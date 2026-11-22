@@ -51,11 +51,11 @@ jobs:
           (cd site && python3 -m http.server 8080 --bind 127.0.0.1 > ../http.log 2>&1 &)
           sleep 3
           npx firebase emulators:exec --only auth --project demo-futari "node tests/local.mjs"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/configure-pages@v5
+      - name: サイトを公開の準備
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: site
           path: site
-          include-hidden-files: true
 
   android:
     name: Android版（APK）を作る
@@ -141,38 +141,44 @@ jobs:
           name: windows
           path: windows/dist/FutariVoice-Setup.exe
 
-  publish:
-    name: リリースしてサイトを公開
+  release:
+    name: GitHubのリリースに出す
     needs: [site, android, windows]
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ needs.site.outputs.url }}/
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with: { name: site, path: site }
       - uses: actions/download-artifact@v4
         with: { name: android, path: dist }
       - uses: actions/download-artifact@v4
         with: { name: windows, path: dist }
-      - name: GitHubのリリースに出す
+      - name: リリースを作る
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: v1.0.${{ github.run_number }}
         run: |
-          gh release create "v1.0.${{ github.run_number }}" dist/FutariVoice-Setup.exe dist/FutariVoice.apk \
-            --title "ふたりボイス 1.0.${{ github.run_number }}" --latest \
-            --notes "Windows版：FutariVoice-Setup.exe ／ Android版：FutariVoice.apk ／ ダウンロードページ：${{ needs.site.outputs.url }}/"
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-      - name: サイトを公開する（GitHub Pages）
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/FutariVoice-Setup.exe dist/FutariVoice.apk --clobber
+          else
+            gh release create "$TAG" dist/FutariVoice-Setup.exe dist/FutariVoice.apk \
+              --title "ふたりボイス 1.0.${{ github.run_number }}" --latest \
+              --notes "Windows版：FutariVoice-Setup.exe ／ Android版：FutariVoice.apk ／ ダウンロードページ：${{ needs.site.outputs.url }}/"
+          fi
+
+  deploy:
+    name: サイトを公開する
+    needs: [site, release]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: GitHub Pagesに出す
+        id: deployment
         uses: actions/deploy-pages@v4
 
   live-test:
     name: 本物のネットでテスト
-    needs: [site, publish]
+    needs: [site, deploy]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
