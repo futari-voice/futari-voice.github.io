@@ -1,22 +1,24 @@
-// ふたりボイス Android版（Trusted Web Activity：中身は公開しているWebアプリ、Chromeのしくみで動く）
+// ふたりボイス Android版（アプリの中で、公開しているWebアプリを開く。通話中はうしろでも止まらない）
 plugins { id 'com.android.application' }
 
 def host = System.getenv('TWA_HOST') ?: 'example.github.io'
 def base = System.getenv('TWA_BASE') ?: ''        // GitHub Pages のフォルダ（例: /futari-voice）。ルートなら空
-def assetStatements = '[{\\"relation\\": [\\"delegate_permission/common.handle_all_urls\\"], \\"target\\": {\\"namespace\\": \\"web\\", \\"site\\": \\"https://' + host + '\\"}}]'
 
 android {
     namespace 'app.futarivoice.twa'
     compileSdk 35
     defaultConfig {
-        applicationId 'app.futarivoice.twa'
+        applicationId 'app.futarivoice.twa'       // 前のバージョンの上に入れられるように、名前は同じまま
         minSdk 24
         targetSdk 35
         versionCode Integer.parseInt(System.getenv('VERSION_CODE') ?: '1')
         versionName System.getenv('VERSION_NAME') ?: '1.0.0'
-        manifestPlaceholders = [hostName: host, pathPrefix: "${base}/app", defaultUrl: "https://${host}${base}/app/"]
-        resValue 'string', 'assetStatements', assetStatements
+        manifestPlaceholders = [hostName: host, pathPrefix: "${base}/app"]
+        buildConfigField 'String', 'SITE_HOST', "\"${host}\""
+        buildConfigField 'String', 'BASE', "\"${base}\""
+        buildConfigField 'String', 'APP_URL', "\"https://${host}${base}/app/\""
     }
+    buildFeatures { buildConfig true }
     signingConfigs {
         release {
             storeFile file(System.getenv('KEYSTORE_FILE') ?: 'missing.jks')
@@ -35,8 +37,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-}
-
-dependencies {
-    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
 }

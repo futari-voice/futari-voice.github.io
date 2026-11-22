@@ -1,0 +1,109 @@
+rules_version = '2';
+// ふたりボイス：フレンド・個人チャット・個人通話のためのデータベースのきまり
+//   users/{uid}            … プロフィール（ログインしている人ならだれでも見られる。書けるのは本人だけ）
+//   unames/{id}            … ユーザーID → uid（同じIDを2人が使えないようにする）
+//   requests/{to}_{from}   … フレンド申請（送った人と受けた人だけ見られる）
+//   friendships/{a}_{b}    … フレンド（a<b。申請を受けた人だけが作れる）
+//   dms/{a}_{b}            … 個人チャットの最後のメッセージ（フレンドどうしだけ）
+//   dms/{a}_{b}/msgs/{id}  … 個人チャットのメッセージ
+//   calls/{a}_{b}          … 個人通話の呼び出し（フレンドどうしだけ）
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function pairOf(a, b) { return a < b ? a + '_' + b : b + '_' + a; }
+    function partsOf(pid) { return pid.split('_'); }
+    function inPair(pid) { return partsOf(pid).size() == 2 && (partsOf(pid)[0] == me() || partsOf(pid)[1] == me()); }
+    function otherIn(pid) { return partsOf(pid)[0] == me() ? partsOf(pid)[1] : partsOf(pid)[0]; }
+    function goodPair(pid) { return inPair(pid) && otherIn(pid) != me() && pid == pairOf(partsOf(pid)[0], partsOf(pid)[1]); }
+    function friends(pid) { return exists(/databases/$(database)/documents/friendships/$(pid)); }
+    function membersOk(pid, d) { return d.members is list && d.members.size() == 2 && d.members.hasAll(partsOf(pid)); }
+    function str(v, n) { return v is string && v.size() <= n; }
+
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow delete: if signedIn() && me() == uid;
+      allow create, update: if signedIn() && me() == uid
+        && request.resource.data.keys().hasOnly(['name', 'color', 'avatar', 'uname', 'seen'])
+        && str(request.resource.data.get('name', ''), 16)
+        && str(request.resource.data.get('color', ''), 9)
+        && str(request.resource.data.get('avatar', ''), 60000)
+        && str(request.resource.data.get('uname', ''), 20)
+        && (!('seen' in request.resource.data) || request.resource.data.seen is timestamp)
+        && (request.resource.data.get('uname', '') == ''
+            || (resource != null && resource.data.get('uname', '') == request.resource.data.uname)
+            || getAfter(/databases/$(database)/documents/unames/$(request.resource.data.uname)).data.uid == me());
+    }
+
+    match /unames/{name} {
+      allow read: if signedIn();
+      allow create: if signedIn() && name.matches('^[a-z0-9_]{3,20}$')
+        && request.resource.data.keys().hasOnly(['uid']) && request.resource.data.uid == me();
+      allow delete: if signedIn() && resource.data.uid == me();
+    }
+
+    match /requests/{rid} {
+      allow read: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['from', 'to', 'ts'])
+        && request.resource.data.from == me()
+        && request.resource.data.to is string && request.resource.data.to != me()
+        && rid == request.resource.data.to + '_' + me()
+        && request.resource.data.ts == request.time
+        && !friends(pairOf(me(), request.resource.data.to));
+      allow delete: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+    }
+
+    match /friendships/{pid} {
+      allow read: if signedIn() && me() in resource.data.members;
+      // 申請を受けた人だけが「フレンドになる」を作れる（相手 → 自分 の申請があるとき）
+      allow create: if signedIn() && goodPair(pid)
+        && request.resource.data.keys().hasOnly(['members', 'since'])
+        && membersOk(pid, request.resource.data)
+        && request.resource.data.since == request.time
+        && exists(/databases/$(database)/documents/requests/$(me() + '_' + otherIn(pid)));
+      allow delete: if signedIn() && me() in resource.data.members;
+    }
+
+    match /dms/{pid} {
+      allow read: if signedIn() && me() in resource.data.members;
+      allow delete: if signedIn() && me() in resource.data.members;
+      allow create, update: if signedIn() && goodPair(pid) && friends(pid)
+        && request.resource.data.keys().hasOnly(['members', 'last'])
+        && membersOk(pid, request.resource.data)
+        && request.resource.data.last.keys().hasOnly(['from', 'text', 'ts'])
+        && request.resource.data.last.from == me()
+        && str(request.resource.data.last.text, 120)
+        && request.resource.data.last.ts == request.time;
+
+      match /msgs/{mid} {
+        allow read: if signedIn() && inPair(pid);
+        allow delete: if signedIn() && inPair(pid) && resource.data.from == me();
+        allow create: if signedIn() && goodPair(pid) && friends(pid)
+          && mid.size() <= 40
+          && request.resource.data.keys().hasOnly(['from', 'text', 'ts'])
+          && request.resource.data.from == me()
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 2000
+          && request.resource.data.ts == request.time;
+      }
+    }
+
+    match /calls/{pid} {
+      allow read: if signedIn() && me() in resource.data.members;
+      allow delete: if signedIn() && me() in resource.data.members;
+      allow create, update: if signedIn() && goodPair(pid) && friends(pid)
+        && request.resource.data.keys().hasOnly(['members', 'from', 'to', 'cid', 'state', 'offer', 'answer', 'ts'])
+        && membersOk(pid, request.resource.data)
+        && request.resource.data.from in partsOf(pid) && request.resource.data.to in partsOf(pid)
+        && request.resource.data.from != request.resource.data.to
+        && str(request.resource.data.cid, 24)
+        && request.resource.data.state in ['ringing', 'accepted', 'declined', 'busy', 'missed', 'ended']
+        && str(request.resource.data.offer, 20000) && str(request.resource.data.answer, 20000)
+        && request.resource.data.ts is timestamp
+        // 通話のとちゅうで変えられるのは同じ通話（cid）だけ。新しくかけるときだけ cid が変わる
+        && (resource == null || request.resource.data.cid == resource.data.cid
+            || (request.resource.data.state == 'ringing' && request.resource.data.from == me()));
+    }
+  }
+}

@@ -290,6 +290,53 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
 .invbox input{flex:1;border:0;background:none;color:var(--head);font-size:15px;outline:none;height:36px}
 .preview{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;background:var(--side)}
 .preview b{color:var(--head)}
+/* フレンド・個人チャット・個人通話 */
+.ri .badge{position:absolute;right:-4px;bottom:-4px;min-width:22px;height:22px;border-radius:11px;border:3px solid var(--rail);font-size:11.5px;padding:0 4px}
+.ch .avw .av{width:28px;height:28px;font-size:13px}
+.ch .avw .dot{width:12px;height:12px;border-width:2.5px;border-color:var(--side);right:-2px;bottom:-2px}
+.ch.dmr{height:44px}
+.ch .badge{margin-left:auto}
+.fwrap{flex:1;overflow-y:auto;padding:0 0 24px}
+.ftabs{display:flex;align-items:center;gap:6px;padding:10px 16px;border-bottom:1px solid #3f4147;flex-wrap:wrap;flex:none}
+.ftabs button{height:30px;padding:0 12px;border-radius:4px;color:var(--soft);font-weight:600;display:flex;align-items:center;gap:6px}
+.ftabs button:hover{background:var(--hover);color:var(--text)}
+.ftabs button[aria-selected=true]{background:var(--active);color:#fff}
+.ftabs .fadd{background:var(--green);color:#fff}
+.ftabs .fadd[aria-selected=true]{background:none;color:var(--green)}
+.fsec{padding:16px 20px 0}
+.fsec h3{margin:0 0 8px;font-size:12px;color:var(--dim);font-weight:700}
+.frow{display:flex;align-items:center;gap:12px;padding:10px 10px;border-top:1px solid #3f4147;border-radius:6px}
+.frow:hover{background:var(--hover);border-top-color:transparent}
+.frow .dot{border-color:var(--main)}.frow:hover .dot{border-color:var(--hover)}
+.fn{flex:1;display:grid;line-height:1.3}
+.fn b{color:var(--head);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.fn span{font-size:13px;color:var(--dim);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.frow .ib{width:36px;height:36px;border-radius:50%;background:var(--side)}
+.frow .ib:hover{background:var(--rail)}
+.frow .ib.ok:hover{color:var(--green)}.frow .ib.no:hover{color:var(--red)}
+.fempty{display:grid;justify-items:center;gap:10px;text-align:center;color:var(--dim);padding:40px 20px}
+.fempty .hicon{width:64px;height:64px;border-radius:50%}
+.addbox{display:grid;gap:10px;background:var(--side);border-radius:10px;padding:16px}
+.addbox p{margin:0;color:var(--soft);font-size:14px}
+.myid{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.myid code{font:inherit;font-weight:700;color:var(--head);background:var(--rail);padding:4px 10px;border-radius:6px}
+.okmsg{color:#3ba55d;margin:0;font-size:14px}.okmsg:empty{display:none}
+.hsrv{padding:24px 20px 0}
+.hsrv .hcards{margin-top:8px}
+.dcall{flex:none;display:grid;justify-items:center;gap:12px;padding:20px 16px 16px;background:var(--stage)}
+.dcavs{display:flex;gap:28px;align-items:center}
+.dcavs .av{width:80px;height:80px;font-size:34px}
+.dcavs .av.ring{animation:ring 1.4s ease-in-out infinite}
+@keyframes ring{0%,100%{box-shadow:0 0 0 0 rgba(35,165,90,.5)}50%{box-shadow:0 0 0 10px rgba(35,165,90,0)}}
+.dcall p{margin:0;color:var(--soft);font-weight:600}
+.dcall .bar{padding:4px 0 0}
+#mRing{z-index:65}
+.ringbox{width:min(320px,100%);background:var(--side);border-radius:14px;padding:28px 20px;display:grid;justify-items:center;gap:12px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.ringbox .av{width:96px;height:96px;font-size:40px;animation:ring 1.4s ease-in-out infinite}
+.ringbox b{color:var(--head);font-size:20px}
+.ringbox p{margin:0;color:var(--soft)}
+.ringbox .bar{padding:8px 0 0;gap:28px}
+.cb.green{background:var(--green)}.cb.green:hover{background:#1a8a4a}
 .toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,20px);background:#111214;color:#fff;padding:10px 16px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:.2s;z-index:80;max-width:calc(100% - 32px);text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .scrim{display:none}
@@ -318,6 +365,7 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 <style id="avcss"></style>
+<style id="favcss"></style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -349,6 +397,10 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
   <symbol id="i-invite" viewBox="0 0 24 24"><circle cx="10" cy="8.5" r="3.5"/><path d="M3.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/></symbol>
   <symbol id="i-google" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></symbol>
   <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 3.5h3.5l2 5-2.5 1.5a11 11 0 0 0 6 6l1.5-2.5 5 2v3.5a2 2 0 0 1-2 2A16.5 16.5 0 0 1 3 5.5a2 2 0 0 1 2-2z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5.5h16v10.5H9.5L5 20v-4H4z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-at" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.8"/><path d="M15.8 8.2v5.3a2.7 2.7 0 0 0 5.2 1V12a9 9 0 1 0-4.2 7.6"/></symbol>
 </svg>
 <svg class="art" id="art" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="display:none">
   <defs>
@@ -425,7 +477,7 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
 <div id="app" class="hide">
   <div class="nav" id="nav">
     <nav class="rail" aria-label="サーバー">
-      <div class="rwrap"><button class="ri" id="homeBtn" title="ホーム"><span class="pip"></span><svg viewBox="0 0 24 24"><use href="#i-logo"/></svg></button></div>
+      <div class="rwrap"><button class="ri" id="homeBtn" title="ホーム（フレンド・個人チャット）"><span class="pip"></span><svg viewBox="0 0 24 24"><use href="#i-logo"/></svg><b class="badge hide" id="homeBadge"></b></button></div>
       <div class="sep"></div>
       <div id="srvList" style="display:grid;gap:8px"></div>
       <div class="rwrap"><button class="ri add" id="addBtn" title="サーバーを追加"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></button></div>
@@ -447,6 +499,13 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
         <button class="ib" id="vsScreen" title="画面を共有"><svg class="i"><use href="#i-screen"/></svg></button>
         <button class="ib" id="vsLeave" title="ボイスから出る"><svg class="i fill"><use href="#i-hang"/></svg></button>
       </div>
+      <div class="vstat hide" id="dcstat">
+        <button class="vs-l" id="dcGo" title="通話を見る">
+          <span class="vs-t"><svg class="i"><use href="#i-phone"/></svg><span id="dcT">通話中</span></span>
+          <span class="vs-s" id="dcSub"></span>
+        </button>
+        <button class="ib" id="dcLeave" title="通話を切る"><svg class="i fill"><use href="#i-hang"/></svg></button>
+      </div>
       <div class="me">
         <div class="avw"><div class="av sm" id="meAv"></div><span class="dot" id="meDot"></span></div>
         <button class="me-n" id="meBtn" title="プロフィールを変える"><b id="meName"></b><span id="meSub">オンライン</span></button>
@@ -463,14 +522,23 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
       <button class="ib menu" id="btnMenu" title="メニュー"><svg class="i"><use href="#i-menu"/></svg></button>
       <svg class="i" id="mIcon"><use href="#i-hash"/></svg><b id="mTitle"></b>
       <span class="sp"></span>
+      <button class="ib hide" id="btnCall" title="通話する"><svg class="i"><use href="#i-phone"/></svg></button>
       <button class="ib" id="btnInvite2" title="友だちを招待"><svg class="i"><use href="#i-invite"/></svg></button>
       <button class="ib" id="btnMembers" title="メンバー"><svg class="i"><use href="#i-people"/></svg><b class="badge hide" id="onlineBadge"></b></button>
     </header>
 
     <section class="view" id="vHome">
-      <div class="home"><div class="hwrap">
-        <h2 id="homeTitle">サーバーを作ろう！</h2>
-        <p>サーバーは、友だちと集まる場所だよ。チャットも通話もできるよ（最大4人）。</p>
+      <div class="ftabs" role="tablist" id="ftabs">
+        <button type="button" role="tab" data-ftab="online">オンライン</button>
+        <button type="button" role="tab" data-ftab="all">すべて</button>
+        <button type="button" role="tab" data-ftab="req">申請<b class="badge hide" id="reqBadge"></b></button>
+        <button type="button" role="tab" data-ftab="add" class="fadd">フレンドを追加</button>
+      </div>
+      <div class="fwrap">
+        <div id="fbody"></div>
+        <div class="hsrv">
+        <h2 id="homeTitle" class="hide"></h2>
+        <div class="fsec" style="padding:0"><h3>サーバー（友だち4人までの集まる場所）</h3></div>
         <div class="hcards">
           <div class="hcard">
             <div class="hicon"><svg class="i"><use href="#i-plus"/></svg></div>
@@ -486,7 +554,22 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
             <p class="err" id="homeErr"></p>
           </div>
         </div>
-      </div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view hide" id="vDm">
+      <div class="dcall hide" id="dcPanel">
+        <div class="dcavs"><div class="av" id="dcMe"></div><div class="av" id="dcYou"></div></div>
+        <p id="dcState"></p>
+        <div class="bar">
+          <button class="cb" id="dcMic" title="ミュート (M)"><svg class="i"><use href="#i-mic"/></svg></button>
+          <button class="cb" id="dcDeaf" title="スピーカーミュート (D)"><svg class="i"><use href="#i-head"/></svg></button>
+          <button class="cb red" id="dcHang" title="通話を切る"><svg class="i fill"><use href="#i-hang"/></svg></button>
+        </div>
+      </div>
+      <div class="msgs" id="dmMsgs"></div>
+      <form class="comp" id="dmComp"><input id="dmIn" autocomplete="off" maxlength="2000"><button class="ib" type="submit" title="送信"><svg class="i"><use href="#i-send"/></svg></button></form>
     </section>
 
     <section class="view hide" id="vText">
@@ -598,6 +681,7 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
     <div class="mbody">
       <h3>アカウント</h3>
       <div class="acct"><div><b id="acName"></b><span id="acHow"></span></div><button class="btn2" id="logoutBtn">ログアウト</button></div>
+      <p class="hint" id="acId"></p>
       <h3>プロフィール</h3>
       <div class="picker">
         <div class="av" id="pAv"></div>
@@ -634,6 +718,19 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
     <header><b id="cfTitle"></b></header>
     <div class="mbody"><p id="cfText"></p></div>
     <div class="mfoot2"><button class="btn2" data-close>やめる</button><button class="btn2 red" id="cfOk"></button></div>
+  </div>
+</div>
+
+<!-- 電話がきたとき -->
+<div class="modal hide" id="mRing" role="dialog" aria-modal="true" aria-label="電話がきたよ">
+  <div class="ringbox">
+    <div class="av" id="ringAv"></div>
+    <b id="ringName"></b>
+    <p>から電話だよ</p>
+    <div class="bar">
+      <button class="cb red" id="ringNo" title="切る"><svg class="i fill"><use href="#i-hang"/></svg></button>
+      <button class="cb green" id="ringYes" title="出る"><svg class="i"><use href="#i-phone"/></svg></button>
+    </div>
   </div>
 </div>
 
@@ -814,11 +911,12 @@ function stopMic(){
   if (S.speaking){ S.speaking = false; broadcast({t:'spk', v:false}); renderSpeak(); }
 }
 function pushGate(){
-  const m = S.muted || S.deaf || S.noMic || !S.voice;
+  const m = S.muted || S.deaf || S.noMic || !(S.voice || DC.state);
   if (S.gate) S.gate.port.postMessage({th:cfg.th, auto:cfg.auto, muted:m});
   else if (S.rawStream) S.rawStream.getAudioTracks().forEach(t => t.enabled = !m);
 }
 function replaceSend(track){
+  if (DC.sender) DC.sender.replaceTrack(track).catch(()=>{});
   for (const P of S.peers.values()){
     const pc = P.call && P.call.peerConnection; if (!pc) continue;
     const snd = pc.getSenders().find(s => s.track ? s.track.kind === 'audio' : true);
@@ -827,8 +925,8 @@ function replaceSend(track){
 }
 function onLevel(d){
   S.level = d.db; S.th = d.th;
-  const sp = !!d.open && !!S.voice && !(S.muted || S.deaf || S.noMic);
-  if (sp !== S.speaking){ S.speaking = sp; broadcast({t:'spk', v:sp}); renderSpeak(); }
+  const sp = !!d.open && !!(S.voice || DC.state) && !(S.muted || S.deaf || S.noMic);
+  if (sp !== S.speaking){ S.speaking = sp; if (S.voice) broadcast({t:'spk', v:sp}); renderSpeak(); if (DC.state) renderDcSpeak(); }
   if (!$('#mSet').classList.contains('hide')) renderMeter();
 }
 
@@ -1247,6 +1345,7 @@ function playRemote(P, st){
 async function joinVoice(ch){
   if (!chanById(ch)) return;
   if (S.voice === ch){ showVoice(ch); return; }
+  if (DC.state) hangup();
   ensureCtx();
   if (S.voice) leaveVoice(true);
   try { await setupAudio(); }
@@ -1256,7 +1355,7 @@ async function joinVoice(ch){
     if (!S.dest) S.dest = S.ctx.createMediaStreamDestination();
     if (!S.sendTrack) S.sendTrack = S.dest.stream.getAudioTracks()[0];
     S.noMic = true;
-    toast('マイクが使えないので、聞くだけで入ったよ。アドレスバーのマークから、マイクを「許可」にしてね', 7000);
+    toast(micHelp(), 8000);
   }
   S.voice = ch; S.watch = null; S.watchOff = false;
   pushGate(); broadcast(vsMsg()); ensureCalls(); playSound('join');
@@ -1303,11 +1402,11 @@ function stopScreen(quiet){
   renderAll();
 }
 function setMuted(v){
-  if (S.noMic && !v && S.voice){ toast('マイクが使えないよ。設定でマイクをえらんでね'); return; }
+  if (S.noMic && !v && (S.voice || DC.state)){ toast(AND ? 'マイクが使えないよ。スマホの設定で、ふたりボイスにマイクを「許可」してね' : 'マイクが使えないよ。設定でマイクをえらんでね'); return; }
   S.muted = v;
   if (!v && S.deaf){ S.deaf = false; applyDeaf(); }
   pushGate(); ensureCtx(); playSound(v ? 'mute' : 'unmute');
-  broadcast(vsMsg()); renderAll();
+  if (S.voice) broadcast(vsMsg()); renderAll();
 }
 function setDeaf(v){
   S.deaf = v; applyDeaf(); pushGate(); ensureCtx(); playSound(v ? 'mute' : 'unmute');
@@ -1315,6 +1414,7 @@ function setDeaf(v){
 }
 function applyDeaf(){
   for (const P of S.peers.values()) if (P.audio) P.audio.muted = S.deaf;
+  if (DC.audio) DC.audio.muted = S.deaf;
   const sv = $('#sv'); if (sv.srcObject && sv.srcObject !== S.scrStream) sv.muted = S.deaf;
 }
 
@@ -1353,7 +1453,7 @@ function exitServer(){
   dbg('exit', sid);
 }
 function goHome(){
-  exitServer(); S.view = 'home'; renderAll();
+  S.view = 'home'; renderAll();
   closeDrawer();
 }
 function createServer(name, icon){
@@ -1464,10 +1564,10 @@ function renderTyping(){
 
 /* ---------- 画面の表示 ---------- */
 function renderRail(){
-  $('#homeBtn').classList.toggle('on', !S.sid);
+  $('#homeBtn').classList.toggle('on', !S.sid || isHome());
   $('#srvList').innerHTML = servers.map(s => {
-    const img = okImg(s.icon), on = s.id === S.sid;
-    const unread = on && S.meta && textChans().some(c => unreadIn(c.id) > 0);
+    const img = okImg(s.icon), on = s.id === S.sid && !isHome();
+    const unread = s.id === S.sid && S.meta && textChans().some(c => unreadIn(c.id) > 0);
     return `<div class="rwrap"><button class="ri s-${s.id}${img ? ' img' : ''}${on ? ' on' : ''}${unread ? ' unread' : ''}" data-sid="${s.id}" title="${esc(s.name)}"><span class="pip"></span>${img ? '' : esc(first(s.name))}</button></div>`;
   }).join('');
 }
@@ -1480,10 +1580,7 @@ function voiceMembers(ch){
 function iconsFor(muted, deaf, live){ return (muted ? ic('mic-off') : '') + (deaf ? ic('head-off') : '') + (live ? '<span class="live">LIVE</span>' : ''); }
 function renderChannels(){
   const el = $('#chList');
-  if (!S.sid){
-    el.innerHTML = `<div class="empty">${servers.length ? '左のアイコンからサーバーをえらんでね。' : 'まだサーバーがないよ。<br>まんなかの「作る」か、招待リンクで入ろう。'}</div>`;
-    return;
-  }
+  if (!S.sid || isHome()){ renderHomeSide(); return; }
   const t = textChans(), v = S.meta.channels.filter(c => c.type === 'voice');
   let h = `<div class="cat"><span>テキストチャンネル</span><button class="ib" data-new="text" title="テキストチャンネルを作る">${ic('plus')}</button></div>`;
   for (const c of t){
@@ -1518,9 +1615,9 @@ function renderBadges(){
 function renderUser(){
   paintAv($('#meAv'), me);
   $('#meName').textContent = me.name;
-  const muted = S.muted || (S.noMic && S.voice);
-  $('#meSub').textContent = S.deaf ? 'スピーカーミュート中' : muted ? 'ミュート中' : (S.sid && S.net !== 'online' ? 'つないでいます…' : 'オンライン');
-  $('#meDot').classList.toggle('off', !!S.sid && S.net !== 'online');
+  const muted = S.muted || (S.noMic && (S.voice || DC.state));
+  $('#meSub').textContent = S.deaf ? 'スピーカーミュート中' : muted ? 'ミュート中' : (S.sid && !isHome() && S.net !== 'online' ? 'つないでいます…' : F.uname ? '@' + F.uname : 'オンライン');
+  $('#meDot').classList.toggle('off', !!S.sid && !isHome() && S.net !== 'online');
   const inV = !!S.voice && S.sid;
   $('#vstat').classList.toggle('hide', !inV);
   if (inV){
@@ -1528,7 +1625,8 @@ function renderUser(){
     const avg = pings.length ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : 0;
     $('#vsSub').textContent = (avg ? 'ping ' + avg + 'ms ・ ' : '') + (c ? c.name : '') + ' / ' + S.meta.name;
   }
-  const off = S.muted || S.deaf || (S.noMic && !!S.voice);
+  const off = S.muted || S.deaf || (S.noMic && !!(S.voice || DC.state));
+  renderDc(); bridgeLive();
   for (const b of [$('#btnMic'), $('#cbMic')]) setBtn(b, off, '#i-mic', '#i-mic-off', 'ミュート (M)', 'ミュート解除 (M)');
   for (const b of [$('#btnDeaf'), $('#cbDeaf')]) setBtn(b, S.deaf, '#i-head', '#i-head-off', 'スピーカーミュート (D)', 'スピーカーミュート解除 (D)');
   for (const b of [$('#vsScreen'), $('#cbScreen')]){ b.classList.toggle('hide', !canShare); b.classList.toggle('on', !!S.scrStream); b.title = S.scrStream ? '画面の共有をやめる' : '画面を共有'; }
@@ -1538,25 +1636,28 @@ function setBtn(b, off, onHref, offHref, onTitle, offTitle){
   b.title = off ? offTitle : onTitle; b.setAttribute('aria-pressed', off);
 }
 function renderMain(){
-  const v = S.sid ? S.view : 'home';
+  const v = S.view, home = isHome();
   $('#vHome').classList.toggle('hide', v !== 'home');
+  $('#vDm').classList.toggle('hide', v !== 'dm');
   $('#vText').classList.toggle('hide', v !== 'text');
   $('#vVoice').classList.toggle('hide', v !== 'voice');
-  $('#btnMembers').classList.toggle('hide', !S.sid);
-  $('#btnInvite2').classList.toggle('hide', !S.sid);
-  $('#app').classList.toggle('mem-on', !!(S.sid && (innerWidth > 1100 ? cfg.members : S.memOpen)));
-  $('#srvName').textContent = S.sid ? S.meta.name : 'ホーム';
-  $('#srvChev').classList.toggle('hide', !S.sid);
+  $('#btnMembers').classList.toggle('hide', !S.sid || home);
+  $('#btnInvite2').classList.toggle('hide', !S.sid || home);
+  $('#btnCall').classList.toggle('hide', v !== 'dm' || DC.fid === F.dm || !F.friends.has(F.dm));
+  $('#app').classList.toggle('mem-on', !!(S.sid && !home && (innerWidth > 1100 ? cfg.members : S.memOpen)));
+  $('#srvName').textContent = S.sid && !home ? S.meta.name : 'ホーム';
+  $('#srvChev').classList.toggle('hide', !S.sid || home);
   const icon = $('#mIcon use');
-  if (v === 'home'){ icon.setAttribute('href', '#i-logo'); $('#mTitle').textContent = 'ホーム'; $('#homeTitle').textContent = servers.length ? 'サーバーを追加しよう' : 'サーバーを作ろう！'; }
+  if (v === 'home'){ icon.setAttribute('href', '#i-people'); $('#mTitle').textContent = 'フレンド'; }
+  else if (v === 'dm'){ icon.setAttribute('href', '#i-at'); const u = prof(F.dm); $('#mTitle').textContent = u.name + (isOnline(F.dm) ? '（オンライン）' : ''); $('#dmIn').placeholder = '@' + u.name + ' へメッセージを送信'; }
   else if (v === 'text'){ icon.setAttribute('href', '#i-hash'); const c = chanById(S.textCh); $('#mTitle').textContent = c ? c.name : ''; $('#ci').placeholder = c ? '#' + c.name + ' へメッセージを送信' : ''; }
   else { icon.setAttribute('href', '#i-vol'); const c = chanById(S.viewVoice); $('#mTitle').textContent = c ? c.name : ''; }
   const online = okPeers().length + (S.sid && S.net === 'online' ? 1 : 0);
-  const b = $('#onlineBadge'); b.textContent = online; b.classList.toggle('hide', !S.sid || online < 2); b.style.background = 'var(--green)';
+  const b = $('#onlineBadge'); b.textContent = online; b.classList.toggle('hide', !S.sid || home || online < 2); b.style.background = 'var(--green)';
 }
 function renderMembers(){
   const el = $('#mlist');
-  if (!S.sid){ el.innerHTML = ''; return; }
+  if (!S.sid || isHome()){ el.innerHTML = ''; return; }
   const onlineUids = new Set(okPeers().map(P => P.uid)); if (S.net === 'online') onlineUids.add(me.uid);
   const voiceOf = uid => uid === me.uid ? S.voice : ((okPeers().find(P => P.uid === uid) || {}).voice || '');
   const all = memberList().sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
@@ -1631,8 +1732,11 @@ function renderStage(){
   } else if (sv.srcObject) sv.srcObject = null;
 }
 function renderAll(){
-  if (!S.sid && S.view !== 'home') S.view = 'home';
+  if (!S.sid && !isHome()) S.view = 'home';
+  if (S.view === 'dm' && !F.dm) S.view = 'home';
   renderUser(); renderMain(); renderMembers();
+  if (S.view === 'home') renderFriends();
+  renderHomeBadge();
   if (S.view === 'voice'){ renderTiles(); renderStage(); } else { const sv = $('#sv'); if (sv.srcObject) sv.srcObject = null; }
   renderTyping(); renderBadges();
 }
@@ -1640,7 +1744,7 @@ function renderAll(){
 /* ---------- モーダル ---------- */
 function openModal(id){ closeModals(); $('#' + id).classList.remove('hide'); const f = $('#' + id).querySelector('input:not([readonly]),button.primary'); if (f && innerWidth > 820) setTimeout(() => f.focus(), 0); }
 function closeModals(){
-  for (const m of document.querySelectorAll('.modal')) m.classList.add('hide');
+  for (const m of document.querySelectorAll('.modal:not(#mRing)')) m.classList.add('hide');
   $('#srvMenu').classList.add('hide');
   if (S.micTest){ S.micTest = false; if (!S.voice) stopMic(); }
 }
@@ -1725,6 +1829,7 @@ function paintAccount(){
   const user = userOf(u);
   $('#acName').textContent = user ? user : (u.displayName || 'Googleアカウント');
   $('#acHow').textContent = user ? 'ユーザー名でログイン中' : 'Googleでログイン中' + (u.email ? '（' + u.email + '）' : '');
+  $('#acId').textContent = F.uname ? 'フレンド用のユーザーID：@' + F.uname : 'フレンド用のユーザーIDは、ホームの「フレンドを追加」で決められるよ';
 }
 function paintProfile(){ paintAv($('#pAv'), me); $('#pDel').classList.toggle('hide', !me.avatar); }
 function renderMeter(){
@@ -1738,6 +1843,7 @@ function profileChanged(){
   me.ver = Math.max(Date.now(), me.ver + 1); saveMe();
   if (S.sid){ S.members[me.uid] = Object.assign(S.members[me.uid] || myRecord(), {name:me.name, color:me.color, avatar:me.avatar, ver:me.ver, left:false}); saveServer(); broadcast({t:'prof', rec:S.members[me.uid]}); }
   renderAvCss(); paintProfile(); renderAll(); if (S.view === 'text') renderMessages();
+  profileToCloud();
 }
 async function micChanged(){
   saveCfg();
@@ -1759,6 +1865,7 @@ function cyrb(str, seed){
   return (h2>>>0).toString(16).padStart(8,'0')+(h1>>>0).toString(16).padStart(8,'0');
 }
 function screen(id){
+  if (window.FVAndroid) console.info('[FV] screen ' + id);
   for (const x of ['boot','nosetup','login','welcome']) $('#' + x).classList.toggle('hide', x !== id);
   $('#art').style.display = id === 'boot' || id === 'app' ? 'none' : '';
   $('#app').classList.toggle('hide', id !== 'app');
@@ -1785,11 +1892,12 @@ function initAuth(){
     const app = FB.initializeApp(FBCFG);
     auth = FB.getAuth(app); auth.languageCode = 'ja';
     if (qs.get('emu')) FB.connectAuthEmulator(auth, 'http://' + qs.get('emu'), {disableWarnings:true});
+    try { DBX = (DEBUG && window.__fvFakeDB) || firestoreDB(app); } catch(e){ console.warn('firestore', e); DBX = null; }
   } catch(e){ console.warn(e); screen('nosetup'); return; }
   FB.getRedirectResult(auth).catch(e => loginErr(e));
   FB.onAuthStateChanged(auth, u => {
     if (u && fbUser && u.uid === fbUser.uid) return;
-    if (!u){ if (fbUser){ exitServer(); fbUser = null; } showLogin(); return; }
+    if (!u){ if (fbUser){ dcEnd(''); hideIncoming(); DC.incoming = null; socialStop(); exitServer(); fbUser = null; } showLogin(); return; }
     fbUser = u; setAccount(u);
     if (me.name && hasSaved()) startApp(); else showWelcome();
   });
@@ -1824,6 +1932,7 @@ async function googleLogin(){
   try {
     if (window.fvDesktop && window.fvDesktop.googleLogin){
       // Windowsアプリ: いつものブラウザでGoogleにログインして、アプリにもどってくる
+      if (window.fvDesktop.platform === 'android') b.disabled = false;
       const idToken = await window.fvDesktop.googleLogin();
       await FB.signInWithCredential(auth, FB.GoogleAuthProvider.credential(idToken));
     } else {
@@ -1853,8 +1962,569 @@ async function passLogin(){
   finally { b.disabled = false; }
 }
 async function logout(){
-  closeModals(); exitServer();
+  closeModals(); if (DC.state) hangup(); exitServer();
   try { await FB.signOut(auth); } catch(e){}
+}
+
+/* ---------- データベース (Firestore。テストのときは window.__fvFakeDB) ---------- */
+const NOW = {__now:1};                                  // 「サーバーの今の時刻」を入れてね、という印
+let DBX = null;
+function firestoreDB(app){
+  const db = FB.initializeFirestore(app, {experimentalAutoDetectLongPolling:true});
+  const emu = qs.get('fsemu'); if (emu){ const [h, p] = emu.split(':'); FB.connectFirestoreEmulator(db, h, +p || 8085); }
+  const ref = p => FB.doc(db, p);
+  const conv = v => v === NOW || (v && v.__now) ? FB.serverTimestamp() : (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, conv(x)])) : v);
+  const norm = v => v && typeof v.toMillis === 'function' ? v.toMillis() : Array.isArray(v) ? v.map(norm) : (v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, norm(x)])) : v);
+  const data = s => s.exists() ? norm(s.data({serverTimestamps:'estimate'})) : null;
+  const q = (c, wh, opt) => {
+    const parts = wh.map(([f, o, v]) => FB.where(f === '__id' ? FB.documentId() : f, o, v));
+    if (opt && opt.last) parts.push(FB.orderBy(opt.order), FB.limitToLast(opt.last));
+    return FB.query(FB.collection(db, c), ...parts);
+  };
+  return {
+    get: async p => data(await FB.getDoc(ref(p))),
+    set: (p, d, merge) => FB.setDoc(ref(p), conv(d), merge ? {merge:true} : {}),
+    del: p => FB.deleteDoc(ref(p)),
+    batch: ops => { const b = FB.writeBatch(db); for (const [op, p, d, merge] of ops){ if (op === 'del') b.delete(ref(p)); else b.set(ref(p), conv(d), merge ? {merge:true} : {}); } return b.commit(); },
+    watch: (p, cb, onErr) => FB.onSnapshot(ref(p), s => cb(data(s)), onErr),
+    query: (c, wh, cb, onErr, opt) => FB.onSnapshot(q(c, wh, opt), s => cb(s.docs.map(d => Object.assign(norm(d.data({serverTimestamps:'estimate'})), {id:d.id}))), onErr),
+    claim: (name, uid, old) => FB.runTransaction(db, async tx => {
+      const s = await tx.get(ref('unames/' + name));
+      if (s.exists() && s.data().uid !== uid) return false;
+      if (!s.exists()) tx.set(ref('unames/' + name), {uid});
+      if (old && old !== name) tx.delete(ref('unames/' + old));
+      tx.set(ref('users/' + uid), {uname:name}, {merge:true});
+      return true;
+    }),
+  };
+}
+
+/* ---------- フレンド・個人チャット ---------- */
+const F = {on:false, err:'', fuid:'', uname:'', meDoc:null, skew:0, hbAt:0, hb:null, started:0,
+  friends:new Map(), users:new Map(), inReq:[], outReq:[], dms:new Map(), calls:[],
+  unsub:[], userUnsub:[], userKey:'', tab:'online', dm:'', dmMsgs:[], dmUnsub:null, dmRead:{}, addMsg:'', addErr:'', busy:false};
+const pairOf = (a, b) => a < b ? a + '_' + b : b + '_' + a;
+if (DEBUG){ window.__fvF = F; window.__fvDBX = () => DBX; }
+const serverNow = () => Date.now() + F.skew;
+const isHome = () => S.view === 'home' || S.view === 'dm';
+const UNAME_RE = /^[a-z0-9_]{3,20}$/;
+const prof = fid => F.users.get(fid) || {name:'だれか', color:COLORS[0], avatar:'', uname:'', seen:0};
+const isOnline = fid => { const u = F.users.get(fid); return !!(u && u.seen && serverNow() - u.seen < 150000); };
+function favHTML(fid, cls){
+  if (fid === F.fuid) return avHTML(me.uid, cls);
+  const u = prof(fid), img = okImg(u.avatar);
+  return `<div class="av ${cls} fa-${fid}${img ? ' img' : ''}" style="--c:${okColor(u.color)}">${img ? '' : esc(first(u.name))}</div>`;
+}
+function renderFavCss(){
+  let css = '';
+  for (const [fid, u] of F.users) if (/^[A-Za-z0-9]{6,40}$/.test(fid) && okImg(u.avatar)) css += `.fa-${fid}{background-image:url("${u.avatar}")}`;
+  $('#favcss').textContent = css;
+}
+function dbErr(e){
+  console.warn('db', e && (e.code || e.message));
+  dbg('db error', e && (e.code || e.message));
+  F.err = (e && (e.code || e.message)) || 'error';
+  renderSocial();
+}
+function socialStop(){
+  for (const u of F.unsub.splice(0)) try{ u(); }catch(e){}
+  for (const u of F.userUnsub.splice(0)) try{ u(); }catch(e){}
+  if (F.dmUnsub){ try{ F.dmUnsub(); }catch(e){} F.dmUnsub = null; }
+  clearInterval(F.hb);
+  Object.assign(F, {on:false, err:'', fuid:'', uname:'', meDoc:null, friends:new Map(), users:new Map(), inReq:[], outReq:[], dms:new Map(), calls:[], userKey:'', dm:'', dmMsgs:[], reqInit:false, dmsInit:false});
+}
+function socialStart(){
+  socialStop();
+  if (!DBX || !fbUser) return;
+  F.fuid = fbUser.uid; F.on = true; F.dmRead = store.get(ak('dmread'), {}) || {};
+  const W = u => F.unsub.push(u);
+  W(DBX.watch('users/' + F.fuid, d => {
+    F.meDoc = d; F.uname = (d && d.uname) || '';
+    if (d && d.seen && F.hbAt && Date.now() - F.hbAt < 20000) F.skew = d.seen - F.hbAt;
+    renderSocial();
+  }, dbErr));
+  W(DBX.query('friendships', [['members', 'array-contains', F.fuid]], list => {
+    F.friends = new Map(list.map(x => [(x.members || []).find(m => m !== F.fuid), {pid:x.id, since:x.since || 0}]).filter(x => x[0]));
+    watchUsers(); renderSocial();
+  }, dbErr));
+  W(DBX.query('requests', [['to', '==', F.fuid]], list => {
+    const before = new Set(F.inReq.map(r => r.from)), first = !F.reqInit;
+    F.inReq = list; F.reqInit = true;
+    if (!first && list.some(r => !before.has(r.from))){ playSound('msg'); const r = list.find(r => !before.has(r.from)); setTimeout(() => { if (document.hidden) bridgeNotify('フレンド申請がきたよ', prof(r.from).name + ' からフレンド申請がきたよ', 'req'); }, 1500); }
+    watchUsers(); renderSocial();
+  }, dbErr));
+  W(DBX.query('requests', [['from', '==', F.fuid]], list => { F.outReq = list; watchUsers(); renderSocial(); }, dbErr));
+  W(DBX.query('dms', [['members', 'array-contains', F.fuid]], onDms, dbErr));
+  W(DBX.query('calls', [['members', 'array-contains', F.fuid]], onCalls, dbErr));
+  pushProfile().then(() => { if (!F.uname && userOf(fbUser)) claimUname(userOf(fbUser), true); });
+  F.hb = setInterval(pushProfile, 60000);
+}
+let profT;
+function pushProfile(){
+  if (!F.on || !DBX) return Promise.resolve();
+  clearTimeout(profT);
+  F.hbAt = Date.now();
+  const d = {name:me.name || 'だれか', color:okColor(me.color), avatar:okImg(me.avatar) && me.avatar.length < 59000 ? me.avatar : '', seen:NOW};
+  return DBX.set('users/' + F.fuid, d, true).catch(dbErr);
+}
+function profileToCloud(){ clearTimeout(profT); profT = setTimeout(pushProfile, 800); }
+function watchUsers(){
+  const ids = new Set([...F.friends.keys(), ...F.inReq.map(r => r.from), ...F.outReq.map(r => r.to)]);
+  ids.delete(F.fuid);
+  const list = [...ids].filter(x => /^[A-Za-z0-9]{6,40}$/.test(x)).sort();
+  const key = list.join(',');
+  if (key === F.userKey) return;
+  F.userKey = key;
+  for (const u of F.userUnsub.splice(0)) try{ u(); }catch(e){}
+  for (const k of [...F.users.keys()]) if (!ids.has(k)) F.users.delete(k);
+  for (let i = 0; i < list.length; i += 10){
+    const chunk = list.slice(i, i + 10);
+    F.userUnsub.push(DBX.query('users', [['__id', 'in', chunk]], docs => {
+      for (const d of docs) F.users.set(d.id, {name:clean(d.name) || 'だれか', color:okColor(d.color), avatar:okImg(d.avatar) ? d.avatar : '', uname:typeof d.uname === 'string' ? d.uname : '', seen:+d.seen || 0});
+      renderFavCss(); renderSocial();
+    }, dbErr));
+  }
+}
+async function claimUname(name, silent){
+  name = String(name || '').trim().replace(/^@/, '').toLowerCase();
+  if (!UNAME_RE.test(name)){ if (!silent){ F.addErr = 'ユーザーIDは、英字・数字・_ で3〜20文字にしてね'; renderSocial(); } return false; }
+  try {
+    const ok = await DBX.claim(name, F.fuid, F.uname);
+    if (!ok){ if (!silent){ F.addErr = '「' + name + '」は、もうだれかが使っているよ'; renderSocial(); } return false; }
+    F.uname = name; F.addErr = ''; if (!silent){ F.addMsg = 'ユーザーIDを「' + name + '」にしたよ！'; toast('ユーザーIDを決めたよ'); }
+    renderSocial(); return true;
+  } catch(e){ if (!silent){ F.addErr = 'うまくいかなかった…（' + (e.code || e.message) + '）'; renderSocial(); } return false; }
+}
+async function sendFriendReq(text){
+  F.addMsg = ''; F.addErr = '';
+  const id = String(text || '').trim().replace(/^@/, '').toLowerCase();
+  if (!UNAME_RE.test(id)){ F.addErr = 'ユーザーIDは、英字・数字・_ で3〜20文字だよ'; renderSocial(); return false; }
+  if (id === F.uname){ F.addErr = 'それはあなたのユーザーIDだよ'; renderSocial(); return false; }
+  F.busy = true; renderSocial();
+  try {
+    const u = await DBX.get('unames/' + id);
+    if (!u || !u.uid){ F.addErr = '「' + id + '」というユーザーIDの人は見つからなかった。IDをもう一度たしかめてね'; return false; }
+    const to = u.uid;
+    if (to === F.fuid){ F.addErr = 'それはあなたのユーザーIDだよ'; return false; }
+    if (F.friends.has(to)){ F.addErr = 'その人とは、もうフレンドだよ'; return false; }
+    if (F.inReq.some(r => r.from === to)){ await acceptReq(to); F.addMsg = 'その人からも申請がきていたから、フレンドになったよ！'; return true; }
+    await DBX.set('requests/' + to + '_' + F.fuid, {from:F.fuid, to, ts:NOW});
+    F.addMsg = '「' + id + '」にフレンド申請を送ったよ！相手が「OK」したらフレンドになるよ。';
+    return true;
+  } catch(e){ F.addErr = 'うまく送れなかった…（' + (e.code || e.message) + '）'; return false; }
+  finally { F.busy = false; renderSocial(); }
+}
+async function acceptReq(from){
+  const pid = pairOf(F.fuid, from);
+  const ops = [['set', 'friendships/' + pid, {members:[F.fuid, from].sort(), since:NOW}], ['del', 'requests/' + F.fuid + '_' + from]];
+  if (F.outReq.some(r => r.to === from)) ops.push(['del', 'requests/' + from + '_' + F.fuid]);
+  try { await DBX.batch(ops); toast(prof(from).name + ' とフレンドになったよ！'); }
+  catch(e){ toast('フレンドになれなかった…（' + (e.code || e.message) + '）'); }
+}
+const declineReq = from => DBX.del('requests/' + F.fuid + '_' + from).catch(dbErr);
+const cancelReq = to => DBX.del('requests/' + to + '_' + F.fuid).catch(dbErr);
+async function removeFriend(fid){
+  if (DC.fid === fid) hangup();
+  try { await DBX.del('friendships/' + pairOf(F.fuid, fid)); toast(prof(fid).name + ' とのフレンドをやめたよ'); if (F.dm === fid) goHome(); }
+  catch(e){ toast('うまくいかなかった…'); }
+}
+function dmUnread(pid){
+  const d = F.dms.get(pid), l = d && d.last;
+  return !!(l && l.from && l.from !== F.fuid && (+l.ts || 0) > (+F.dmRead[pid] || 0));
+}
+function onDms(list){
+  const prev = F.dms, first = !F.dmsInit;
+  F.dms = new Map(list.map(d => [d.id, d])); F.dmsInit = true;
+  if (!first) for (const d of list){
+    const l = d.last || {}, p = prev.get(d.id), pl = (p && p.last) || {};
+    if (!l.from || l.from === F.fuid || (+l.ts || 0) <= (+pl.ts || 0) || !pl.ts && p) continue;
+    const fid = (d.members || []).find(m => m !== F.fuid);
+    const looking = S.view === 'dm' && F.dm === fid && !document.hidden;
+    if (!looking){ playSound('msg'); if (document.hidden) bridgeNotify(prof(fid).name, String(l.text || '').slice(0, 100), 'dm-' + fid); }
+  }
+  if (S.view === 'dm') markDmRead();
+  renderSocial();
+}
+function markDmRead(){
+  if (S.view !== 'dm' || !F.dm || document.hidden) return;
+  const pid = pairOf(F.fuid, F.dm), d = F.dms.get(pid);
+  const ts = Math.max(+F.dmRead[pid] || 0, d && d.last ? +d.last.ts || 0 : 0, F.dmMsgs.length ? +F.dmMsgs[F.dmMsgs.length - 1].ts || 0 : 0);
+  if (ts !== (+F.dmRead[pid] || 0)){ F.dmRead[pid] = ts; store.set(ak('dmread'), F.dmRead); renderHomeSide(); renderHomeBadge(); }
+}
+function openDm(fid){
+  if (!F.friends.has(fid) && DC.fid !== fid){ toast('フレンドとだけ、個人チャットができるよ'); return; }
+  if (F.dm !== fid || !F.dmUnsub){
+    if (F.dmUnsub){ try{ F.dmUnsub(); }catch(e){} }
+    F.dm = fid; F.dmMsgs = [];
+    const pid = pairOf(F.fuid, fid);
+    F.dmUnsub = DBX.query('dms/' + pid + '/msgs', [], list => {
+      F.dmMsgs = list.filter(m => m && typeof m.text === 'string').sort((a, b) => (+a.ts || 0) - (+b.ts || 0));
+      if (S.view === 'dm' && F.dm === fid){ renderDmMsgs(); markDmRead(); }
+    }, dbErr, {order:'ts', last:150});
+  }
+  S.view = 'dm'; closeDrawer(); closeModals(); renderAll(); renderDmMsgs(); markDmRead();
+  if (innerWidth > 820) setTimeout(() => $('#dmIn').focus(), 0);
+}
+function renderDmMsgs(){
+  if (S.view !== 'dm' || !F.dm) return;
+  const box = $('#dmMsgs'), u = prof(F.dm);
+  box.innerHTML = `<div class="welcome"><div style="margin-bottom:8px">${favHTML(F.dm, 'lg')}</div><h2>${esc(u.name)}</h2><p>${u.uname ? '@' + esc(u.uname) + '<br>' : ''}ここが ${esc(u.name)} との個人チャットのはじまりだよ。</p></div>`;
+  for (const m of F.dmMsgs) appendDm(m, true);
+  box.scrollTop = box.scrollHeight;
+}
+function appendDm(m, bulk){
+  const box = $('#dmMsgs'), last = box.lastElementChild;
+  const near = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+  const mine = m.from === F.fuid, name = mine ? me.name : prof(m.from).name, color = mine ? me.color : prof(m.from).color;
+  const ts = +m.ts || Date.now();
+  if (last && last.classList.contains('mg') && last.dataset.uid === m.from && ts - (+last.dataset.ts) < 300000){
+    last.querySelector('.body').insertAdjacentHTML('beforeend', `<div class="ln">${fmtText(m.text)}</div>`); last.dataset.ts = ts;
+  } else {
+    box.insertAdjacentHTML('beforeend', `<div class="mg" data-uid="${esc(m.from)}" data-ts="${ts}">${favHTML(m.from, 'md')}<div class="body"><div class="mh"><b style="color:${okColor(color)}">${esc(name)}</b><time>${fmtTime(ts)}</time></div><div class="ln">${fmtText(m.text)}</div></div></div>`);
+  }
+  if (!bulk && (near || mine)) box.scrollTop = box.scrollHeight;
+}
+async function sendDm(text){
+  if (!F.dm || !text) return;
+  if (!F.friends.has(F.dm)){ toast('フレンドじゃないと送れないよ'); return; }
+  const fid = F.dm, pid = pairOf(F.fuid, fid), id = Date.now().toString(36) + rid(5);
+  text = text.slice(0, 2000);
+  try {
+    await DBX.batch([['set', 'dms/' + pid + '/msgs/' + id, {from:F.fuid, text, ts:NOW}], ['set', 'dms/' + pid, {members:[F.fuid, fid].sort(), last:{from:F.fuid, text:text.slice(0, 120), ts:NOW}}]]);
+  } catch(e){ toast('送れなかった…（' + (e.code || e.message) + '）'); }
+}
+
+/* ---------- 個人通話 (フレンドと1対1。よび出しはデータベース、声はWebRTCで直接) ---------- */
+const DC = {state:'', fid:'', pid:'', cid:'', role:'', pc:null, audio:null, unsub:null, t0:0, ringT:null, lostT:null, incoming:null, ring:null, ana:null, spk:false, spkT:null, sender:null};
+if (DEBUG) window.__fvDC = DC;
+const iceDone = pc => new Promise(res => {
+  if (pc.iceGatheringState === 'complete') return res();
+  const t = setTimeout(res, 2500);
+  pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete'){ clearTimeout(t); res(); } });
+});
+function startRing(kind){
+  stopRing();
+  const beep = () => {
+    if (!S.ctx) return;
+    const t0 = S.ctx.currentTime + .02, tones = kind === 'in' ? [[880, 0], [660, .25], [880, .5], [660, .75]] : [[440, 0]];
+    for (const [f, dt] of tones){
+      const o = S.ctx.createOscillator(), g = S.ctx.createGain(); o.frequency.value = f; o.type = 'sine';
+      const len = kind === 'in' ? .22 : .9;
+      g.gain.setValueAtTime(.0001, t0 + dt); g.gain.exponentialRampToValueAtTime(kind === 'in' ? .12 : .06, t0 + dt + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + dt + len);
+      o.connect(g).connect(S.ctx.destination); o.start(t0 + dt); o.stop(t0 + dt + len + .05);
+    }
+  };
+  ensureCtx(); beep(); DC.ring = setInterval(beep, kind === 'in' ? 2200 : 3000);
+}
+function stopRing(){ clearInterval(DC.ring); DC.ring = null; }
+async function dcAudio(){
+  try { await setupAudio(); S.noMic = false; return true; }
+  catch(e){
+    console.warn('mic', e);
+    if (!S.ctx) return false;
+    if (!S.dest) S.dest = S.ctx.createMediaStreamDestination();
+    if (!S.sendTrack) S.sendTrack = S.dest.stream.getAudioTracks()[0];
+    S.noMic = true; toast(micHelp(), 8000); return false;
+  }
+}
+function dcNewPC(){
+  const pc = new RTCPeerConnection({iceServers:ICE, iceTransportPolicy:qs.has('relay') ? 'relay' : 'all'});
+  DC.pc = pc;
+  pc.ontrack = e => { if (DC.pc === pc) dcPlay(e.streams[0] || new MediaStream([e.track])); };
+  pc.addEventListener('iceconnectionstatechange', () => {
+    if (DC.pc !== pc) return;
+    const s = pc.iceConnectionState;
+    dbg('dc ice', s);
+    if ((s === 'connected' || s === 'completed') && DC.state !== 'active'){ DC.state = 'active'; DC.t0 = Date.now(); clearTimeout(DC.lostT); playSound('join'); renderAll(); }
+    else if (s === 'connected' || s === 'completed') clearTimeout(DC.lostT);
+    if (s === 'failed') dcEnd('つながらなかった…ネットの調子を見て、もう一度かけてね', true);
+    if (s === 'disconnected'){ clearTimeout(DC.lostT); DC.lostT = setTimeout(() => { if (DC.pc === pc && pc.iceConnectionState !== 'connected' && pc.iceConnectionState !== 'completed') dcEnd('通話が切れちゃった…', true); }, 12000); }
+  });
+  return pc;
+}
+function dcAddTrack(pc){
+  const tr = S.sendTrack;
+  DC.sender = pc.addTrack(tr, new MediaStream([tr]));
+}
+function dcPlay(st){
+  if (!DC.audio){ DC.audio = document.createElement('audio'); DC.audio.autoplay = true; DC.audio.setAttribute('playsinline', ''); DC.audio.className = 'hide'; document.body.appendChild(DC.audio); }
+  const a = DC.audio; a.srcObject = st; a.muted = S.deaf; a.volume = volOf('f-' + DC.fid) / 100;
+  if (cfg.outputId && a.setSinkId) a.setSinkId(cfg.outputId).catch(()=>{});
+  const p = a.play(); if (p && p.catch) p.catch(() => toast('音が出ないときは、画面をタップしてね'));
+  try {
+    ensureCtx();
+    const src = S.ctx.createMediaStreamSource(st), an = S.ctx.createAnalyser(); an.fftSize = 512; src.connect(an); DC.ana = an;
+    clearInterval(DC.spkT);
+    DC.spkT = setInterval(() => {
+      if (!DC.ana) return;
+      const b = new Float32Array(DC.ana.fftSize); DC.ana.getFloatTimeDomainData(b); let s = 0; for (const v of b) s += v * v;
+      const on = 10 * Math.log10(s / b.length + 1e-12) > -52;
+      if (on !== DC.spk){ DC.spk = on; renderDcSpeak(); }
+    }, 150);
+  } catch(e){}
+}
+async function startDmCall(fid){
+  if (DC.state){ if (DC.fid === fid) openDm(fid); else toast('いまは ' + prof(DC.fid).name + ' と通話中だよ'); return; }
+  if (!F.friends.has(fid)){ toast('フレンドとだけ通話できるよ'); return; }
+  if (!isOnline(fid)) toast(prof(fid).name + ' はオフラインかも。よんでみるね');
+  ensureCtx();
+  if (S.voice) leaveVoice(true);
+  const pid = pairOf(F.fuid, fid), cid = rid(12);
+  Object.assign(DC, {state:'calling', fid, pid, cid, role:'caller', t0:0, incoming:null});
+  openDm(fid); renderAll();
+  await dcAudio();
+  if (DC.cid !== cid) return;
+  pushGate();
+  try {
+    const pc = dcNewPC(); dcAddTrack(pc);
+    const offer = await pc.createOffer(); offer.sdp = opusTune(offer.sdp);
+    await pc.setLocalDescription(offer); await iceDone(pc);
+    if (DC.cid !== cid) return;
+    await DBX.set('calls/' + pid, {members:[F.fuid, fid].sort(), from:F.fuid, to:fid, cid, state:'ringing', offer:pc.localDescription.sdp, answer:'', ts:NOW});
+    if (DC.cid !== cid){ DBX.set('calls/' + pid, {state:'ended', cid}, true).catch(()=>{}); return; }
+    DC.unsub = DBX.watch('calls/' + pid, dcOnDoc, dbErr);
+    startRing('out');
+    DC.ringT = setTimeout(() => { if (DC.cid === cid && DC.state === 'calling') dcEnd(prof(fid).name + ' は出なかったみたい', 'missed'); }, 40000);
+  } catch(e){ console.warn('call', e); dcEnd('かけられなかった…（' + (e.code || e.message || e) + '）'); }
+}
+function dcOnDoc(d){
+  if (!DC.state) return;
+  if (!d){ dcEnd('通話がおわったよ'); return; }
+  if (d.cid !== DC.cid){ if (DC.state !== 'calling' || d.from !== DC.fid) dcEnd(DC.state === 'active' ? '通話がおわったよ' : ''); return; }
+  if (DC.role === 'caller' && d.state === 'accepted' && d.answer && DC.state === 'calling'){
+    DC.state = 'connecting'; clearTimeout(DC.ringT); stopRing(); renderAll();
+    DC.pc.setRemoteDescription({type:'answer', sdp:d.answer}).catch(e => { console.warn(e); dcEnd('つながらなかった…', true); });
+    DC.lostT = setTimeout(() => { if (DC.state === 'connecting' && DC.cid === d.cid) dcEnd('つながらなかった…ネットの調子を見て、もう一度かけてね', true); }, 25000);
+  }
+  else if (d.state === 'declined') dcEnd(prof(DC.fid).name + ' はいま出られないみたい');
+  else if (d.state === 'busy') dcEnd(prof(DC.fid).name + ' はほかの人と通話中だよ');
+  else if (d.state === 'ended' || d.state === 'missed') dcEnd(DC.state === 'active' ? '通話がおわったよ' : '');
+}
+function onCalls(list){
+  F.calls = list;
+  const now = serverNow();
+  for (const d of list){
+    if (d.to !== F.fuid || d.state !== 'ringing' || !d.offer) continue;
+    if (now - (+d.ts || 0) > 45000) continue;
+    if (DC.cid === d.cid || (DC.incoming && DC.incoming.cid === d.cid)) continue;
+    if (!F.friends.has(d.from)) continue;
+    if (DC.state || DC.incoming){
+      // おたがいに同時にかけたときは、あとからかけた人のよび出しが残る。こちらは「出る」がわになる
+      if (DC.state === 'calling' && DC.fid === d.from) dcEnd('', false);
+      else { DBX.set('calls/' + d.id, {state:'busy', cid:d.cid}, true).catch(()=>{}); continue; }
+    }
+    showIncoming(d);
+  }
+  if (DC.incoming){
+    const inc = DC.incoming, d = list.find(x => x.id === inc.id);
+    if (!d || d.cid !== inc.cid || d.state !== 'ringing'){
+      hideIncoming(); DC.incoming = null;
+      if (!d || d.cid === inc.cid) toast(prof(inc.from).name + ' からの電話がおわったよ');
+      renderAll();
+    }
+  }
+}
+function showIncoming(d){
+  DC.incoming = d;
+  const u = prof(d.from);
+  paintAv($('#ringAv'), {name:u.name, color:u.color, avatar:u.avatar});
+  $('#ringName').textContent = u.name;
+  $('#mRing').classList.remove('hide');
+  startRing('in');
+  bridgeNotify(u.name + ' から電話だよ', 'タップして出てね', 'call');
+  clearTimeout(DC.ringT);
+  DC.ringT = setTimeout(() => { if (DC.incoming && DC.incoming.cid === d.cid){ hideIncoming(); DC.incoming = null; toast(u.name + ' から電話がきていたよ'); renderAll(); } }, 45000);
+}
+function hideIncoming(){ $('#mRing').classList.add('hide'); stopRing(); clearTimeout(DC.ringT); bridgeCancel('call'); }
+async function acceptCall(){
+  const d = DC.incoming; if (!d) return;
+  hideIncoming(); DC.incoming = null;
+  ensureCtx();
+  if (S.voice) leaveVoice(true);
+  Object.assign(DC, {state:'connecting', fid:d.from, pid:d.id, cid:d.cid, role:'callee', t0:0});
+  openDm(d.from); renderAll();
+  await dcAudio();
+  if (DC.cid !== d.cid) return;
+  pushGate();
+  try {
+    const pc = dcNewPC();
+    await pc.setRemoteDescription({type:'offer', sdp:d.offer});
+    dcAddTrack(pc);
+    const ans = await pc.createAnswer(); ans.sdp = opusTune(ans.sdp);
+    await pc.setLocalDescription(ans); await iceDone(pc);
+    if (DC.cid !== d.cid) return;
+    await DBX.set('calls/' + d.id, {state:'accepted', answer:pc.localDescription.sdp, cid:d.cid}, true);
+    DC.unsub = DBX.watch('calls/' + d.id, dcOnDoc, dbErr);
+    DC.lostT = setTimeout(() => { if (DC.state === 'connecting' && DC.cid === d.cid) dcEnd('つながらなかった…ネットの調子を見て、もう一度かけてね', true); }, 25000);
+  } catch(e){ console.warn('answer', e); dcEnd('出られなかった…（' + (e.code || e.message || e) + '）', true); }
+}
+function declineCall(){
+  const d = DC.incoming; if (!d) return;
+  hideIncoming(); DC.incoming = null;
+  DBX.set('calls/' + d.id, {state:'declined', cid:d.cid}, true).catch(()=>{});
+  renderAll();
+}
+function dcEnd(msg, write){
+  if (!DC.state) return;
+  if (write && DC.pid) DBX.set('calls/' + DC.pid, {state:write === 'missed' ? 'missed' : 'ended', cid:DC.cid}, true).catch(()=>{});
+  clearTimeout(DC.ringT); clearTimeout(DC.lostT); clearInterval(DC.spkT); stopRing();
+  if (DC.unsub){ try{ DC.unsub(); }catch(e){} }
+  if (DC.pc){ try{ DC.pc.close(); }catch(e){} }
+  if (DC.audio){ DC.audio.srcObject = null; }
+  const was = DC.state;
+  Object.assign(DC, {state:'', fid:'', pid:'', cid:'', role:'', pc:null, unsub:null, t0:0, ana:null, spk:false, sender:null});
+  if (!S.voice && !S.micTest) stopMic();
+  pushGate();
+  if (was === 'active') playSound('leave');
+  if (msg) toast(msg);
+  renderAll();
+}
+function hangup(){ dcEnd('', true); }
+function renderDcSpeak(){
+  $('#dcMe').classList.toggle('spk', !!DC.state && S.speaking);
+  $('#dcYou').classList.toggle('spk', DC.state === 'active' && DC.spk);
+}
+function fmtDur(ms){ const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function renderDc(){
+  const show = !!DC.state && S.view === 'dm' && F.dm === DC.fid;
+  $('#dcPanel').classList.toggle('hide', !show);
+  $('#dcstat').classList.toggle('hide', !DC.state);
+  if (!DC.state) return;
+  const u = prof(DC.fid);
+  const st = DC.state === 'calling' ? 'よびだし中…' : DC.state === 'connecting' ? 'つないでいます…' : '通話中 ' + fmtDur(Date.now() - DC.t0);
+  $('#dcT').textContent = DC.state === 'active' ? '通話中' : st.replace(/ .*/, '');
+  $('#dcSub').textContent = u.name + (DC.state === 'active' ? ' ・ ' + fmtDur(Date.now() - DC.t0) : '');
+  if (show){
+    paintAv($('#dcMe'), me);
+    paintAv($('#dcYou'), {name:u.name, color:u.color, avatar:u.avatar});
+    $('#dcYou').classList.toggle('ring', DC.state !== 'active');
+    $('#dcState').textContent = st;
+    const off = S.muted || S.deaf || S.noMic;
+    setBtn($('#dcMic'), off, '#i-mic', '#i-mic-off', 'ミュート (M)', 'ミュート解除 (M)');
+    setBtn($('#dcDeaf'), S.deaf, '#i-head', '#i-head-off', 'スピーカーミュート (D)', 'スピーカーミュート解除 (D)');
+  }
+  renderDcSpeak();
+}
+setInterval(() => { if (DC.state === 'active') renderDc(); }, 1000);
+
+/* ---------- ホーム（フレンド）の画面 ---------- */
+function renderSocial(){
+  if (!fbUser) return;
+  renderHomeBadge();
+  if (isHome()){ renderHomeSide(); if (S.view === 'home') renderFriends(); else renderMain(); }
+  renderDc();
+}
+function renderHomeBadge(){
+  const n = F.inReq.length + [...F.dms.keys()].filter(pid => dmUnread(pid) && F.friends.has(pid.split('_').find(x => x !== F.fuid))).length;
+  const b = $('#homeBadge'); b.textContent = n > 9 ? '9+' : n; b.classList.toggle('hide', !n);
+  const r = $('#reqBadge'); r.textContent = F.inReq.length; r.classList.toggle('hide', !F.inReq.length);
+}
+function renderHomeSide(){
+  if (S.sid && !isHome()) return;
+  const el = $('#chList');
+  const dms = [...F.friends.keys()].map(fid => { const pid = pairOf(F.fuid, fid), d = F.dms.get(pid); return {fid, pid, ts:d && d.last ? +d.last.ts || 0 : 0}; })
+    .filter(x => x.ts || x.fid === F.dm || x.fid === DC.fid).sort((a, b) => b.ts - a.ts);
+  let h = `<button class="ch${S.view === 'home' ? ' on' : ''}" data-home="friends">${ic('people')}<span>フレンド</span>${F.inReq.length ? `<b class="badge">${F.inReq.length}</b>` : ''}</button>`;
+  h += `<div class="cat"><span>個人チャット</span></div>`;
+  if (!dms.length) h += `<div class="empty">フレンドの ${ic('chat')} からメッセージを送ろう。</div>`;
+  for (const x of dms){
+    const u = prof(x.fid), on = S.view === 'dm' && F.dm === x.fid, un = !on && dmUnread(x.pid);
+    h += `<button class="ch dmr${on ? ' on' : ''}${un ? ' unread' : ''}" data-dmopen="${esc(x.fid)}"><div class="avw">${favHTML(x.fid, 'xs')}<span class="dot${isOnline(x.fid) ? '' : ' off'}"></span></div><span>${esc(u.name)}</span>${DC.fid === x.fid ? ic('phone') : ''}${un ? '<b class="badge">!</b>' : ''}</button>`;
+  }
+  el.innerHTML = h;
+}
+function friendRow(fid, kind){
+  const u = prof(fid), on = isOnline(fid);
+  const sub = (u.uname ? '@' + esc(u.uname) + ' ・ ' : '') + (kind === 'in' ? 'フレンド申請がきたよ' : kind === 'out' ? '申請中（OKを待っています）' : on ? 'オンライン' : 'オフライン');
+  let btns = '';
+  if (kind === 'in') btns = `<button class="ib ok" data-acc="${esc(fid)}" title="OK（フレンドになる）">${ic('check')}</button><button class="ib no" data-dec="${esc(fid)}" title="ことわる">${ic('x')}</button>`;
+  else if (kind === 'out') btns = `<button class="ib no" data-cancel="${esc(fid)}" title="申請をとりけす">${ic('x')}</button>`;
+  else btns = `<button class="ib" data-dmopen="${esc(fid)}" title="メッセージ">${ic('chat')}</button><button class="ib ok" data-call="${esc(fid)}" title="通話する">${ic('phone')}</button><button class="ib no" data-unf="${esc(fid)}" title="フレンドをやめる">${ic('x')}</button>`;
+  return `<div class="frow" data-fid="${esc(fid)}"><div class="avw">${favHTML(fid, 'sm')}${kind ? '' : `<span class="dot${on ? '' : ' off'}"></span>`}</div><div class="fn"><b>${esc(u.name)}</b><span>${sub}</span></div>${btns}</div>`;
+}
+function renderFriends(){
+  for (const b of document.querySelectorAll('[data-ftab]')) b.setAttribute('aria-selected', String(b.dataset.ftab === F.tab));
+  const el = $('#fbody');
+  if (!DBX){ el.innerHTML = `<div class="fempty"><p>フレンド機能は、いまは使えないよ。</p></div>`; return; }
+  if (F.err && !F.meDoc && !F.friends.size){ el.innerHTML = `<div class="fempty"><div class="hicon">${ic('people')}</div><p>フレンド機能につながらなかった…<br>少ししてから開きなおしてね（${esc(F.err)}）</p></div>`; return; }
+  const fr = [...F.friends.keys()].sort((a, b) => prof(a).name.localeCompare(prof(b).name, 'ja'));
+  if (F.tab === 'online' || F.tab === 'all'){
+    const list = F.tab === 'online' ? fr.filter(isOnline) : fr;
+    if (!list.length){
+      el.innerHTML = `<div class="fempty"><div class="hicon">${ic('people')}</div><p>${fr.length ? 'いまオンラインのフレンドはいないよ。' : 'まだフレンドがいないよ。<br>友だちのユーザーIDで、フレンド申請を送ろう！'}</p>${fr.length ? '' : '<button class="primary" data-ftab="add">フレンドを追加</button>'}</div>`;
+      return;
+    }
+    el.innerHTML = `<div class="fsec"><h3>${F.tab === 'online' ? 'オンライン' : 'すべてのフレンド'} — ${list.length}</h3>${list.map(f => friendRow(f, '')).join('')}</div>`;
+    return;
+  }
+  if (F.tab === 'req'){
+    if (!F.inReq.length && !F.outReq.length){ el.innerHTML = `<div class="fempty"><div class="hicon">${ic('invite')}</div><p>いまは申請はないよ。</p></div>`; return; }
+    el.innerHTML = (F.inReq.length ? `<div class="fsec"><h3>とどいた申請 — ${F.inReq.length}</h3>${F.inReq.map(r => friendRow(r.from, 'in')).join('')}</div>` : '')
+      + (F.outReq.length ? `<div class="fsec"><h3>送った申請 — ${F.outReq.length}</h3>${F.outReq.map(r => friendRow(r.to, 'out')).join('')}</div>` : '');
+    return;
+  }
+  // フレンドを追加
+  const keepIn = document.activeElement && (document.activeElement.id === 'fAddIn' || document.activeElement.id === 'unIn') ? [document.activeElement.id, document.activeElement.value] : null;
+  let h = '<div class="fsec"><div class="addbox">';
+  if (!F.uname){
+    h += `<b style="color:var(--head)">まずは、自分のユーザーIDを決めよう</b><p>友だちはこのIDで、あなたにフレンド申請を送れるよ。英字・数字・_ で3〜20文字。</p>
+      <form class="inrow" id="unForm"><input id="unIn" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="例：mitsuki_01"><button class="primary" type="submit">決める</button></form>`;
+  } else {
+    h += `<div class="myid"><span>あなたのユーザーID：</span><code>@${esc(F.uname)}</code><button class="btn2" type="button" id="copyId">コピー</button></div><p>このIDを友だちに教えると、フレンド申請を送ってもらえるよ。</p>`;
+  }
+  h += `<p class="err">${esc(F.addErr)}</p><p class="okmsg">${esc(F.addMsg)}</p></div></div>`;
+  h += `<div class="fsec"><div class="addbox"><b style="color:var(--head)">フレンドを追加</b><p>友だちのユーザーIDを入れて、フレンド申請を送ろう。</p>
+    <form class="inrow" id="fAddForm"><input id="fAddIn" maxlength="21" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="友だちのユーザーID"><button class="primary" type="submit"${F.busy ? ' disabled' : ''}>申請を送る</button></form></div></div>`;
+  el.innerHTML = h;
+  if (keepIn){ const i = $('#' + keepIn[0]); if (i){ i.value = keepIn[1]; i.focus(); } }
+}
+
+/* ---------- Androidアプリとの橋 ---------- */
+const AND = window.FVAndroid || null;
+let lastLive = '';
+function bridgeNotify(title, text, tag){ if (AND && AND.notifyMsg) try{ AND.notifyMsg(String(title), String(text), String(tag || 'msg')); }catch(e){} }
+function bridgeCancel(tag){ if (AND && AND.cancel) try{ AND.cancel(String(tag)); }catch(e){} }
+function bridgeLive(){
+  if (!AND) return;
+  let live = null;
+  if (S.voice && S.sid && S.meta){ const c = chanById(S.voice); live = ['ボイスにつながっているよ', (c ? c.name : '') + ' / ' + S.meta.name]; }
+  else if (DC.state) live = [DC.state === 'active' ? '通話中' : 'よびだし中', prof(DC.fid).name];
+  const key = JSON.stringify(live);
+  if (key === lastLive) return;
+  lastLive = key;
+  try { AND.callState(!!live, live ? live[0] : '', live ? live[1] : ''); } catch(e){}
+}
+const micHelp = () => AND
+  ? 'マイクが使えないので、聞くだけで入ったよ。スマホの「設定」→「アプリ」→「ふたりボイス」→「権限」で、マイクを「許可」にしてね'
+  : 'マイクが使えないので、聞くだけで入ったよ。アドレスバーのマークから、マイクを「許可」にしてね';
+if (AND){
+  if (!window.fvDesktop){
+    let pend = null;
+    window.fvDesktop = {platform:'android', googleLogin(){
+      if (pend) pend.rej({code:'auth/cancelled-popup-request'});
+      return new Promise((res, rej) => { const st = rid(24); pend = {st, res, rej}; AND.googleLogin(st); });
+    }};
+    window.__fvLoginResult = (st, tok) => { if (pend && pend.st === st && tok){ const p = pend; pend = null; p.res(tok); } };
+  }
+  window.__fvBack = () => {
+    if (!$('#mRing').classList.contains('hide')) return true;
+    if ([...document.querySelectorAll('.modal')].some(m => !m.classList.contains('hide'))){ closeModals(); return true; }
+    if ($('#app').classList.contains('hide')) return false;
+    if (innerWidth <= 820 && !$('#app').classList.contains('drawer')){ $('#app').classList.add('drawer'); return true; }
+    return false;
+  };
+  window.__fvHangup = () => { if (DC.state) hangup(); else if (S.voice) leaveVoice(); };
+  window.__fvOpenLink = url => {
+    const inv = (String(url).match(/#invite-([A-Za-z0-9._-]+)/) || [])[1];
+    if (!inv || !fbUser || $('#app').classList.contains('hide')) return;
+    const p = parseInvite('invite-' + inv);
+    if (p && !servers.some(s => s.id === p.id)) openAdd('invite-' + inv); else if (p) enterServer(p.id);
+  };
+  console.info('[FV] bridge android');
+  if (DEBUG){
+    setInterval(() => console.info('[FV] alive ' + document.visibilityState), 3000);
+    if (qs.has('fgtest')) setTimeout(() => { try { AND.callState(true, 'テスト', 'テスト中'); console.info('[FV] fgtest on'); } catch(e){ console.info('[FV] fgtest error ' + e); } }, 3000);
+  }
 }
 
 /* ---------- はじめの画面 ---------- */
@@ -1869,6 +2539,7 @@ function paintW(){ paintAv($('#wAv'), {name:$('#wName').value || '?', color:me.c
 function startApp(){
   screen('app');
   renderAvCss();
+  socialStart();
   const inv = (location.hash.match(/^#invite-([A-Za-z0-9._-]+)/) || [])[1];
   if (cfg.last && servers.some(s => s.id === cfg.last)) enterServer(cfg.last);
   else if (servers.length) enterServer(servers[0].id);
@@ -1900,12 +2571,40 @@ $('#cDel').onclick = () => { newIcon = ''; paintCreateIcon(); };
 $('#cMake').onclick = () => { closeModals(); createServer($('#cName').value, newIcon); };
 $('#addInv').addEventListener('input', previewInvite);
 $('#addJoin').addEventListener('submit', e => { e.preventDefault(); joinByInvite($('#addInv').value, $('#addErr')); });
-$('#invCopy').onclick = () => {
-  const i = $('#invLink'); i.select();
-  const ok = () => { toast('招待リンクをコピーしたよ'); $('#invCopy').textContent = 'コピーした！'; setTimeout(() => $('#invCopy').textContent = 'コピー', 1800); };
-  try { navigator.clipboard.writeText(i.value).then(ok, () => { try{ document.execCommand('copy'); ok(); }catch(e){ toast('コピーできなかった…自分で選んでコピーしてね'); } }); }
-  catch(e){ try{ document.execCommand('copy'); ok(); }catch(e2){ toast('コピーできなかった…'); } }
+function copyText(text, btn, msg){
+  const ok = () => { toast(msg); if (btn){ const t = btn.textContent; btn.textContent = 'コピーした！'; setTimeout(() => btn.textContent = t, 1800); } };
+  const old = () => { const t = document.createElement('textarea'); t.value = text; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); try{ document.execCommand('copy'); ok(); }catch(e){ toast('コピーできなかった…自分で選んでコピーしてね'); } t.remove(); };
+  try { navigator.clipboard.writeText(text).then(ok, old); } catch(e){ old(); }
+}
+$('#invCopy').onclick = () => { $('#invLink').select(); copyText($('#invLink').value, $('#invCopy'), '招待リンクをコピーしたよ'); };
+$('#ftabs').onclick = e => {
+  const b = e.target.closest('[data-ftab]'); if (!b) return;
+  F.tab = b.dataset.ftab; F.addMsg = ''; F.addErr = ''; renderFriends();
+  if (F.tab === 'add' && innerWidth > 820) setTimeout(() => { const i = $('#unIn') || $('#fAddIn'); if (i) i.focus(); }, 0);
 };
+$('#fbody').addEventListener('click', e => {
+  const t = e.target.closest('[data-ftab]'); if (t){ F.tab = t.dataset.ftab; renderFriends(); return; }
+  const a = e.target.closest('[data-acc]'); if (a){ acceptReq(a.dataset.acc); return; }
+  const d = e.target.closest('[data-dec]'); if (d){ declineReq(d.dataset.dec); return; }
+  const c = e.target.closest('[data-cancel]'); if (c){ cancelReq(c.dataset.cancel); return; }
+  const m = e.target.closest('[data-dmopen]'); if (m){ openDm(m.dataset.dmopen); return; }
+  const k = e.target.closest('[data-call]'); if (k){ startDmCall(k.dataset.call); return; }
+  const u = e.target.closest('[data-unf]');
+  if (u){ const fid = u.dataset.unf; confirmBox(prof(fid).name + ' とのフレンドをやめる？', 'やめると、個人チャットや個人通話ができなくなるよ。また申請すれば、フレンドにもどれるよ。', 'やめる', () => removeFriend(fid)); return; }
+  if (e.target.closest('#copyId')) copyText('@' + F.uname, $('#copyId'), 'ユーザーIDをコピーしたよ');
+});
+$('#fbody').addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id === 'unForm') claimUname($('#unIn').value);
+  if (e.target.id === 'fAddForm') sendFriendReq($('#fAddIn').value).then(ok => { const i = $('#fAddIn'); if (ok && i) i.value = ''; });
+});
+$('#dmComp').addEventListener('submit', e => { e.preventDefault(); const i = $('#dmIn'), t = i.value.trim(); if (!t) return; sendDm(t); i.value = ''; });
+$('#btnCall').onclick = () => { if (F.dm) startDmCall(F.dm); };
+$('#dcHang').onclick = hangup;
+$('#dcLeave').onclick = hangup;
+$('#dcGo').onclick = () => { if (DC.fid) openDm(DC.fid); };
+$('#ringYes').onclick = acceptCall;
+$('#ringNo').onclick = declineCall;
 $('#srvHead').onclick = e => { if (!S.sid) return; e.stopPropagation(); $('#srvMenu').classList.toggle('hide'); };
 document.addEventListener('click', e => {
   if (!e.target.closest('#srvMenu') && !e.target.closest('#srvHead')) $('#srvMenu').classList.add('hide');
@@ -1924,6 +2623,8 @@ $('#mlist').addEventListener('click', e => {
   confirmBox(r.name + ' をメンバーから外す？', '外すと、あいた席にほかの友だちが入れるよ。' + r.name + ' がまた来たときは、席があいていれば入れるよ。', '外す', () => kickMember(r.uid));
 });
 $('#chList').onclick = e => {
+  if (e.target.closest('[data-home]')){ goHome(); return; }
+  const dm = e.target.closest('[data-dmopen]'); if (dm){ openDm(dm.dataset.dmopen); return; }
   const n = e.target.closest('[data-new]'); if (n){ openNewChannel(n.dataset.new); return; }
   const t = e.target.closest('[data-ch]'); if (t){ openText(t.dataset.ch); return; }
   const v = e.target.closest('[data-vc]'); if (v){ joinVoice(v.dataset.vc); return; }
@@ -1945,8 +2646,8 @@ $('#cfOk').onclick = () => { const f = confirmFn; confirmFn = null; closeModals(
 for (const b of document.querySelectorAll('[data-close]')) b.addEventListener('click', closeModals);
 for (const m of document.querySelectorAll('.modal')) m.addEventListener('click', e => { if (e.target === m) closeModals(); });
 
-for (const id of ['#btnMic','#cbMic']) $(id).onclick = () => setMuted(!(S.muted || S.deaf || (S.noMic && !!S.voice)));
-for (const id of ['#btnDeaf','#cbDeaf']) $(id).onclick = () => setDeaf(!S.deaf);
+for (const id of ['#btnMic','#cbMic','#dcMic']) $(id).onclick = () => setMuted(!(S.muted || S.deaf || (S.noMic && !!(S.voice || DC.state))));
+for (const id of ['#btnDeaf','#cbDeaf','#dcDeaf']) $(id).onclick = () => setDeaf(!S.deaf);
 for (const id of ['#vsScreen','#cbScreen']) $(id).onclick = toggleScreen;
 for (const id of ['#btnSet','#cbSet']) $(id).onclick = openSettings;
 for (const id of ['#vsLeave','#cbLeave']) $(id).onclick = () => leaveVoice();
@@ -1986,15 +2687,15 @@ $('#sOut').onchange = e => {
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape'){ closeModals(); closeDrawer(); return; }
-  if (!S.sid || !fbUser || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+  if ((!S.sid && !DC.state) || !fbUser || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'select' || tag === 'textarea' || !$('#mSet').classList.contains('hide')) return;
-  if (e.code === 'KeyM'){ e.preventDefault(); setMuted(!(S.muted || S.deaf || (S.noMic && !!S.voice))); }
+  if (e.code === 'KeyM'){ e.preventDefault(); setMuted(!(S.muted || S.deaf || (S.noMic && !!(S.voice || DC.state)))); }
   if (e.code === 'KeyD'){ e.preventDefault(); setDeaf(!S.deaf); }
 });
-document.addEventListener('visibilitychange', () => { if (!document.hidden) markRead(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden){ markRead(); markDmRead(); ensureCtx(); } });
 window.addEventListener('resize', () => renderMain());
-window.addEventListener('pagehide', () => { if (S.sid){ broadcast({t:'bye'}); try{ S.peer && S.peer.destroy(); }catch(e){} } });
+window.addEventListener('pagehide', () => { if (DC.state) hangup(); if (S.sid){ broadcast({t:'bye'}); try{ S.peer && S.peer.destroy(); }catch(e){} } });
 if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange', () => { if (!$('#mSet').classList.contains('hide')) fillDevices(); });
 
 startTicker();

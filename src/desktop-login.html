@@ -23,7 +23,7 @@ button:disabled{opacity:.6;cursor:wait}
 <body>
 <main class="card">
   <div class="logo"><svg viewBox="0 0 24 24"><circle cx="9.3" cy="12" r="5.6"/><circle cx="14.7" cy="12" r="5.6"/></svg></div>
-  <h1>Windowsアプリにログイン</h1>
+  <h1 id="ttl">アプリにログイン</h1>
   <p id="lead">Googleアカウントをえらんでね。終わったら、ふたりボイスのアプリにもどるよ。</p>
   <button id="go" type="button">Googleでログイン</button>
   <p id="msg"></p>
@@ -36,32 +36,42 @@ button:disabled{opacity:.6;cursor:wait}
   const $ = s => document.querySelector(s);
   const q = new URLSearchParams(location.search);
   const state = q.get('state') || '';
+  const android = q.get('p') === 'android';
+  const appName = android ? 'Androidアプリ' : 'Windowsアプリ';
+  $('#ttl').textContent = appName + 'にログイン';
   const say = (t, bad) => { $('#msg').textContent = t; $('#msg').classList.toggle('err', !!bad); };
   const cfg = q.get('emu') ? {apiKey:'demo-key', authDomain:'demo-futari.firebaseapp.com', projectId:'demo-futari', appId:'demo'} : window.FV_FIREBASE;
   let auth = null;
-  if (!/^[a-z0-9]{16,64}$/.test(state)){ $('#go').disabled = true; say('このページは、ふたりボイスのWindowsアプリから開いてね。', true); }
+  if (!/^[a-z0-9]{16,64}$/.test(state)){ $('#go').disabled = true; say('このページは、ふたりボイスのアプリから開いてね。', true); }
   else if (!window.FB || !cfg){ $('#go').disabled = true; say('ログインのしくみの設定が、まだないよ。', true); }
   else {
     auth = FB.getAuth(FB.initializeApp(cfg));
     auth.languageCode = 'ja';
     if (q.get('emu')) FB.connectAuthEmulator(auth, 'http://' + q.get('emu'), {disableWarnings:true});
+    FB.getRedirectResult(auth).then(res => { if (res) finish(res); }).catch(fail);
+  }
+  async function finish(res){
+    const cred = FB.GoogleAuthProvider.credentialFromResult(res);
+    if (!cred || !cred.idToken) throw new Error('no token');
+    try { await FB.signOut(auth); } catch(e){}      // このブラウザにはログインを残さない
+    const qp = 'state=' + state + '&id_token=' + encodeURIComponent(cred.idToken);
+    const url = android ? 'intent://auth?' + qp + '#Intent;scheme=futarivoice;package=app.futarivoice.twa;end' : 'futarivoice://auth?' + qp;
+    $('#back').href = url; $('#back').hidden = false; $('#go').hidden = true;
+    $('#lead').textContent = 'ログインできたよ！';
+    say(android ? '下の「ふたりボイスを開く」をおしてね。' : 'ブラウザが「ふたりボイスを開く？」と聞いてきたら「開く」をおしてね。何も起きなければ、下のボタンをおしてね。');
+    location.href = url;
+  }
+  function fail(e){
+    $('#go').disabled = false;
+    say(e && e.code === 'auth/popup-closed-by-user' ? 'ログインの窓がとじられたよ。もう一度ためしてね。' : 'ログインできなかった…（' + ((e && (e.code || e.message)) || '') + '）', true);
   }
   $('#go').onclick = async () => {
     $('#go').disabled = true; say('');
-    try {
-      const prov = new FB.GoogleAuthProvider(); prov.setCustomParameters({prompt:'select_account'});
-      const res = await FB.signInWithPopup(auth, prov);
-      const cred = FB.GoogleAuthProvider.credentialFromResult(res);
-      if (!cred || !cred.idToken) throw new Error('no token');
-      try { await FB.signOut(auth); } catch(e){}      // このブラウザにはログインを残さない
-      const url = 'futarivoice://auth?state=' + state + '&id_token=' + encodeURIComponent(cred.idToken);
-      $('#back').href = url; $('#back').hidden = false; $('#go').hidden = true;
-      $('#lead').textContent = 'ログインできたよ！';
-      say('ブラウザが「ふたりボイスを開く？」と聞いてきたら「開く」をおしてね。何も起きなければ、下のボタンをおしてね。');
-      location.href = url;
-    } catch(e){
-      $('#go').disabled = false;
-      say(e && e.code === 'auth/popup-closed-by-user' ? 'ログインの窓がとじられたよ。もう一度ためしてね。' : 'ログインできなかった…（' + ((e && (e.code || e.message)) || '') + '）', true);
+    const prov = new FB.GoogleAuthProvider(); prov.setCustomParameters({prompt:'select_account'});
+    try { await finish(await FB.signInWithPopup(auth, prov)); }
+    catch(e){
+      if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')){ try { await FB.signInWithRedirect(auth, prov); return; } catch(e2){ fail(e2); return; } }
+      fail(e);
     }
   };
 }
