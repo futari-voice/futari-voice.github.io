@@ -1,0 +1,33 @@
+# bundle.tar.gz（アプリのデータをまとめたもの）がとどいたら、広げてリポジトリに入れて、ビルドと公開をはじめる
+name: データを広げる
+
+on:
+  push:
+    branches: [main]
+    paths: ['bundle.tar.gz', '.github/workflows/unpack.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  unpack:
+    name: データを広げてビルドをはじめる
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: データを広げる
+        run: |
+          if [ ! -f bundle.tar.gz ]; then echo "bundle.tar.gz がないので、広げるものはないよ"; exit 0; fi
+          tar xzf bundle.tar.gz
+          rm bundle.tar.gz
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "アプリのデータを広げる" || echo "変わったところなし"
+          git push
+      - name: ビルドと公開をはじめる
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run release.yml --ref main

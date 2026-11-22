@@ -1,0 +1,188 @@
+# main にプッシュするたびに：サイトを作ってテスト → Windows版とAndroid版を作る → リリース・サイト公開（GitHub Pages）→ 本物のネットでテスト
+name: ビルドして公開
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['.github/workflows/**', 'bundle.tar.gz']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  site:
+    name: サイトを作って練習テスト
+    runs-on: ubuntu-latest
+    outputs:
+      host: ${{ steps.cfg.outputs.host }}
+      base: ${{ steps.cfg.outputs.base }}
+      url: ${{ steps.cfg.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: 公開するアドレスを決める
+        id: cfg
+        run: |
+          if [ ! -f firebase-config.json ]; then echo "::error::firebase-config.json がないよ"; exit 1; fi
+          OWNER="${GITHUB_REPOSITORY%%/*}"; REPO="${GITHUB_REPOSITORY#*/}"
+          HOST="$(echo "$OWNER" | tr 'A-Z' 'a-z').github.io"
+          if [ "$(echo "$REPO" | tr 'A-Z' 'a-z')" = "$HOST" ]; then BASE=""; else BASE="/$REPO"; fi
+          echo "host=$HOST" >> "$GITHUB_OUTPUT"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "url=https://$HOST$BASE" >> "$GITHUB_OUTPUT"
+          echo "サイト: https://$HOST$BASE/"
+      - run: npm ci
+      - name: サイトを組み立てる
+        run: node scripts/build.mjs
+      - name: 練習用サーバーで4人テスト
+        run: |
+          npx playwright install --with-deps chromium
+          npx peerjs --port 9000 --host 127.0.0.1 > peer.log 2>&1 &
+          (cd site && python3 -m http.server 8080 --bind 127.0.0.1 > ../http.log 2>&1 &)
+          sleep 3
+          npx firebase emulators:exec --only auth --project demo-futari "node tests/local.mjs"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: site
+          include-hidden-files: true
+
+  android:
+    name: Android版（APK）を作る
+    needs: site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: 署名のカギを用意
+        env:
+          SIGN: ${{ secrets.ANDROID_SIGNING }}
+        run: |
+          SIGN="$(printf '%s' "$SIGN" | tr -d ' \r\n\t')"
+          if [ -z "$SIGN" ]; then echo "::error::GitHubのシークレット ANDROID_SIGNING がないよ"; exit 1; fi
+          PW="${SIGN%%:*}"; KS="${SIGN#*:}"
+          echo "::add-mask::$PW"
+          printf '%s' "$KS" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "KEYSTORE_PASSWORD=$PW" >> "$GITHUB_ENV"
+      - name: APKを作る
+        env:
+          TWA_HOST: ${{ needs.site.outputs.host }}
+          TWA_BASE: ${{ needs.site.outputs.base }}
+          KEYSTORE_FILE: ${{ runner.temp }}/release.jks
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: 1.0.${{ github.run_number }}
+        run: gradle -p android assembleRelease --no-daemon --stacktrace
+      - name: APKをしらべる
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          BT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          "$BT/apksigner" verify --print-certs "$APK" | tee certs.txt
+          "$BT/aapt2" dump badging "$APK" | head -5
+          FP=$(grep "SHA-256 digest" certs.txt | head -1 | awk '{print $NF}' | tr 'a-f' 'A-F' | sed 's/../&:/g;s/:$//')
+          WANT=$(node -p "require('./static/.well-known/assetlinks.json')[0].target.sha256_cert_fingerprints[0]")
+          echo "APK: $FP"; echo "assetlinks: $WANT"
+          if [ "$FP" != "$WANT" ]; then echo "::error::APKの署名と assetlinks.json がちがうよ（シークレットのカギがちがうかも）"; exit 1; fi
+          cp "$APK" FutariVoice.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: FutariVoice.apk
+
+  windows:
+    name: Windows版（.exe）を作る
+    needs: site
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 設定を書く
+        run: |
+          echo "{\"url\":\"${{ needs.site.outputs.url }}/app/\"}" > config.json
+          cat config.json
+          npm version "1.0.${{ github.run_number }}" --no-git-tag-version
+      - run: npm install --no-audit --no-fund
+      - name: インストーラーを作る
+        run: npx electron-builder --win nsis --x64 --publish never
+      - name: 起動テスト
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.65.1
+          cp ../tests/win-smoke.mjs ./win-smoke.mjs
+          node win-smoke.mjs "dist/win-unpacked/FutariVoice.exe"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-smoke
+          path: windows/win-smoke.png
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: windows/dist/FutariVoice-Setup.exe
+
+  publish:
+    name: リリースしてサイトを公開
+    needs: [site, android, windows]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ needs.site.outputs.url }}/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: site, path: site }
+      - uses: actions/download-artifact@v4
+        with: { name: android, path: dist }
+      - uses: actions/download-artifact@v4
+        with: { name: windows, path: dist }
+      - name: GitHubのリリースに出す
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v1.0.${{ github.run_number }}" dist/FutariVoice-Setup.exe dist/FutariVoice.apk \
+            --title "ふたりボイス 1.0.${{ github.run_number }}" --latest \
+            --notes "Windows版：FutariVoice-Setup.exe ／ Android版：FutariVoice.apk ／ ダウンロードページ：${{ needs.site.outputs.url }}/"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: サイトを公開する（GitHub Pages）
+        uses: actions/deploy-pages@v4
+
+  live-test:
+    name: 本物のネットでテスト
+    needs: [site, publish]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: 本番のサイトで2人テスト（ふつう／中継サーバーだけ）
+        run: |
+          sleep 20
+          node tests/live.mjs "${{ needs.site.outputs.url }}"
