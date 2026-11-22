@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ふたりボイス</title>
+<link rel="icon" href="../icon-192.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#1e1f22">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ふたりボイス — 友だち4人までの小さなサーバー (Discord風のダークUI) */
+:root{
+  --rail:#1e1f22;--side:#2b2d31;--main:#313338;--panel:#232428;--stage:#111214;
+  --hover:#35373c;--active:#404249;--line:#1f2023;
+  --text:#dbdee1;--dim:#949ba4;--head:#f2f3f5;--soft:#b5bac1;
+  --brand:#5865f2;--brand2:#4752c4;--green:#23a55a;--red:#f23f43;--red2:#da373c;--yellow:#f0b232;
+  --font:"Noto Sans JP","Segoe UI","Hiragino Sans","Meiryo",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--main);color:var(--text);font:15px/1.45 var(--font);overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input,select{font:inherit}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.fill{fill:currentColor;stroke:none}
+.hide{display:none!important}
+:focus-visible{outline:2px solid #00a8fc;outline-offset:2px}
+
+/* ---------- はじめの画面 ---------- */
+#welcome{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:none;overflow:auto;z-index:70}
+.art{position:fixed;inset:0;width:100%;height:100%}
+.card{position:relative;width:min(480px,100%);background:var(--main);border-radius:10px;padding:32px;box-shadow:0 10px 40px rgba(0,0,0,.4);display:grid;gap:16px}
+.logo{width:64px;height:64px;border-radius:20px;background:var(--brand);display:grid;place-items:center;margin:0 auto}
+.logo svg{width:40px;height:40px;stroke:#fff;fill:none;stroke-width:2.2}
+.card h1{margin:0;text-align:center;color:var(--head);font-size:26px;font-weight:800;line-height:1.15}
+.card .sub{margin:-8px 0 0;text-align:center;color:var(--soft)}
+.fl{display:grid;gap:8px;font-size:12.5px;font-weight:700;color:var(--soft)}
+.fl input,.fl select{height:44px;border:0;border-radius:4px;background:var(--rail);color:var(--text);padding:0 12px;font-size:16px;font-weight:400;outline:none}
+.fl input:focus{outline:2px solid var(--brand)}
+.colors{display:flex;gap:10px;flex-wrap:wrap}
+.colors button{width:32px;height:32px;border-radius:50%;background:var(--c);outline-offset:3px}
+.colors button[aria-pressed=true]{outline:3px solid #fff}
+.primary{height:44px;padding:0 20px;border-radius:4px;background:var(--brand);color:#fff;font-weight:700;font-size:15.5px}
+.primary:hover{background:var(--brand2)}
+.primary:disabled{opacity:.55;cursor:not-allowed}
+.btn2{height:38px;padding:0 16px;border-radius:4px;background:#4e5058;color:#fff;font-weight:600}
+.btn2:hover{background:#6d6f78}
+.btn2.red{background:var(--red2)}.btn2.red:hover{background:#a12828}
+.link{color:#00a8fc;font-weight:500}
+.err{color:#fa777c;margin:0;font-size:14px}
+.err:empty{display:none}
+.picker{display:flex;align-items:center;gap:16px}
+.picker .av{width:88px;height:88px;font-size:36px}
+.picker .col{display:grid;gap:8px;justify-items:start}
+
+/* ---------- ログイン ---------- */
+#login,#boot,#nosetup{position:fixed;inset:0;display:grid;place-items:center;padding:20px;overflow:auto;z-index:70}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--rail);border-radius:8px;padding:4px;gap:4px}
+.tabs button{height:38px;border-radius:6px;color:var(--soft);font-weight:700}
+.tabs button[aria-selected=true]{background:var(--main);color:var(--head);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.gbtn{height:46px;border-radius:4px;background:#fff;color:#1f1f1f;font-weight:700;font-size:15.5px;display:flex;align-items:center;justify-content:center;gap:10px}
+.gbtn:hover{background:#eceff3}
+.gbtn:disabled{opacity:.6;cursor:wait}
+.gbtn svg.i{color:#3b44c4}
+.or{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:13px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:#4e5058}
+.upOnly{display:none}
+#login.up .upOnly{display:grid}
+#login.up .inOnly{display:none}
+.acct{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;background:var(--side)}
+.acct div{flex:1;display:grid;line-height:1.35}
+.acct b{color:var(--head)}
+.acct span{color:var(--dim);font-size:13.5px;overflow-wrap:anywhere}
+.spin{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- アプリ本体 ---------- */
+#app{position:fixed;inset:0;display:flex}
+.nav{display:flex;flex:none}
+.rail{width:72px;background:var(--rail);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:8px;overflow-y:auto;flex:none}
+.ri{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--main);color:var(--head);font-weight:700;font-size:18px;position:relative;transition:border-radius .15s,background-color .15s;background-size:cover;background-position:center;flex:none}
+.ri svg{width:28px;height:28px;stroke:var(--brand);fill:none;stroke-width:2.2}
+.ri:hover,.ri.on{border-radius:16px;background-color:var(--brand);color:#fff}
+.ri:hover svg,.ri.on svg{stroke:#fff}
+.ri.img{color:transparent}
+.ri.add svg{stroke:var(--green)}.ri.add:hover{background-color:var(--green)}.ri.add:hover svg{stroke:#fff}
+.ri .pip{display:none;position:absolute;left:-12px;top:50%;width:4px;height:8px;margin-top:-4px;border-radius:0 4px 4px 0;background:#fff;transition:height .15s,margin .15s}
+.ri.on .pip,.ri.unread .pip{display:block}
+.ri.on .pip{height:40px;margin-top:-20px}
+.rwrap{position:relative;display:grid;justify-items:center;width:72px}
+.sep{width:32px;height:2px;background:var(--active);border-radius:1px;flex:none}
+
+.side{width:240px;background:var(--side);display:flex;flex-direction:column;flex:none;position:relative}
+.srvh{height:48px;width:100%;display:flex;align-items:center;gap:6px;padding:0 12px 0 16px;color:var(--head);font-weight:700;box-shadow:0 1px 0 rgba(0,0,0,.25);flex:none;text-align:left}
+.srvh:hover{background:var(--hover)}
+.srvh span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pop{position:absolute;top:54px;left:10px;right:10px;background:#111214;border-radius:6px;padding:6px;z-index:25;box-shadow:0 8px 24px rgba(0,0,0,.5);display:grid;gap:2px}
+.pop button{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 10px;border-radius:4px;color:var(--soft);font-size:14px;font-weight:500}
+.pop button:hover{background:var(--brand);color:#fff}
+.pop .danger{color:var(--red)}.pop .danger:hover{background:var(--red);color:#fff}
+.pop svg.i{width:18px;height:18px}
+.chs{flex:1;overflow-y:auto;padding:8px}
+.netbar{margin:4px 0 8px;padding:8px 10px;border-radius:6px;font-size:13px;line-height:1.4;background:rgba(240,178,50,.14);color:var(--yellow)}
+.netbar.r{background:rgba(242,63,67,.14);color:#fa777c}
+.netbar button{margin-top:6px}
+.cat{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:var(--dim);padding:16px 2px 4px 8px}
+.cat .ib{width:22px;height:22px}.cat svg.i{width:16px;height:16px}
+.ch{width:100%;display:flex;align-items:center;gap:6px;height:34px;padding:0 8px;border-radius:4px;color:var(--dim);font-weight:500;text-align:left;position:relative}
+.ch:hover{background:var(--hover);color:var(--text)}
+.ch.on{background:var(--active);color:#fff}
+.ch.unread{color:#fff;font-weight:700}
+.ch.unread::before{content:"";position:absolute;left:-8px;top:50%;width:4px;height:8px;margin-top:-4px;border-radius:0 4px 4px 0;background:#fff}
+.ch span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.badge{min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:inline-grid;place-items:center;line-height:1}
+.vm{padding:2px 0 6px 24px;display:grid;gap:2px}
+.mem{display:flex;align-items:center;gap:8px;height:32px;padding:0 6px;border-radius:4px;color:var(--dim)}
+.mem .nm{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:14px}
+.mem.spk .nm{color:#fff}
+.ics{display:flex;align-items:center;gap:4px}
+.ics svg.i{width:16px;height:16px;color:var(--dim)}
+.live{background:var(--red);color:#fff;font-size:10.5px;font-weight:800;border-radius:4px;padding:1px 5px;line-height:1.4}
+.empty{color:var(--dim);font-size:13.5px;padding:14px 10px;line-height:1.6}
+
+.av{border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;background-color:var(--c,#5865f2);background-size:cover;background-position:center;flex:none;transition:box-shadow .12s;user-select:none}
+.av.xs{width:24px;height:24px;font-size:12px}
+.av.sm{width:32px;height:32px;font-size:14px}
+.av.md{width:40px;height:40px;font-size:17px}
+.av.lg{width:84px;height:84px;font-size:36px}
+.mem.spk>.av,.av.spk{box-shadow:0 0 0 2px var(--side),0 0 0 4px var(--green)}
+.avw{position:relative;flex:none}
+.dot{position:absolute;right:-3px;bottom:-3px;width:14px;height:14px;border-radius:50%;background:var(--green);border:3px solid var(--panel)}
+.dot.off{background:#80848e}
+
+.vstat{display:flex;align-items:center;gap:2px;padding:8px 8px 8px 10px;background:var(--panel);border-bottom:1px solid #3f4147}
+.vs-l{flex:1;text-align:left}
+.vs-t{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px;white-space:nowrap;color:var(--green)}
+.vs-t span{overflow:hidden;text-overflow:ellipsis}
+.vs-t svg.i{width:16px;height:16px}
+.vs-s{font-size:12.5px;color:var(--dim);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:block}
+.me{display:flex;align-items:center;gap:2px;height:56px;padding:0 8px;background:var(--panel);flex:none}
+.me-n{flex:1;display:grid;line-height:1.25;margin-left:8px;text-align:left;border-radius:4px;padding:2px 4px}
+.me-n:hover{background:var(--hover)}
+.me-n b{color:var(--head);font-size:14px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.me-n span{font-size:12px;color:var(--dim);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ib{width:32px;height:32px;border-radius:4px;display:grid;place-items:center;color:var(--soft);position:relative;flex:none}
+.ib:hover{background:var(--hover);color:var(--text)}
+.ib.off{color:var(--red)}
+.ib.on{color:var(--green)}
+.ib .badge{position:absolute;top:-3px;right:-5px}
+
+.main{flex:1;display:flex;flex-direction:column;background:var(--main);position:relative}
+.sh{height:48px;display:flex;align-items:center;gap:8px;padding:0 12px 0 16px;color:var(--head);box-shadow:0 1px 0 rgba(0,0,0,.3);flex:none}
+.sh .sp{flex:1}
+.sh>svg.i{color:var(--dim)}
+.sh b{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.menu{display:none!important}
+.view{flex:1;display:flex;flex-direction:column;min-height:0}
+#vVoice{background:var(--stage)}
+
+/* ホーム */
+.home{flex:1;overflow:auto;display:grid;place-items:center;padding:24px}
+.hwrap{width:min(720px,100%);display:grid;gap:18px}
+.hwrap h2{margin:0;color:var(--head);font-size:28px;line-height:1.15}
+.hwrap>p{margin:-8px 0 4px;color:var(--soft)}
+.hcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.hcard{background:var(--side);border-radius:10px;padding:20px;display:grid;gap:12px;align-content:start}
+.hcard h3{margin:0;color:var(--head);font-size:17px}
+.hcard p{margin:0;color:var(--dim);font-size:14px}
+.hicon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--brand);color:#fff}
+.hicon.g{background:var(--green)}
+.hicon svg.i{width:26px;height:26px}
+.inrow{display:flex;gap:8px}
+.inrow input{flex:1;height:44px;border:0;border-radius:4px;background:var(--rail);color:var(--text);padding:0 12px;font-size:16px;outline:none}
+.inrow input:focus{outline:2px solid var(--brand)}
+
+/* チャット */
+.msgs{flex:1;overflow-y:auto;padding:8px 0}
+.welcome{padding:16px 16px 4px}
+.welcome .hb{width:68px;height:68px;border-radius:50%;background:var(--active);display:grid;place-items:center;margin-bottom:8px}
+.welcome .hb svg.i{width:40px;height:40px;color:#fff}
+.welcome h2{margin:0;color:var(--head);font-size:24px;line-height:1.2}
+.welcome p{margin:4px 0 0;color:var(--dim)}
+.mg{display:flex;gap:14px;padding:2px 16px;margin-top:14px}
+.mg:hover{background:#2e3035}
+.mg .body{flex:1}
+.mh{display:flex;align-items:baseline;gap:8px}
+.mh b{font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.mh time{font-size:11.5px;color:var(--dim);white-space:nowrap}
+.ln{white-space:pre-wrap;overflow-wrap:anywhere}
+.ln a{color:#00a8fc}
+.sys{display:flex;gap:12px;align-items:center;padding:2px 16px 2px 26px;color:var(--dim);font-size:14px;margin-top:12px}
+.sys svg.i{color:var(--green);width:16px;height:16px}
+.sys b{color:var(--head);font-weight:600}
+.sys time{font-size:11.5px}
+.typing{height:22px;padding:0 16px;font-size:12.5px;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.comp{margin:0 16px 18px;display:flex;align-items:center;background:#383a40;border-radius:8px;padding:0 6px 0 16px}
+.comp input{flex:1;height:44px;border:0;background:none;color:var(--text);outline:none;font-size:16px}
+.comp input::placeholder{color:#6d6f78}
+.dots::after{content:"";animation:dots 1.4s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"・"}50%{content:"・・"}75%{content:"・・・"}}
+
+/* ボイス */
+.grid{flex:1;display:flex;flex-direction:column;gap:12px;padding:16px;overflow:auto;justify-content:center}
+.grid.sharing{justify-content:flex-start}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;max-width:1100px;margin:0 auto}
+.tiles.n1{grid-template-columns:minmax(0,620px);justify-content:center}
+.grid.sharing .tiles{grid-template-columns:repeat(4,minmax(0,200px));justify-content:center}
+.tile{position:relative;aspect-ratio:16/9;border-radius:10px;background:#2b2d31;background:color-mix(in srgb,var(--c,#5865f2) 32%,#1e1f22);display:grid;place-items:center;overflow:hidden;outline:3px solid transparent;outline-offset:-3px;transition:outline-color .12s}
+.tile.spk{outline-color:var(--green)}
+.tile.canwatch{cursor:pointer}
+.grid.sharing .tile .av.lg{width:44px;height:44px;font-size:19px}
+.tl{position:absolute;left:10px;bottom:10px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.6);color:#fff;padding:3px 8px;border-radius:6px;font-size:13.5px;font-weight:600;max-width:calc(100% - 20px)}
+.tl .nm{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tl svg.i{width:16px;height:16px;color:var(--red)}
+.tvol{position:absolute;right:10px;top:10px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.6);color:#fff;padding:4px 10px;border-radius:6px;opacity:0;transition:opacity .15s;width:min(180px,55%)}
+.tvol svg.i{width:16px;height:16px}
+.tile:hover .tvol,.tvol:focus-within{opacity:1}
+@media (hover:none){.tvol{opacity:1}}
+.grid.sharing .tvol{display:none}
+.vjoin{display:grid;justify-items:center;gap:12px;text-align:center;color:var(--soft);padding:24px}
+.vjoin h2{margin:0;color:var(--head);font-size:24px}
+.vjoin .who{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.scr{position:relative;flex:1;min-height:220px;border-radius:10px;overflow:hidden;background:#000;width:100%;max-width:1400px;margin:0 auto}
+.scr video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.scr-top{position:absolute;left:10px;top:10px;display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.6);color:#fff;padding:4px 10px 4px 6px;border-radius:6px;font-size:13px;font-weight:600;max-width:calc(100% - 70px)}
+.scr-top span:last-child{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.scr-x{position:absolute;right:10px;top:10px;background:rgba(0,0,0,.6);color:#fff}
+.scr-ctl{position:absolute;right:10px;bottom:10px;display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.6);color:#fff;padding:4px 6px 4px 10px;border-radius:6px}
+.scr-ctl input{width:110px}
+.scr-ctl svg.i{width:16px;height:16px}
+.bar{display:flex;justify-content:center;gap:12px;padding:12px 16px 20px;flex:none;flex-wrap:wrap}
+.cb{width:56px;height:56px;border-radius:50%;background:#2b2d31;color:#fff;display:grid;place-items:center;transition:background .12s}
+.cb:hover{background:#3a3c42}
+.cb svg.i{width:24px;height:24px}
+.cb.off{background:#fff;color:var(--red2)}
+.cb.on{background:var(--green)}
+.cb.red{background:var(--red2)}.cb.red:hover{background:#a12828}
+.unlock{position:absolute;left:50%;top:60px;transform:translateX(-50%);z-index:5;background:var(--yellow);color:#1e1f22;font-weight:700;padding:10px 16px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+
+/* メンバー */
+.mlist{width:240px;background:var(--side);overflow-y:auto;flex:none;display:none;padding:12px 8px 20px}
+#app.mem-on .mlist{display:block}
+.mcat{font-size:12px;font-weight:700;color:var(--dim);padding:14px 8px 6px}
+.mrow{display:flex;align-items:center;gap:12px;padding:6px 8px;border-radius:4px}
+.mrow:hover{background:var(--hover)}
+.mrow.off{opacity:.42}
+.mrow .nm{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:500}
+.mrow .dot{border-color:var(--side)}
+.mrow svg.i{width:16px;height:16px;color:var(--dim)}
+.crown{color:var(--yellow)!important}
+.mrow .kick{opacity:0;width:26px;height:26px}.mrow:hover .kick,.mrow .kick:focus-visible{opacity:1}
+@media (hover:none){.mrow .kick{opacity:1}}
+.mrow.off .kick{color:var(--soft)}
+.mfoot{margin:16px 8px 0;padding:12px;border-radius:8px;background:var(--panel);display:grid;gap:8px;color:var(--soft);font-size:13.5px}
+
+/* モーダル */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:grid;place-items:center;z-index:50;padding:16px}
+.mbox{width:min(520px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--main);border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.mbox.wide{width:min(640px,100%)}
+.mbox header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:18px 16px 6px 20px;color:var(--head);font-size:20px;position:sticky;top:0;background:var(--main);z-index:1}
+.mbody{padding:0 20px 20px;display:grid;gap:14px}
+.mbody>p{margin:0;color:var(--soft)}
+.mbody h3{font-size:12.5px;color:var(--dim);margin:10px 0 -4px}
+.mfoot2{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;background:var(--side);border-radius:0 0 10px 10px;flex-wrap:wrap}
+.choice{display:flex;align-items:center;gap:14px;width:100%;padding:14px;border-radius:8px;border:1px solid #4e5058;text-align:left}
+.choice:hover{background:var(--hover)}
+.choice b{display:block;color:var(--head)}
+.choice span{color:var(--dim);font-size:13.5px}
+.choice.sel{border-color:var(--brand);background:rgba(88,101,242,.12)}
+.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.fl select{height:42px;font-size:15px}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0;color:var(--text);cursor:pointer}
+.tg{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:12px;background:#80848e;position:relative;cursor:pointer;flex:none;margin:0;transition:background .15s}
+.tg::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
+.tg:checked{background:var(--green)}.tg:checked::after{transform:translateX(18px)}
+input[type=range]{width:100%;accent-color:var(--brand);height:24px;margin:0}
+.meter{position:relative;height:10px;border-radius:5px;background:#4e5058;overflow:hidden}
+.mfill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--yellow)}
+.mfill.ok{background:var(--green)}
+.mth{position:absolute;top:0;bottom:0;width:3px;margin-left:-1px;background:#fff}
+.hint{color:var(--dim);font-size:13px;margin:0}
+kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-weight:700;color:var(--head)}
+.chrow{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;background:var(--side)}
+.chrow span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.invbox{display:flex;gap:8px;background:var(--rail);border-radius:6px;padding:6px 6px 6px 12px;align-items:center}
+.invbox input{flex:1;border:0;background:none;color:var(--head);font-size:15px;outline:none;height:36px}
+.preview{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;background:var(--side)}
+.preview b{color:var(--head)}
+.toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,20px);background:#111214;color:#fff;padding:10px 16px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:.2s;z-index:80;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.scrim{display:none}
+
+@media (max-width:1100px){#app.mem-on .mlist{position:fixed;right:0;top:48px;bottom:0;z-index:30;box-shadow:-8px 0 30px rgba(0,0,0,.4)}}
+@media (max-width:820px){
+  .nav{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-105%);transition:transform .2s;box-shadow:8px 0 30px rgba(0,0,0,.4)}
+  .side{width:min(280px,calc(100vw - 92px))}
+  #app.drawer .nav{transform:none}
+  #app.drawer .scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:39}
+  .menu{display:grid!important}
+  .sh{padding-left:8px}
+  .grid{padding:12px}
+  .cb{width:52px;height:52px}
+  .hcards{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tiles.n1,.tiles.n2{grid-template-columns:minmax(0,1fr);max-width:440px}
+  .grid.sharing .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .row2{grid-template-columns:minmax(0,1fr)}
+  .card{padding:24px 18px}
+  .bar{gap:10px}
+  .inrow{flex-direction:column}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style id="avcss"></style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-logo" viewBox="0 0 24 24"><circle cx="9.3" cy="12" r="5.6"/><circle cx="14.7" cy="12" r="5.6"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></symbol>
+  <symbol id="i-mic-off" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7M4 3.5l16 17"/></symbol>
+  <symbol id="i-head" viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="7" rx="1.5"/><rect x="16.5" y="14" width="4.5" height="7" rx="1.5"/></symbol>
+  <symbol id="i-head-off" viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="7" rx="1.5"/><rect x="16.5" y="14" width="4.5" height="7" rx="1.5"/><path d="M3.5 3.5l17 17"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="6.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol>
+  <symbol id="i-hang" viewBox="0 0 24 24"><path d="M3.4 13.4c4.8-4.2 12.4-4.2 17.2 0 .6.5.6 1.4.1 2l-1.6 1.8c-.4.5-1.2.6-1.7.2l-2-1.5c-.4-.3-.6-.8-.5-1.3l.2-1.4c-2-.7-4.2-.7-6.2 0l.2 1.4c.1.5-.1 1-.5 1.3l-2 1.5c-.5.4-1.3.3-1.7-.2l-1.6-1.8c-.5-.6-.5-1.5.1-2z"/></symbol>
+  <symbol id="i-screen" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 16.5v4M12 13.5V8M9.3 10.5 12 7.8l2.7 2.7"/></symbol>
+  <symbol id="i-vol" viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18.2 6.5a8 8 0 0 1 0 11"/></symbol>
+  <symbol id="i-hash" viewBox="0 0 24 24"><path d="M10 3.5 8 20.5M16.5 3.5l-2 17M4.5 8.5h16M3.5 15.5h16"/></symbol>
+  <symbol id="i-signal" viewBox="0 0 24 24"><path d="M5 19.5v-3M10 19.5v-7M15 19.5v-11M20 19.5v-15"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M20.5 3.5 3.5 10.5l7 2.5 2.5 7zM10.5 13l10-9.5"/></symbol>
+  <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="i-in" viewBox="0 0 24 24"><path d="M4 12h14M13 6.5l5.5 5.5-5.5 5.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6.5 9.5 12 15l5.5-5.5"/></symbol>
+  <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9.5" r="2.8"/><path d="M16.5 14.6A5.5 5.5 0 0 1 21.5 20"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3.2-3.2a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3.2 3.2a4.5 4.5 0 0 0 6.4 6.4l1-1"/></symbol>
+  <symbol id="i-crown" viewBox="0 0 24 24"><path d="M4 8l4 4 4-6 4 6 4-4-1.5 10h-13z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 16l-5-5L6 19.5"/></symbol>
+  <symbol id="i-exit" viewBox="0 0 24 24"><path d="M14 4.5h4.5a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5H14M10 16.5 5.5 12 10 7.5M5.5 12H15"/></symbol>
+  <symbol id="i-invite" viewBox="0 0 24 24"><circle cx="10" cy="8.5" r="3.5"/><path d="M3.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/></symbol>
+  <symbol id="i-google" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+</svg>
+<svg class="art" id="art" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="display:none">
+  <defs>
+    <linearGradient id="bgG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f2266"/><stop offset=".55" stop-color="#3b44c4"/><stop offset="1" stop-color="#6c77ff"/></linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1440" height="900" fill="url(#bgG)"/>
+  <g fill="none" stroke="#fff" stroke-opacity=".1" stroke-width="2">
+    <circle cx="260" cy="720" r="150"/><circle cx="260" cy="720" r="250"/><circle cx="260" cy="720" r="350"/><circle cx="260" cy="720" r="450"/>
+    <circle cx="1200" cy="180" r="130"/><circle cx="1200" cy="180" r="230"/><circle cx="1200" cy="180" r="330"/>
+  </g>
+  <circle cx="1080" cy="690" r="220" fill="#fff" fill-opacity=".06"/><circle cx="1270" cy="690" r="220" fill="#fff" fill-opacity=".06"/>
+  <circle cx="260" cy="720" r="110" fill="url(#glow)"/><circle cx="1200" cy="180" r="90" fill="url(#glow)"/>
+  <g fill="#fff" fill-opacity=".55"><circle cx="160" cy="120" r="3"/><circle cx="420" cy="80" r="2"/><circle cx="690" cy="140" r="2.5"/><circle cx="930" cy="70" r="2"/><circle cx="560" cy="820" r="2.5"/><circle cx="860" cy="860" r="2"/><circle cx="1380" cy="520" r="3"/><circle cx="90" cy="420" r="2"/></g>
+</svg>
+
+<!-- 読みこみ中 -->
+<section id="boot"><div class="spin" aria-label="読みこみ中"></div></section>
+
+<!-- Firebaseの設定がまだないとき -->
+<section id="nosetup" class="hide">
+  <div class="card">
+    <div class="logo"><svg viewBox="0 0 24 24"><use href="#i-logo"/></svg></div>
+    <h1>まだじゅんび中だよ</h1>
+    <p class="sub">ログインのしくみ（Firebase）の設定が、まだこのアプリに入っていないよ。公開されたサイトかアプリから開いてね。</p>
+  </div>
+</section>
+
+<!-- ログイン -->
+<section id="login" class="hide">
+  <div class="card">
+    <div class="logo"><svg viewBox="0 0 24 24"><use href="#i-logo"/></svg></div>
+    <h1>ふたりボイス</h1>
+    <p class="sub">ログインして、友だちと話そう</p>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tabIn" aria-selected="true">ログイン</button>
+      <button type="button" role="tab" id="tabUp" aria-selected="false">新しく登録</button>
+    </div>
+    <button type="button" class="gbtn" id="gLogin"><svg class="i"><use href="#i-google"/></svg><span id="gText">Googleでログイン</span></button>
+    <div class="or">または</div>
+    <form id="lf" novalidate style="display:grid;gap:14px">
+      <label class="fl">ユーザー名<input id="lUser" maxlength="20" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="例：mitsuki_01"></label>
+      <label class="fl">パスワード<input id="lPass" type="password" maxlength="64" autocomplete="current-password"></label>
+      <label class="fl upOnly">パスワード（もう一度）<input id="lPass2" type="password" maxlength="64" autocomplete="new-password"></label>
+      <p class="hint upOnly">ユーザー名は、英字・数字・_（アンダーバー）で3〜20文字。パスワードは6文字以上だよ。</p>
+      <button class="primary" type="submit" id="lGo">ログイン</button>
+      <p class="err" id="lErr"></p>
+    </form>
+    <p class="hint">パスワードはわすれないようにメモしてね。ユーザー名で作ったアカウントは、パスワードをリセットできないよ。</p>
+  </div>
+</section>
+
+<!-- はじめの画面（プロフィール） -->
+<section id="welcome" class="hide">
+  <form class="card" id="wf" novalidate>
+    <div class="logo"><svg viewBox="0 0 24 24"><use href="#i-logo"/></svg></div>
+    <h1>ふたりボイスへようこそ！</h1>
+    <p class="sub">友だち4人までの、自分たちだけのサーバー</p>
+    <div class="picker">
+      <div class="av" id="wAv"></div>
+      <div class="col">
+        <button type="button" class="btn2" id="wPick">アイコンの画像をえらぶ</button>
+        <button type="button" class="link hide" id="wDel">画像を消す</button>
+      </div>
+    </div>
+    <label class="fl">なまえ<input id="wName" maxlength="16" autocomplete="off" placeholder="例：みつき"></label>
+    <div class="fl">画像がないときの色<div class="colors" id="wColors"></div></div>
+    <button class="primary" type="submit">はじめる</button>
+    <p class="err" id="wErr"></p>
+  </form>
+</section>
+
+<!-- アプリ本体 -->
+<div id="app" class="hide">
+  <div class="nav" id="nav">
+    <nav class="rail" aria-label="サーバー">
+      <div class="rwrap"><button class="ri" id="homeBtn" title="ホーム"><span class="pip"></span><svg viewBox="0 0 24 24"><use href="#i-logo"/></svg></button></div>
+      <div class="sep"></div>
+      <div id="srvList" style="display:grid;gap:8px"></div>
+      <div class="rwrap"><button class="ri add" id="addBtn" title="サーバーを追加"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></button></div>
+    </nav>
+    <aside class="side" id="side">
+      <button class="srvh" id="srvHead"><span id="srvName">ホーム</span><svg class="i" id="srvChev"><use href="#i-down"/></svg></button>
+      <div class="pop hide" id="srvMenu">
+        <button data-act="invite">友だちを招待<svg class="i"><use href="#i-invite"/></svg></button>
+        <button data-act="server">サーバー設定<svg class="i"><use href="#i-gear"/></svg></button>
+        <button data-act="newch">チャンネルを作る<svg class="i"><use href="#i-plus"/></svg></button>
+        <button data-act="quit" class="danger">サーバーから抜ける<svg class="i"><use href="#i-exit"/></svg></button>
+      </div>
+      <div class="chs" id="chList"></div>
+      <div class="vstat hide" id="vstat">
+        <button class="vs-l" id="vsGo" title="ボイスチャンネルを見る">
+          <span class="vs-t"><svg class="i"><use href="#i-signal"/></svg><span>ボイス接続中</span></span>
+          <span class="vs-s" id="vsSub"></span>
+        </button>
+        <button class="ib" id="vsScreen" title="画面を共有"><svg class="i"><use href="#i-screen"/></svg></button>
+        <button class="ib" id="vsLeave" title="ボイスから出る"><svg class="i fill"><use href="#i-hang"/></svg></button>
+      </div>
+      <div class="me">
+        <div class="avw"><div class="av sm" id="meAv"></div><span class="dot" id="meDot"></span></div>
+        <button class="me-n" id="meBtn" title="プロフィールを変える"><b id="meName"></b><span id="meSub">オンライン</span></button>
+        <button class="ib" id="btnMic" title="ミュート (M)"><svg class="i"><use href="#i-mic"/></svg></button>
+        <button class="ib" id="btnDeaf" title="スピーカーミュート (D)"><svg class="i"><use href="#i-head"/></svg></button>
+        <button class="ib" id="btnSet" title="設定"><svg class="i"><use href="#i-gear"/></svg></button>
+      </div>
+    </aside>
+  </div>
+  <div class="scrim" id="scrim"></div>
+
+  <main class="main">
+    <header class="sh">
+      <button class="ib menu" id="btnMenu" title="メニュー"><svg class="i"><use href="#i-menu"/></svg></button>
+      <svg class="i" id="mIcon"><use href="#i-hash"/></svg><b id="mTitle"></b>
+      <span class="sp"></span>
+      <button class="ib" id="btnInvite2" title="友だちを招待"><svg class="i"><use href="#i-invite"/></svg></button>
+      <button class="ib" id="btnMembers" title="メンバー"><svg class="i"><use href="#i-people"/></svg><b class="badge hide" id="onlineBadge"></b></button>
+    </header>
+
+    <section class="view" id="vHome">
+      <div class="home"><div class="hwrap">
+        <h2 id="homeTitle">サーバーを作ろう！</h2>
+        <p>サーバーは、友だちと集まる場所だよ。チャットも通話もできるよ（最大4人）。</p>
+        <div class="hcards">
+          <div class="hcard">
+            <div class="hicon"><svg class="i"><use href="#i-plus"/></svg></div>
+            <h3>サーバーを作る</h3>
+            <p>自分のサーバーを作って、招待リンクを友だちに送ろう。</p>
+            <button class="primary" id="homeCreate">作る</button>
+          </div>
+          <div class="hcard">
+            <div class="hicon g"><svg class="i"><use href="#i-link"/></svg></div>
+            <h3>招待リンクで入る</h3>
+            <p>友だちからもらった招待リンクを、ここにはってね。</p>
+            <form class="inrow" id="homeJoin"><input id="homeInv" autocomplete="off" placeholder="招待リンクをはる"><button class="primary" type="submit">入る</button></form>
+            <p class="err" id="homeErr"></p>
+          </div>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="view hide" id="vText">
+      <div class="msgs" id="msgs"></div>
+      <div class="typing" id="typing"></div>
+      <form class="comp" id="comp"><input id="ci" autocomplete="off" maxlength="2000"><button class="ib" type="submit" title="送信"><svg class="i"><use href="#i-send"/></svg></button></form>
+    </section>
+
+    <section class="view hide" id="vVoice">
+      <button class="unlock hide" id="unlock">音が聞こえないときは、ここをおしてね</button>
+      <div class="grid" id="grid">
+        <div class="scr hide" id="scr">
+          <video id="sv" autoplay playsinline></video>
+          <div class="scr-top"><span class="live">LIVE</span><span id="scrWho"></span></div>
+          <button class="ib scr-x" id="scrClose" title="見るのをやめる"><svg class="i"><use href="#i-x"/></svg></button>
+          <div class="scr-ctl">
+            <span id="scrVolBox" style="display:flex;align-items:center;gap:6px"><svg class="i"><use href="#i-vol"/></svg><input type="range" id="scrVol" min="0" max="100" title="配信の音の大きさ"></span>
+            <button class="ib" id="scrFull" title="全画面"><svg class="i"><use href="#i-full"/></svg></button>
+          </div>
+        </div>
+        <div class="tiles" id="tiles"></div>
+        <div class="vjoin hide" id="vjoin"></div>
+      </div>
+      <div class="bar" id="bar">
+        <button class="cb" id="cbMic" title="ミュート (M)"><svg class="i"><use href="#i-mic"/></svg></button>
+        <button class="cb" id="cbDeaf" title="スピーカーミュート (D)"><svg class="i"><use href="#i-head"/></svg></button>
+        <button class="cb" id="cbScreen" title="画面を共有"><svg class="i"><use href="#i-screen"/></svg></button>
+        <button class="cb" id="cbSet" title="設定"><svg class="i"><use href="#i-gear"/></svg></button>
+        <button class="cb red" id="cbLeave" title="ボイスから出る"><svg class="i fill"><use href="#i-hang"/></svg></button>
+      </div>
+    </section>
+  </main>
+
+  <aside class="mlist" id="mlist" aria-label="メンバー"></aside>
+</div>
+
+<!-- サーバーを追加 -->
+<div class="modal hide" id="mAdd" role="dialog" aria-modal="true" aria-label="サーバーを追加">
+  <div class="mbox">
+    <header><b>サーバーを追加</b><button class="ib" data-close title="とじる"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="mbody" id="addPick">
+      <p>新しく作るか、友だちのサーバーに入るか、えらんでね。</p>
+      <button class="choice" id="goCreate"><div class="hicon"><svg class="i"><use href="#i-plus"/></svg></div><div><b>サーバーを作る</b><span>自分のサーバーを作って、友だちを招待する</span></div></button>
+      <h3>招待リンクをもっている？</h3>
+      <form class="inrow" id="addJoin"><input id="addInv" autocomplete="off" placeholder="招待リンクをはる"><button class="primary" type="submit">入る</button></form>
+      <div class="preview hide" id="addPrev"></div>
+      <p class="err" id="addErr"></p>
+    </div>
+    <div class="mbody hide" id="addCreate">
+      <p>サーバーの名前とアイコンを決めよう。あとで変えられるよ。</p>
+      <div class="picker">
+        <div class="av" id="cIcon" style="border-radius:24px"></div>
+        <div class="col"><button type="button" class="btn2" id="cPick">アイコンの画像をえらぶ</button><button type="button" class="link hide" id="cDel">画像を消す</button></div>
+      </div>
+      <label class="fl">サーバーの名前<input id="cName" maxlength="30" autocomplete="off"></label>
+    </div>
+    <div class="mfoot2 hide" id="addCreateFoot"><button class="btn2" id="cBack">もどる</button><button class="primary" id="cMake">作る</button></div>
+  </div>
+</div>
+
+<!-- 招待 -->
+<div class="modal hide" id="mInvite" role="dialog" aria-modal="true" aria-label="友だちを招待">
+  <div class="mbox">
+    <header><b id="invTitle">友だちを招待</b><button class="ib" data-close title="とじる"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="mbody">
+      <p>この招待リンクを友だちに送ってね。友だちは、同じアプリ（このファイル）を開いて、リンクをはると入れるよ。</p>
+      <div class="invbox"><input id="invLink" readonly aria-label="招待リンク"><button class="primary" id="invCopy">コピー</button></div>
+      <p class="hint" id="invCount"></p>
+    </div>
+  </div>
+</div>
+
+<!-- サーバー設定 -->
+<div class="modal hide" id="mServer" role="dialog" aria-modal="true" aria-label="サーバー設定">
+  <div class="mbox wide">
+    <header><b>サーバー設定</b><button class="ib" data-close title="とじる"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="mbody">
+      <div class="picker">
+        <div class="av" id="sIcon" style="border-radius:24px"></div>
+        <div class="col"><button type="button" class="btn2" id="sPick">アイコンの画像をかえる</button><button type="button" class="link hide" id="sDel">画像を消す</button></div>
+      </div>
+      <label class="fl">サーバーの名前<input id="sName" maxlength="30" autocomplete="off"></label>
+      <h3>チャンネル</h3>
+      <div id="sChans" style="display:grid;gap:6px"></div>
+      <button class="btn2" id="sNewCh" style="justify-self:start">チャンネルを作る</button>
+      <h3>あぶないこと</h3>
+      <button class="btn2 red" id="sQuit" style="justify-self:start">このサーバーから抜ける</button>
+    </div>
+  </div>
+</div>
+
+<!-- チャンネルを作る -->
+<div class="modal hide" id="mChan" role="dialog" aria-modal="true" aria-label="チャンネルを作る">
+  <div class="mbox">
+    <header><b>チャンネルを作る</b><button class="ib" data-close title="とじる"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="mbody">
+      <button class="choice sel" data-type="text"><div class="hicon"><svg class="i"><use href="#i-hash"/></svg></div><div><b>テキスト</b><span>文字や画像のリンクでおしゃべり</span></div></button>
+      <button class="choice" data-type="voice"><div class="hicon g"><svg class="i"><use href="#i-vol"/></svg></div><div><b>ボイス</b><span>声で話す・画面を見せる</span></div></button>
+      <label class="fl">チャンネルの名前<input id="nName" maxlength="20" autocomplete="off" placeholder="例：攻略メモ"></label>
+    </div>
+    <div class="mfoot2"><button class="btn2" data-close>やめる</button><button class="primary" id="nMake">作る</button></div>
+  </div>
+</div>
+
+<!-- 設定 -->
+<div class="modal hide" id="mSet" role="dialog" aria-modal="true" aria-label="設定">
+  <div class="mbox wide">
+    <header><b>設定</b><button class="ib" data-close title="とじる"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="mbody">
+      <h3>アカウント</h3>
+      <div class="acct"><div><b id="acName"></b><span id="acHow"></span></div><button class="btn2" id="logoutBtn">ログアウト</button></div>
+      <h3>プロフィール</h3>
+      <div class="picker">
+        <div class="av" id="pAv"></div>
+        <div class="col"><button type="button" class="btn2" id="pPick">アイコンの画像をかえる</button><button type="button" class="link hide" id="pDel">画像を消す</button></div>
+      </div>
+      <label class="fl">なまえ<input id="pName" maxlength="16" autocomplete="off"></label>
+      <div class="fl">画像がないときの色<div class="colors" id="pColors"></div></div>
+      <h3>音声</h3>
+      <div class="row2">
+        <label class="fl">マイク<select id="sIn"></select></label>
+        <label class="fl">スピーカー・イヤホン<select id="sOut"></select></label>
+      </div>
+      <h3>入力感度（どのくらいの声で、みんなにとどくか）</h3>
+      <button class="btn2 hide" id="micTest" style="justify-self:start">マイクをテストする</button>
+      <label class="sw"><span>自動で決める</span><input type="checkbox" class="tg" id="sAuto"></label>
+      <div class="meter"><div class="mfill" id="mFill"></div><div class="mth" id="mTh"></div></div>
+      <input type="range" id="sTh" min="-80" max="-10" step="1" aria-label="入力感度">
+      <p class="hint">しゃべると、バーが動くよ。バーが白い線をこえて緑になると、声がとどくよ。「自動で決める」を切ると、線の位置を自分で動かせるよ。</p>
+      <h3>声をきれいにする</h3>
+      <label class="sw"><span>まわりの音をへらす（ノイズ抑制）</span><input type="checkbox" class="tg" id="sNoise"></label>
+      <label class="sw"><span>声がはね返るのをふせぐ（エコー除去）</span><input type="checkbox" class="tg" id="sEcho"></label>
+      <label class="sw"><span>声の大きさを自動でそろえる</span><input type="checkbox" class="tg" id="sAgc"></label>
+      <h3>音のおしらせ</h3>
+      <label class="sw"><span>ボイスに入る・出るときの音</span><input type="checkbox" class="tg" id="sSnd"></label>
+      <label class="sw"><span>メッセージがきたときの音</span><input type="checkbox" class="tg" id="sMsg"></label>
+      <p class="hint">キーボード：<kbd>M</kbd> マイクのミュート、<kbd>D</kbd> スピーカーミュート（このアプリの画面を見ているときだけ使えるよ）</p>
+    </div>
+  </div>
+</div>
+
+<!-- たしかめ -->
+<div class="modal hide" id="mConfirm" role="dialog" aria-modal="true">
+  <div class="mbox">
+    <header><b id="cfTitle"></b></header>
+    <div class="mbody"><p id="cfText"></p></div>
+    <div class="mfoot2"><button class="btn2" data-close>やめる</button><button class="btn2 red" id="cfOk"></button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+<input type="file" id="filePick" accept="image/*" class="hide">
+
+<script>/*@@PEERJS@@*/</script>
+<script>/*@@FIREBASE@@*/</script>
+<script>window.FV_FIREBASE = /*@@FBCONFIG@@*/null;</script>
+<script>
+{
+const $ = s => document.querySelector(s);
+const qs = new URLSearchParams(location.search);
+const TEST_SERVER = qs.get('server');          // テスト用: ?server=127.0.0.1:9000
+const PREFIX = 'futarivoice-v2-';
+const SEATS = 8;                                // つなぐための「席」(4人＋落ちたときの予備)
+const MAX = 4;                                  // サーバーに入れる人数
+const COLORS = ['#5865f2','#23a55a','#f0b232','#eb459e','#ed4245','#3ba5d8','#9b59b6','#e67e22'];
+const DEF_CH = () => [{id:'general', name:'ざつだん', type:'text'}, {id:'game', name:'ゲーム通話', type:'voice'}];
+const ICE = TEST_SERVER ? [] : [
+  {urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']},
+  {urls:'stun:stun.cloudflare.com:3478'},
+  {urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'}
+];
+
+const store = {
+  get(k,d){try{const v=localStorage.getItem('fv.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem('fv.'+k,JSON.stringify(v));return true}catch(e){return false}},
+  del(k){try{localStorage.removeItem('fv.'+k)}catch(e){}}
+};
+const rid = (n=12) => { const a='abcdefghijklmnopqrstuvwxyz0123456789'; let s=''; for (const x of crypto.getRandomValues(new Uint8Array(n))) s += a[x%36]; return s; };
+// ログインしたアカウントごとに、データを分けて保存する
+let acct = '';
+const ak = k => 'a.' + acct + '.' + k;
+const me = {uid:'', name:'', color:COLORS[0], avatar:'', ver:0};
+const saveMe = () => store.set(ak('me'), me);
+const cfg = Object.assign({inputId:'',outputId:'',auto:true,th:-50,echo:true,noise:true,agc:true,vol:{},scrVol:80,sounds:true,msgSound:true,members:true,last:''}, store.get('cfg2', {}));
+const saveCfg = () => store.set('cfg2', cfg);
+let servers = [];
+const saveServers = () => store.set(ak('servers'), servers);
+
+const S = {sid:'', meta:null, members:{}, msgs:[], ids:new Set(), lastRead:{},
+  peer:null, seat:0, peers:new Map(), pend:{}, early:[], net:'idle', full:false, fullTries:0, lastTry:0, sess:rid(8),
+  view:'home', textCh:'', viewVoice:'', voice:'', typing:{}, typingSent:0,
+  ctx:null, gate:null, dest:null, micSrc:null, rawStream:null, sendTrack:null, noMic:false, ana:null, level:-120, th:-50, micTest:false,
+  muted:false, deaf:false, speaking:false, scrStream:null, watch:null, watchOff:false};
+const DEBUG = !!TEST_SERVER || qs.has('debug');
+if (DEBUG) window.__fv = S;
+const dbg = (...a) => { if (DEBUG) (window.__log = window.__log || []).push(((Date.now()/1000)%1000).toFixed(2) + ' ' + a.join(' ')); };
+
+/* ---------- 小さな道具 ---------- */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clean = (s, n=16) => String(s||'').replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,n);
+const okColor = c => COLORS.includes(c) ? c : COLORS[0];
+const okImg = s => typeof s === 'string' && s.length < 90000 && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(s);
+const okId = s => typeof s === 'string' && /^[a-z0-9]{8,16}$/.test(s);
+const first = s => (Array.from(String(s||'?').trim())[0] || '?').toUpperCase();
+const ic = (n, cls='') => `<svg class="i ${cls}"><use href="#i-${n}"/></svg>`;
+const safeClose = c => { try{ c && c.close(); }catch(e){} };
+let toastT;
+function toast(msg, ms=3200){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'), ms); }
+function fmtTime(ts){ const d=new Date(ts), n=new Date(); const hm=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0'); return d.toDateString()===n.toDateString() ? '今日 '+hm : (d.getMonth()+1)+'/'+d.getDate()+' '+hm; }
+function fmtText(t){ return esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'); }
+const b64u = s => { let b=''; for (const x of new TextEncoder().encode(s)) b += String.fromCharCode(x); return btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); };
+const unb64u = s => { s = s.replace(/-/g,'+').replace(/_/g,'/'); while (s.length % 4) s += '='; const b = atob(s); return new TextDecoder().decode(Uint8Array.from(b, c => c.charCodeAt(0))); };
+
+/* ---------- アイコン画像 ---------- */
+function pickFile(){ return new Promise(res => { const f = $('#filePick'); f.value = ''; f.onchange = () => res(f.files[0] || null); f.click(); }); }
+async function fileToIcon(file){
+  if (!file) return null;
+  if (!/^image\//.test(file.type)) throw new Error('画像じゃないみたい');
+  const url = await new Promise((ok, ng) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = ng; r.readAsDataURL(file); });
+  const img = await new Promise((ok, ng) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ng(new Error('この画像は読めなかった')); i.src = url; });
+  const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+  g.fillStyle = '#313338'; g.fillRect(0, 0, 128, 128);
+  const s = Math.min(img.naturalWidth, img.naturalHeight);
+  g.drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, 128, 128);
+  let q = .85, d = c.toDataURL('image/jpeg', q);
+  while (d.length > 24000 && q > .35){ q -= .1; d = c.toDataURL('image/jpeg', q); }
+  return d;
+}
+async function chooseIcon(){
+  try { return await fileToIcon(await pickFile()); }
+  catch(e){ toast(e.message || 'この画像は使えなかった…'); return null; }
+}
+const rec = uid => uid === me.uid ? me : (S.members[uid] || {uid, name:'?', color:COLORS[0], avatar:''});
+function avHTML(uid, cls){
+  const r = rec(uid), img = okImg(r.avatar);
+  return `<div class="av ${cls} u-${uid}${img ? ' img' : ''}" style="--c:${okColor(r.color)}">${img ? '' : esc(first(r.name))}</div>`;
+}
+function paintAv(el, r, round){
+  el.style.setProperty('--c', okColor(r.color));
+  if (okImg(r.avatar || r.icon)){ el.style.backgroundImage = `url("${r.avatar || r.icon}")`; el.textContent = ''; }
+  else { el.style.backgroundImage = ''; el.textContent = first(r.name); }
+}
+function renderAvCss(){
+  let css = '';
+  const seen = new Set();
+  for (const r of [me, ...Object.values(S.members)]){ if (!r || !okId(r.uid) || seen.has(r.uid)) continue; seen.add(r.uid); if (okImg(r.avatar)) css += `.u-${r.uid}{background-image:url("${r.avatar}")}`; }
+  for (const sv of servers) if (okId(sv.id) && okImg(sv.icon)) css += `.s-${sv.id}{background-image:url("${sv.icon}")}`;
+  $('#avcss').textContent = css;
+}
+
+/* ---------- 音 ---------- */
+const SND = {join:[[523,0,.16],[784,.09,.24]], leave:[[784,0,.16],[523,.09,.24]], mute:[[392,0,.08,.07,'triangle']], unmute:[[659,0,.08,.07,'triangle']], msg:[[880,0,.1,.06],[1175,.06,.16,.05]]};
+function ensureCtx(){ if (!S.ctx) try{ S.ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} if (S.ctx && S.ctx.state === 'suspended') S.ctx.resume().catch(()=>{}); return S.ctx; }
+function playSound(k){
+  if (k === 'msg' ? !cfg.msgSound : !cfg.sounds) return;
+  if (!S.ctx || !SND[k]) return;
+  const t0 = S.ctx.currentTime + .01;
+  for (const [f,dt,dur,vol=.1,type='sine'] of SND[k]){
+    const o=S.ctx.createOscillator(), g=S.ctx.createGain();
+    o.type=type; o.frequency.value=f;
+    g.gain.setValueAtTime(.0001,t0+dt); g.gain.exponentialRampToValueAtTime(vol,t0+dt+.015); g.gain.exponentialRampToValueAtTime(.0001,t0+dt+dur);
+    o.connect(g).connect(S.ctx.destination); o.start(t0+dt); o.stop(t0+dt+dur+.05);
+  }
+}
+
+/* ---------- マイク (声が小さいときは送らない「ゲート」つき) ---------- */
+const GATE_SRC = `class G extends AudioWorkletProcessor{
+constructor(){super();this.th=-50;this.auto=true;this.muted=false;this.nf=-60;this.hold=0;this.g=0;this.n=0;this.pk=-120;this.port.onmessage=e=>Object.assign(this,e.data)}
+process(ins,outs){const a=ins[0]&&ins[0][0],o=outs[0][0];if(!o)return true;if(!a){o.fill(0);return true}
+let s=0;for(let i=0;i<a.length;i++)s+=a[i]*a[i];const db=10*Math.log10(s/a.length+1e-12);
+if(db<this.nf)this.nf+=(db-this.nf)*.05;else this.nf+=.004;
+const th=this.auto?Math.max(this.nf+14,-62):this.th;
+if(db>th)this.hold=sampleRate*.4;else this.hold-=a.length;
+const t=(!this.muted&&this.hold>0)?1:0;
+for(let i=0;i<a.length;i++){this.g+=(t-this.g)*(t>this.g?.01:.0015);o[i]=a[i]*this.g}
+if(db>this.pk)this.pk=db;
+if(++this.n>=6){this.port.postMessage({db:this.pk,th,open:t===1});this.n=0;this.pk=-120}
+return true}}
+registerProcessor('fv-gate',G);`;
+async function setupAudio(){
+  ensureCtx();
+  if (!S.ctx) throw new Error('no audio');
+  if (!S.dest) S.dest = S.ctx.createMediaStreamDestination();
+  if (!S.gate && S.ctx.audioWorklet && !S.gateFailed){
+    try {
+      try { await S.ctx.audioWorklet.addModule('data:text/javascript;charset=utf-8,' + encodeURIComponent(GATE_SRC)); }
+      catch(e){ await S.ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([GATE_SRC],{type:'text/javascript'}))); }
+      S.gate = new AudioWorkletNode(S.ctx,'fv-gate',{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1]});
+      S.gate.port.onmessage = e => onLevel(e.data);
+      S.gate.connect(S.dest);
+    } catch(e){ console.warn('gate', e); S.gate = null; S.gateFailed = true; }
+  }
+  if (cfg.outputId && S.ctx.setSinkId) S.ctx.setSinkId(cfg.outputId).catch(()=>{});
+  if (S.gate) S.sendTrack = S.dest.stream.getAudioTracks()[0];
+  else if (!S.sendTrack) S.sendTrack = S.dest.stream.getAudioTracks()[0];
+  pushGate();
+  if (!S.rawStream) await openMic();
+}
+async function openMic(){
+  const c = {audio:{echoCancellation:cfg.echo, noiseSuppression:cfg.noise, autoGainControl:cfg.agc, channelCount:1}};
+  if (cfg.inputId) c.audio.deviceId = {exact:cfg.inputId};
+  let st;
+  try { st = await navigator.mediaDevices.getUserMedia(c); }
+  catch(e){
+    if (!cfg.inputId) throw e;
+    cfg.inputId=''; saveCfg(); delete c.audio.deviceId;
+    st = await navigator.mediaDevices.getUserMedia(c);
+  }
+  stopMic();
+  S.rawStream = st; S.noMic = false;
+  S.micSrc = S.ctx.createMediaStreamSource(st);
+  if (S.gate){ S.micSrc.connect(S.gate); }
+  else {
+    // AudioWorklet が使えないブラウザ用：そのままマイクを送る
+    const tr = st.getAudioTracks()[0]; S.sendTrack = tr; replaceSend(tr);
+    S.ana = S.ctx.createAnalyser(); S.ana.fftSize = 1024; S.micSrc.connect(S.ana);
+    if (!S.anaTimer) S.anaTimer = setInterval(() => { if (!S.ana) return; const b = new Float32Array(S.ana.fftSize); S.ana.getFloatTimeDomainData(b); let s=0; for (const v of b) s+=v*v; const db = 10*Math.log10(s/b.length+1e-12); const th = cfg.auto ? -50 : cfg.th; onLevel({db, th, open: db > th}); }, 80);
+  }
+  pushGate();
+}
+function stopMic(){
+  if (S.rawStream){ S.rawStream.getTracks().forEach(t => t.stop()); S.rawStream = null; }
+  if (S.micSrc){ try{ S.micSrc.disconnect(); }catch(e){} S.micSrc = null; }
+  S.ana = null; S.level = -120;
+  if (S.speaking){ S.speaking = false; broadcast({t:'spk', v:false}); renderSpeak(); }
+}
+function pushGate(){
+  const m = S.muted || S.deaf || S.noMic || !S.voice;
+  if (S.gate) S.gate.port.postMessage({th:cfg.th, auto:cfg.auto, muted:m});
+  else if (S.rawStream) S.rawStream.getAudioTracks().forEach(t => t.enabled = !m);
+}
+function replaceSend(track){
+  for (const P of S.peers.values()){
+    const pc = P.call && P.call.peerConnection; if (!pc) continue;
+    const snd = pc.getSenders().find(s => s.track ? s.track.kind === 'audio' : true);
+    if (snd) snd.replaceTrack(track).catch(()=>{});
+  }
+}
+function onLevel(d){
+  S.level = d.db; S.th = d.th;
+  const sp = !!d.open && !!S.voice && !(S.muted || S.deaf || S.noMic);
+  if (sp !== S.speaking){ S.speaking = sp; broadcast({t:'spk', v:sp}); renderSpeak(); }
+  if (!$('#mSet').classList.contains('hide')) renderMeter();
+}
+
+/* ---------- サーバーのデータ ---------- */
+function sanitizeMeta(m, id){
+  m = m && typeof m === 'object' ? m : {};
+  let chans = Array.isArray(m.channels) ? m.channels.filter(c => c && /^[a-z0-9-]{2,24}$/.test(c.id) && (c.type === 'text' || c.type === 'voice')).slice(0, 16).map(c => ({id:c.id, type:c.type, name:clean(c.name, 20) || (c.type === 'text' ? 'チャンネル' : 'ボイス')})) : [];
+  const seen = new Set(); chans = chans.filter(c => !seen.has(c.id) && seen.add(c.id));
+  if (!chans.some(c => c.type === 'text')) chans = DEF_CH().filter(c => c.type === 'text').concat(chans);
+  return {id, name:clean(m.name, 30) || '友だちのサーバー', icon:okImg(m.icon) ? m.icon : '', owner:okId(m.owner) ? m.owner : '', channels:chans, ver:+m.ver || 0, by:okId(m.by) ? m.by : ''};
+}
+function sanitizeMember(r){
+  if (!r || !okId(r.uid)) return null;
+  return {uid:r.uid, name:clean(r.name) || 'だれか', color:okColor(r.color), avatar:okImg(r.avatar) ? r.avatar : '', joinedAt:+r.joinedAt || 0, left:!!r.left, ver:+r.ver || 0};
+}
+function sanitizeMsg(m){
+  if (!m || typeof m.id !== 'string' || m.id.length > 40 || !okId(m.uid) || typeof m.ch !== 'string' || m.ch.length > 24) return null;
+  const sys = m.sys === 'join' || m.sys === 'create' ? m.sys : '';
+  return {id:m.id, ch:m.ch, uid:m.uid, ts:+m.ts || 0, text:sys ? '' : String(m.text || '').slice(0, 2000), sys};
+}
+const memberList = () => Object.values(S.members).filter(m => m && !m.left);
+const textChans = () => S.meta ? S.meta.channels.filter(c => c.type === 'text') : [];
+const chanById = id => S.meta && S.meta.channels.find(c => c.id === id);
+let saveT;
+function saveServer(now){
+  if (!S.sid) return;
+  clearTimeout(saveT);
+  const go = () => {
+    const data = {meta:S.meta, members:S.members, msgs:S.msgs, lastRead:S.lastRead};
+    if (!store.set(ak('s.' + S.sid), data)){ data.msgs = S.msgs.slice(-150); store.set(ak('s.' + S.sid), data); }
+  };
+  if (now) go(); else saveT = setTimeout(go, 400);
+}
+function myRecord(){
+  const old = S.members[me.uid];
+  const rejoin = !old || old.left;
+  return {uid:me.uid, name:me.name, color:me.color, avatar:me.avatar, joinedAt:old && !old.left ? old.joinedAt : Date.now(), left:false, ver:rejoin ? Math.max(Date.now(), (old ? old.ver : 0) + 1) : Math.max(me.ver, old.ver)};
+}
+function ensureSysMsgs(){
+  const ch = (textChans()[0] || {}).id || 'general';
+  let added = false;
+  for (const m of memberList()){
+    if (!m.joinedAt || m.uid === S.meta.owner) continue;
+    const id = 'join-' + m.uid;
+    if (!S.ids.has(id)){ S.msgs.push({id, ch, uid:m.uid, ts:m.joinedAt, text:'', sys:'join'}); S.ids.add(id); added = true; }
+  }
+  if (added) S.msgs.sort((a, b) => a.ts - b.ts);
+  return added;
+}
+function updateServerEntry(){
+  const e = servers.find(s => s.id === S.sid); if (!e) return;
+  if (e.name !== S.meta.name || e.icon !== S.meta.icon){ e.name = S.meta.name; e.icon = S.meta.icon; saveServers(); renderAvCss(); }
+}
+function mergeMeta(m){
+  if (!m || m.id !== S.sid) return false;
+  const n = sanitizeMeta(m, S.sid);
+  const cur = S.meta;
+  if (n.ver > cur.ver || (n.ver === cur.ver && n.by > cur.by)){
+    S.meta = n; updateServerEntry();
+    if (S.view === 'text' && !chanById(S.textCh)) S.textCh = (textChans()[0] || {}).id;
+    if (S.voice && !chanById(S.voice)) leaveVoice();
+    return true;
+  }
+  return false;
+}
+function mergeMembers(obj){
+  if (!obj || typeof obj !== 'object') return false;
+  let changed = false;
+  for (const k of Object.keys(obj).slice(0, 40)){
+    const r = sanitizeMember(obj[k]); if (!r || r.uid === me.uid) continue;
+    const cur = S.members[r.uid];
+    if (!cur || r.ver > cur.ver){ S.members[r.uid] = r; changed = true; }
+  }
+  if (changed){ ensureSysMsgs(); renderAvCss(); }
+  return changed;
+}
+function mergeMsgs(arr){
+  if (!Array.isArray(arr)) return [];
+  const added = [];
+  for (const x of arr.slice(-400)){
+    const m = sanitizeMsg(x); if (!m || S.ids.has(m.id)) continue;
+    if (m.sys && m.sys !== 'join' && m.sys !== 'create') continue;
+    S.msgs.push(m); S.ids.add(m.id); added.push(m);
+  }
+  if (added.length){
+    S.msgs.sort((a, b) => a.ts - b.ts);
+    if (S.msgs.length > 600){ for (const m of S.msgs.splice(0, S.msgs.length - 600)) S.ids.delete(m.id); }
+  }
+  return added;
+}
+
+/* ---------- つなぐしくみ (PeerJS) ---------- */
+const idOf = n => PREFIX + S.sid + '-' + n;
+const slotOf = id => { const m = /-(\d+)$/.exec(id || ''); return m ? +m[1] : 0; };
+const inServer = id => typeof id === 'string' && !!S.sid && id.startsWith(PREFIX + S.sid + '-') && slotOf(id) >= 1 && slotOf(id) <= SEATS;
+const isOpen = n => { const P = S.peers.get(n); return !!(P && P.conn && P.conn.open); };
+const okPeers = () => [...S.peers.values()].filter(P => P.ok && P.conn && P.conn.open);
+function sendTo(P, o){ if (P && P.conn && P.conn.open) try{ P.conn.send(o); }catch(e){ dbg('send err', e); } }
+function broadcast(o){ for (const P of S.peers.values()) if (P.ok || o.t === 'hello') sendTo(P, o); }
+const helloMsg = () => ({t:'hello', uid:me.uid, sess:S.sess, name:me.name, voice:S.voice, muted:S.muted || S.noMic, deaf:S.deaf, spk:S.speaking, scr:!!S.scrStream});
+const vsMsg = () => ({t:'vs', voice:S.voice, muted:S.muted || S.noMic, deaf:S.deaf, scr:!!S.scrStream});
+const syncMsg = () => ({t:'sync', meta:S.meta, members:S.members, msgs:S.msgs.slice(-200)});
+
+function setNet(s){ S.net = s; renderNet(); renderMembers(); renderUser(); }
+function startPeer(seat){
+  if (!S.sid || S.full) return;
+  const sid = S.sid;
+  const opts = {debug:0, config:{iceServers:ICE}};
+  if (qs.has('relay')) opts.config.iceTransportPolicy = 'relay';   // テスト用: 中継サーバー(TURN)だけを使う
+  if (TEST_SERVER){ const [h,p] = TEST_SERVER.split(':'); Object.assign(opts, {host:h, port:+p || 9000, path:'/', secure:false, key:'peerjs'}); }
+  const peer = new Peer(idOf(seat), opts);
+  S.peer = peer;
+  const mine = () => S.peer === peer && S.sid === sid;
+  peer.on('open', () => {
+    if (!mine()) return;
+    dbg('open seat', seat);
+    const firstOpen = !peer._fvOpened; peer._fvOpened = true;
+    S.seat = seat; S.fullTries = 0; setNet('online');
+    if (firstOpen) tryConnect(); else setTimeout(tryConnect, 500);
+  });
+  peer.on('error', err => { if (mine()) onPeerError(peer, seat, err); });
+  peer.on('connection', c => { if (mine()) onIncomingConn(c); else safeClose(c); });
+  peer.on('call', call => { if (mine()) onIncomingCall(call); else safeClose(call); });
+  peer.on('disconnected', () => {
+    if (!mine()) return;
+    setNet('offline');
+    clearTimeout(S.netT);
+    S.netT = setTimeout(() => { if (mine() && peer.disconnected && !peer.destroyed) try{ peer.reconnect(); }catch(e){} }, 1500);
+  });
+}
+function onPeerError(peer, seat, err){
+  const t = err && err.type;
+  dbg('peer error', t);
+  if (t === 'unavailable-id'){
+    if (peer._fvOpened){
+      clearTimeout(S.netT);
+      S.netT = setTimeout(() => { if (S.peer === peer && !peer.destroyed) try{ peer.reconnect(); }catch(e){} }, 5000);
+      return;
+    }
+    S.peer = null; try{ peer.destroy(); }catch(e){}
+    if (seat < SEATS) return startPeer(seat + 1);
+    if (++S.fullTries <= 30){ setNet('retry'); S.retryT = setTimeout(() => startPeer(1), 3000); }
+    else setNet('seats');
+    return;
+  }
+  if (t === 'peer-unavailable'){
+    const n = slotOf((((err && err.message) || '').match(/futarivoice-v2-[a-z0-9]+-\d+/) || [''])[0]);
+    if (n) closePend(n);
+    return;
+  }
+  if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed'){
+    setNet('offline');
+    clearTimeout(S.netT);
+    S.netT = setTimeout(() => {
+      if (S.peer !== peer) return;
+      if (peer.destroyed){ S.peer = null; startPeer(S.seat || seat); }
+      else if (peer.disconnected){ try{ peer.reconnect(); }catch(e){} }
+    }, 3000);
+    return;
+  }
+  if (t === 'browser-incompatible'){ toast('このブラウザでは通話できないよ。Chrome か Edge を使ってね', 6000); return; }
+  console.warn('peer error', t, err);
+}
+function closePend(n){ const p = S.pend[n]; if (p){ delete S.pend[n]; safeClose(p.c); } }
+function tryConnect(){
+  if (!S.peer || !S.peer.open || S.full) return;
+  S.lastTry = Date.now();
+  for (let n = 1; n <= SEATS; n++) if (n !== S.seat && !S.pend[n] && !isOpen(n)) dial(n);
+}
+function dial(n){
+  const c = S.peer.connect(idOf(n), {reliable:true, metadata:{uid:me.uid}});
+  if (!c) return;
+  S.pend[n] = {c, at:Date.now()};
+  c.on('open', () => {
+    if (!S.pend[n] || S.pend[n].c !== c){ safeClose(c); return; }
+    delete S.pend[n];
+    adoptConn(c, true);
+  });
+  c.on('error', () => { if (S.pend[n] && S.pend[n].c === c) delete S.pend[n]; });
+  c.on('close', () => { if (S.pend[n] && S.pend[n].c === c) delete S.pend[n]; });
+  setTimeout(() => { if (S.pend[n] && S.pend[n].c === c) closePend(n); }, 10000);
+}
+// 2人のあいだの「正式な」線は、席の番号が小さい人がかけたもの
+function onIncomingConn(c){
+  const n = slotOf(c.peer);
+  if (!inServer(c.peer) || n === S.seat || S.full){ setTimeout(() => safeClose(c), 50); return; }
+  if (S.seat < n){
+    const p = S.pend[n];
+    if (p && Date.now() - p.at < 4000){
+      setTimeout(() => safeClose(c), 50);
+      const sid = S.sid;
+      setTimeout(() => { if (S.sid === sid && !isOpen(n) && S.peer && S.peer.open){ closePend(n); dial(n); } }, 6000);
+      return;
+    }
+    const P = S.peers.get(n);
+    if (P && P.canon && P.conn && P.conn.open && Date.now() - P.lastRx < 5000){ setTimeout(() => safeClose(c), 50); return; }
+  }
+  c.on('open', () => adoptConn(c, false));
+}
+function newPeer(n){ return {seat:n, id:idOf(n), conn:null, canon:false, uid:'', sess:'', ok:false, voice:'', muted:false, deaf:false, spk:false, scr:false, call:null, scrIn:null, scrOut:null, remoteScr:null, audio:null, lastRx:0, lastPing:0, askAt:0, ping:0}; }
+function adoptConn(c, initiator){
+  const n = slotOf(c.peer);
+  const canon = initiator ? S.seat < n : S.seat > n;
+  let P = S.peers.get(n);
+  if (P && P.conn && P.conn !== c && P.conn.open){
+    if (!canon && P.canon && Date.now() - P.lastRx < 5000){ safeClose(c); return; }
+    P.conn._fvDrop = true; safeClose(P.conn);
+  }
+  if (S.pend[n] && S.pend[n].c !== c) closePend(n);
+  if (!P){ P = newPeer(n); S.peers.set(n, P); }
+  dbg('adopt', n, initiator ? 'out' : 'in');
+  P.conn = c; P.canon = canon; P.lastRx = Date.now(); P.lastPing = 0;
+  c.on('data', d => onData(P, c, d));
+  c.on('close', () => { if (P.conn === c && !c._fvDrop && S.peers.get(n) === P) removePeer(n, true); });
+  c.on('error', e => console.warn('conn', e));
+  sendTo(P, helloMsg());
+}
+function removePeer(n, lost, quiet){
+  const P = S.peers.get(n); if (!P) return;
+  dbg('remove', n, lost ? 'lost' : '', quiet ? 'quiet' : '');
+  S.peers.delete(n);
+  if (P.conn){ P.conn._fvDrop = true; safeClose(P.conn); }
+  resetMedia(P);
+  if (P.audio){ P.audio.srcObject = null; P.audio.remove(); P.audio = null; }
+  if (!quiet && P.ok && P.voice && P.voice === S.voice) playSound('leave');
+  if (S.watch === n) S.watch = null;
+  for (const ch of Object.keys(S.typing)) delete S.typing[ch][P.uid];
+  if (lost && S.sid){ const sid = S.sid; setTimeout(() => { if (S.sid === sid && !isOpen(n)) tryConnect(); }, 1500); }
+  renderAll();
+}
+function onFull(){
+  const others = memberList().filter(m => m.uid !== me.uid && m.ver > 0);
+  if (others.length) return;
+  dbg('full');
+  S.full = true; clearTimeout(S.retryT);
+  for (const n of [...S.peers.keys()]) removePeer(n, false, true);
+  for (const n of Object.keys(S.pend)) closePend(n);
+  const p = S.peer; S.peer = null; if (p) try{ p.destroy(); }catch(e){}
+  setNet('full'); renderAll();
+}
+function onHello(P, d){
+  const uid = d.uid;
+  if (!okId(uid)) return;
+  if (uid === me.uid){
+    toast('同じアカウントで、2か所から入っているみたい。友だちとためすときは、べつのアカウントでログインしてね', 6000);
+    removePeer(P.seat, false, true); return;
+  }
+  for (const [m, Q] of S.peers) if (Q !== P && Q.uid === uid) removePeer(m, false, true);   // 前の自分が残っていたら消す
+  const known = S.members[uid] && !S.members[uid].left;
+  if (!known && memberList().length >= MAX){ sendTo(P, {t:'full'}); setTimeout(() => removePeer(P.seat, false, true), 800); return; }
+  const r0 = S.members[uid];
+  if (r0 && r0.left){ r0.left = false; r0.ver = Math.max(Date.now(), r0.ver + 1); saveServer(); }
+  if (P.sess && P.sess !== d.sess) resetMedia(P);
+  const firstHello = !P.ok;
+  P.uid = uid; P.sess = String(d.sess || ''); P.ok = true;
+  P.voice = typeof d.voice === 'string' && /^[a-z0-9-]{2,24}$/.test(d.voice) ? d.voice : '';
+  P.muted = !!d.muted; P.deaf = !!d.deaf; P.spk = !!d.spk; P.scr = !!d.scr;
+  if (!S.members[uid]) S.members[uid] = {uid, name:clean(d.name) || 'だれか', color:COLORS[0], avatar:'', joinedAt:0, left:false, ver:0};
+  if (firstHello){
+    sendTo(P, syncMsg()); sendTo(P, vsMsg());
+    if (P.voice && P.voice === S.voice) playSound('join');
+    const early = S.early.filter(x => slotOf(x.call.peer) === P.seat); S.early = S.early.filter(x => !early.includes(x));
+    for (const x of early) handleCall(P, x.call);
+  }
+  ensureCalls(); renderAll();
+}
+function onData(P, c, d){
+  if (c !== P.conn || !d || typeof d !== 'object') return;
+  const now = Date.now(); P.lastRx = now;
+  switch (d.t){
+    case 'hello': return onHello(P, d);
+    case 'who': return sendTo(P, helloMsg());
+    case 'full': return onFull();
+    case 'ping': return sendTo(P, {t:'pong', ts:d.ts});
+    case 'pong': P.ping = Math.max(0, now - (+d.ts || 0)); return renderUser();
+  }
+  if (!P.ok){ if (now - P.askAt > 1000){ P.askAt = now; sendTo(P, {t:'who'}); } return; }
+  switch (d.t){
+    case 'sync': {
+      const a = mergeMeta(d.meta), b = mergeMembers(d.members), added = mergeMsgs(d.msgs);
+      if (ensureSysMsgs() || added.length || a || b){ saveServer(); renderAll(); if (S.view === 'text' && (b || added.some(m => m.ch === S.textCh))) renderMessages(); }
+      break;
+    }
+    case 'prof': if (d.rec && d.rec.uid === P.uid && mergeMembers({[P.uid]:d.rec})){ saveServer(); renderAll(); renderMessages(); } break;
+    case 'meta': if (mergeMeta(d.meta)){ saveServer(); renderAll(); } break;
+    case 'vs': {
+      const before = P.voice;
+      P.voice = typeof d.voice === 'string' && /^[a-z0-9-]{0,24}$/.test(d.voice) ? d.voice : '';
+      P.muted = !!d.muted; P.deaf = !!d.deaf; P.scr = !!d.scr;
+      if (!P.voice) P.spk = false;
+      if (S.voice && before !== P.voice){ if (P.voice === S.voice) playSound('join'); else if (before === S.voice) playSound('leave'); }
+      ensureCalls(); renderAll(); break;
+    }
+    case 'spk': P.spk = !!d.v; renderSpeak(); break;
+    case 'msg': {
+      if (!d.m || d.m.uid !== P.uid) break;
+      const added = mergeMsgs([d.m]);
+      if (added.length){
+        const m = added[0]; saveServer();
+        if (S.typing[m.ch]) delete S.typing[m.ch][P.uid];
+        const seen = S.view === 'text' && S.textCh === m.ch && !document.hidden;
+        if (S.view === 'text' && S.textCh === m.ch) appendMsg(m); else renderChannels();
+        if (seen) markRead(); else { playSound('msg'); renderBadges(); }
+        renderTyping();
+      }
+      break;
+    }
+    case 'typing': if (typeof d.ch === 'string'){ (S.typing[d.ch] = S.typing[d.ch] || {})[P.uid] = now + 3500; renderTyping(); setTimeout(renderTyping, 3600); } break;
+    case 'screen':
+      P.scr = !!d.on;
+      if (!d.on){ if (P.scrIn){ safeClose(P.scrIn); P.scrIn = null; } P.remoteScr = null; if (S.watch === P.seat) S.watch = null; }
+      renderAll(); break;
+    case 'quit': {
+      const r = S.members[P.uid];
+      if (r){ r.left = true; r.ver = Math.max(+d.ver || 0, r.ver + 1); saveServer(); }
+      removePeer(P.seat, false); break;
+    }
+    case 'kick': {
+      const r = sanitizeMember(d.rec);
+      if (!r || !r.left || r.uid === me.uid || r.uid === P.uid || okPeers().some(Q => Q.uid === r.uid)) break;
+      if (mergeMembers({[r.uid]:r})){ saveServer(); renderAll(); }
+      break;
+    }
+    case 'bye': removePeer(P.seat, false); break;
+  }
+}
+function tick(){
+  if (!S.sid) return;
+  const now = Date.now();
+  for (const [n, P] of S.peers){
+    if (!P.conn || !P.conn.open) continue;
+    if (now - P.lastPing > 2000){ P.lastPing = now; sendTo(P, {t:'ping', ts:now}); }
+    if (!P.ok && now - P.askAt > 1500){ P.askAt = now; sendTo(P, {t:'who'}); }
+    if (now - P.lastRx > 12000){ removePeer(n, true); }
+  }
+  if (S.peer && S.peer.open && !S.full && now - S.lastTry > 45000) tryConnect();
+}
+function startTicker(){
+  // うしろに隠れたタブでも止まりにくいように、Worker でも時計を動かす
+  try { const w = new Worker('data:text/javascript,setInterval(()=>postMessage(0),1000)'); w.onmessage = tick; S.worker = w; } catch(e){}
+  setInterval(tick, 1000);
+}
+
+/* ---------- 声と画面 ---------- */
+function opusTune(sdp){
+  const m = sdp.match(/a=rtpmap:(\d+) opus\/48000/i); if (!m) return sdp;
+  const re = new RegExp('a=fmtp:' + m[1] + ' ([^\\r\\n]*)');
+  return sdp.replace(re, (all, p) => 'a=fmtp:' + m[1] + ' ' + p.split(';').filter(x => x && !/^(maxaveragebitrate|useinbandfec)=/.test(x)).concat(['maxaveragebitrate=64000','useinbandfec=1']).join(';'));
+}
+function resetMedia(P){
+  if (P.call){ const c = P.call; P.call = null; safeClose(c); }
+  if (P.scrIn){ const c = P.scrIn; P.scrIn = null; safeClose(c); }
+  if (P.scrOut){ const c = P.scrOut; P.scrOut = null; safeClose(c); }
+  P.remoteScr = null; P.spk = P.spk && !!P.voice;
+  if (P.audio) P.audio.srcObject = null;
+}
+// 同じボイスチャンネルにいる人とだけ、声の線をつなぐ（席の番号が小さい人がかける）
+function ensureCalls(){
+  for (const P of S.peers.values()){
+    if (!P.ok) continue;
+    const same = !!S.voice && P.voice === S.voice;
+    if (!same){ if (P.call || P.scrIn || P.scrOut) resetMedia(P); continue; }
+    if (!P.call && S.seat < P.seat && S.sendTrack) startCall(P);
+    if (S.scrStream && !P.scrOut) shareTo(P);
+  }
+}
+function startCall(P){
+  const call = S.peer && S.peer.call(P.id, new MediaStream([S.sendTrack]), {metadata:{kind:'voice'}, sdpTransform:opusTune});
+  if (call) wireCall(P, call);
+}
+function wireCall(P, call){
+  P.call = call;
+  call.on('stream', st => { if (P.call === call) playRemote(P, st); });
+  call.on('close', () => { if (P.call === call) P.call = null; });
+  call.on('error', e => console.warn('call', e));
+  const pc = call.peerConnection;
+  if (pc) pc.addEventListener('iceconnectionstatechange', () => {
+    if (P.call !== call) return;
+    P.ice = pc.iceConnectionState; renderUser();
+    if (P.ice === 'failed' && S.seat < P.seat) setTimeout(() => { if (P.call === call && S.peers.get(P.seat) === P){ safeClose(call); P.call = null; ensureCalls(); } }, 1500);
+  });
+}
+function onIncomingCall(call){
+  if (!inServer(call.peer)){ safeClose(call); return; }
+  const P = S.peers.get(slotOf(call.peer));
+  if (!P || !P.ok){
+    S.early.push({call, at:Date.now()});
+    setTimeout(() => { const i = S.early.findIndex(x => x.call === call); if (i >= 0){ S.early.splice(i, 1); safeClose(call); } }, 8000);
+    return;
+  }
+  handleCall(P, call);
+}
+function handleCall(P, call){
+  const kind = call.metadata && call.metadata.kind;
+  if (!S.voice){ safeClose(call); return; }
+  if (kind === 'screen'){
+    if (P.scrIn) safeClose(P.scrIn);
+    P.scrIn = call; call.answer();
+    call.on('stream', st => { if (P.scrIn === call){ P.remoteScr = st; S.watch = P.seat; S.watchOff = false; renderAll(); } });
+    call.on('close', () => { if (P.scrIn === call){ P.scrIn = null; P.remoteScr = null; if (S.watch === P.seat) S.watch = null; renderAll(); } });
+    return;
+  }
+  if (P.call && P.call !== call) safeClose(P.call);
+  if (P.voice !== S.voice) P.voice = S.voice;
+  call.answer(new MediaStream([S.sendTrack]), {sdpTransform:opusTune});
+  wireCall(P, call);
+}
+const volOf = uid => Math.max(0, Math.min(100, cfg.vol[uid] == null ? 100 : +cfg.vol[uid]));
+function playRemote(P, st){
+  if (!P.audio){ P.audio = document.createElement('audio'); P.audio.autoplay = true; P.audio.setAttribute('playsinline', ''); P.audio.className = 'hide'; document.body.appendChild(P.audio); }
+  const a = P.audio;
+  a.srcObject = st; a.volume = volOf(P.uid) / 100; a.muted = S.deaf;
+  if (cfg.outputId && a.setSinkId) a.setSinkId(cfg.outputId).catch(()=>{});
+  const p = a.play(); if (p && p.catch) p.catch(() => $('#unlock').classList.remove('hide'));
+}
+async function joinVoice(ch){
+  if (!chanById(ch)) return;
+  if (S.voice === ch){ showVoice(ch); return; }
+  ensureCtx();
+  if (S.voice) leaveVoice(true);
+  try { await setupAudio(); }
+  catch(e){
+    console.warn('mic', e);
+    if (!S.ctx){ toast('音が使えなかったよ。ページを開きなおしてね'); return; }
+    if (!S.dest) S.dest = S.ctx.createMediaStreamDestination();
+    if (!S.sendTrack) S.sendTrack = S.dest.stream.getAudioTracks()[0];
+    S.noMic = true;
+    toast('マイクが使えないので、聞くだけで入ったよ。アドレスバーのマークから、マイクを「許可」にしてね', 7000);
+  }
+  S.voice = ch; S.watch = null; S.watchOff = false;
+  pushGate(); broadcast(vsMsg()); ensureCalls(); playSound('join');
+  showVoice(ch); renderAll();
+}
+function leaveVoice(silent){
+  if (!S.voice) return;
+  stopScreen(true);
+  S.voice = '';
+  for (const P of S.peers.values()) resetMedia(P);
+  if (!S.micTest) stopMic();
+  pushGate(); broadcast(vsMsg());
+  if (!silent) playSound('leave');
+  renderAll();
+}
+const canShare = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+async function toggleScreen(){
+  if (S.scrStream) return stopScreen();
+  if (!S.voice){ toast('先にボイスチャンネルに入ってね'); return; }
+  if (!canShare){ toast('この端末では画面共有ができないよ'); return; }
+  let st;
+  try { st = await navigator.mediaDevices.getDisplayMedia({video:{frameRate:{ideal:30, max:60}}, audio:true}); }
+  catch(e){ return; }
+  if (!S.voice){ st.getTracks().forEach(t => t.stop()); return; }
+  const v = st.getVideoTracks()[0];
+  if (v){ try{ v.contentHint = 'motion'; }catch(e){} v.addEventListener('ended', () => stopScreen()); }
+  S.scrStream = st; S.watch = 'me'; S.watchOff = false;
+  for (const P of S.peers.values()) if (P.ok && P.voice === S.voice) shareTo(P);
+  broadcast({t:'screen', on:true}); broadcast(vsMsg()); renderAll();
+  toast('画面の共有をはじめたよ');
+}
+function shareTo(P){
+  if (!S.scrStream || !S.peer) return;
+  if (P.scrOut) safeClose(P.scrOut);
+  P.scrOut = S.peer.call(P.id, S.scrStream, {metadata:{kind:'screen'}});
+}
+function stopScreen(quiet){
+  if (!S.scrStream) return;
+  S.scrStream.getTracks().forEach(t => t.stop()); S.scrStream = null;
+  for (const P of S.peers.values()) if (P.scrOut){ safeClose(P.scrOut); P.scrOut = null; }
+  if (S.watch === 'me') S.watch = null;
+  broadcast({t:'screen', on:false});
+  if (!quiet) broadcast(vsMsg());
+  renderAll();
+}
+function setMuted(v){
+  if (S.noMic && !v && S.voice){ toast('マイクが使えないよ。設定でマイクをえらんでね'); return; }
+  S.muted = v;
+  if (!v && S.deaf){ S.deaf = false; applyDeaf(); }
+  pushGate(); ensureCtx(); playSound(v ? 'mute' : 'unmute');
+  broadcast(vsMsg()); renderAll();
+}
+function setDeaf(v){
+  S.deaf = v; applyDeaf(); pushGate(); ensureCtx(); playSound(v ? 'mute' : 'unmute');
+  broadcast(vsMsg()); renderAll();
+}
+function applyDeaf(){
+  for (const P of S.peers.values()) if (P.audio) P.audio.muted = S.deaf;
+  const sv = $('#sv'); if (sv.srcObject && sv.srcObject !== S.scrStream) sv.muted = S.deaf;
+}
+
+/* ---------- サーバーに入る・出る ---------- */
+function enterServer(id){
+  if (S.sid === id){ openText(S.textCh || (textChans()[0] || {}).id); return; }
+  exitServer();
+  const d = store.get(ak('s.' + id), null);
+  if (!d){ servers = servers.filter(s => s.id !== id); saveServers(); renderRail(); return; }
+  S.sid = id; S.meta = sanitizeMeta(d.meta, id);
+  S.members = {}; for (const k of Object.keys(d.members || {})){ const r = sanitizeMember(d.members[k]); if (r) S.members[r.uid] = r; }
+  S.msgs = (Array.isArray(d.msgs) ? d.msgs : []).map(sanitizeMsg).filter(Boolean); S.ids = new Set(S.msgs.map(m => m.id));
+  S.lastRead = d.lastRead && typeof d.lastRead === 'object' ? d.lastRead : {};
+  if (!S.lastRead._base) S.lastRead._base = Date.now();
+  S.members[me.uid] = myRecord();
+  ensureSysMsgs();
+  S.peers = new Map(); S.pend = {}; S.early = []; S.seat = 0; S.full = false; S.fullTries = 0; S.typing = {}; S.watch = null;
+  cfg.last = id; store.set(ak('last'), id); saveServer(true);
+  renderAvCss();
+  openText((textChans()[0] || {}).id);
+  setNet('connecting');
+  startPeer(1);
+}
+function exitServer(){
+  if (!S.sid) return;
+  leaveVoice(true);
+  broadcast({t:'bye'});
+  const sid = S.sid;
+  for (const n of [...S.peers.keys()]) removePeer(n, false, true);
+  for (const n of Object.keys(S.pend)) closePend(n);
+  for (const x of S.early) safeClose(x.call); S.early = [];
+  const p = S.peer; S.peer = null; if (p) setTimeout(() => { try{ p.destroy(); }catch(e){} }, 150);
+  clearTimeout(S.retryT); clearTimeout(S.netT);
+  saveServer(true);
+  S.sid = ''; S.meta = null; S.members = {}; S.msgs = []; S.ids = new Set(); S.seat = 0; S.net = 'idle';
+  dbg('exit', sid);
+}
+function goHome(){
+  exitServer(); S.view = 'home'; renderAll();
+  closeDrawer();
+}
+function createServer(name, icon){
+  const id = rid(12), now = Date.now();
+  const meta = {id, name:clean(name, 30) || (me.name + 'のサーバー'), icon:okImg(icon) ? icon : '', owner:me.uid, channels:DEF_CH(), ver:now, by:me.uid};
+  store.set(ak('s.' + id), {meta, members:{}, msgs:[{id:'create', ch:'general', uid:me.uid, ts:now, text:'', sys:'create'}], lastRead:{_base:now}});
+  servers.push({id, name:meta.name, icon:meta.icon}); saveServers();
+  enterServer(id);
+  openInvite();
+}
+function parseInvite(t){
+  t = String(t || '').trim();
+  const m = t.match(/invite[\/-]([a-z0-9]{12})(?:\.([A-Za-z0-9_-]{1,200}))?/) || t.match(/^([a-z0-9]{12})(?:\.([A-Za-z0-9_-]{1,200}))?$/);
+  if (!m) return null;
+  let name = ''; try { if (m[2]) name = clean(unb64u(m[2]), 30); } catch(e){}
+  return {id:m[1], name};
+}
+function inviteLink(){
+  const code = S.sid + '.' + b64u(S.meta.name.slice(0, 30));
+  return /^https?:$/.test(location.protocol) ? location.origin + location.pathname + '#invite-' + code : 'futari-voice://invite/' + code;
+}
+function joinByInvite(text, errEl){
+  const inv = parseInvite(text);
+  if (!inv){ errEl.textContent = '招待リンクが正しくないみたい。もう一度コピーしてね'; return false; }
+  errEl.textContent = '';
+  if (!servers.some(s => s.id === inv.id)){
+    if (servers.length >= 30){ errEl.textContent = 'サーバーが多すぎるよ。いらないサーバーから抜けてね'; return false; }
+    const now = Date.now();
+    const meta = {id:inv.id, name:inv.name || '友だちのサーバー', icon:'', owner:'', channels:DEF_CH(), ver:0, by:''};
+    store.set(ak('s.' + inv.id), {meta, members:{}, msgs:[], lastRead:{_base:now}});
+    servers.push({id:inv.id, name:meta.name, icon:''}); saveServers();
+  }
+  closeModals(); enterServer(inv.id);
+  toast((inv.name || 'サーバー') + ' に入ったよ');
+  return true;
+}
+function quitServer(){
+  if (!S.sid) return;
+  const sid = S.sid, name = S.meta.name;
+  const r = S.members[me.uid]; const ver = Math.max(Date.now(), (r ? r.ver : 0) + 1);
+  broadcast({t:'quit', ver});
+  setTimeout(() => {
+    exitServer();
+    servers = servers.filter(s => s.id !== sid); saveServers(); store.del(ak('s.' + sid));
+    if (servers.length) enterServer(servers[0].id); else goHome();
+    toast(name + ' から抜けたよ');
+  }, 300);
+}
+
+function kickMember(uid){
+  const r = S.members[uid]; if (!r || uid === me.uid) return;
+  if (okPeers().some(P => P.uid === uid)){ toast('オンラインの人は外せないよ'); return; }
+  r.left = true; r.ver = Math.max(Date.now(), r.ver + 1);
+  saveServer(); broadcast({t:'kick', rec:r}); renderAll();
+  toast(r.name + ' をメンバーから外したよ');
+}
+
+/* ---------- チャット ---------- */
+function openText(ch){
+  if (!S.sid || !chanById(ch)) return;
+  S.view = 'text'; S.textCh = ch;
+  closeDrawer(); renderAll(); renderMessages(); markRead();
+  if (innerWidth > 820) setTimeout(() => $('#ci').focus(), 0);
+}
+function showVoice(ch){ S.view = 'voice'; S.viewVoice = ch; closeDrawer(); renderAll(); }
+function markRead(){
+  if (S.view !== 'text' || !S.textCh) return;
+  S.lastRead[S.textCh] = Date.now(); saveServer(); renderBadges();
+}
+function unreadIn(ch){
+  const since = S.lastRead[ch] || S.lastRead._base || 0; let n = 0;
+  for (const m of S.msgs) if (m.ch === ch && m.ts > since && m.uid !== me.uid && !m.sys) n++;
+  return n;
+}
+function renderMessages(){
+  const box = $('#msgs'), c = chanById(S.textCh);
+  if (!c) return;
+  box.innerHTML = `<div class="welcome"><div class="hb">${ic('hash')}</div><h2>#${esc(c.name)} へようこそ！</h2><p>ここが #${esc(c.name)} チャンネルのはじまりだよ。</p></div>`;
+  S.lastEl = null;
+  for (const m of S.msgs) if (m.ch === S.textCh) appendMsg(m, true);
+  box.scrollTop = box.scrollHeight;
+}
+function appendMsg(m, bulk){
+  const box = $('#msgs'), last = box.lastElementChild;
+  const near = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+  const r = rec(m.uid);
+  if (m.sys){
+    const t = m.sys === 'create' ? ' がサーバーを作ったよ' : ' がサーバーに入ったよ';
+    box.insertAdjacentHTML('beforeend', `<div class="sys">${ic('in')}<span><b>${esc(r.name)}</b>${t}</span><time>${fmtTime(m.ts)}</time></div>`);
+  } else if (last && last.classList.contains('mg') && last.dataset.uid === m.uid && m.ts - (+last.dataset.ts) < 300000){
+    last.querySelector('.body').insertAdjacentHTML('beforeend', `<div class="ln">${fmtText(m.text)}</div>`); last.dataset.ts = m.ts;
+  } else {
+    box.insertAdjacentHTML('beforeend', `<div class="mg" data-uid="${m.uid}" data-ts="${m.ts}">${avHTML(m.uid, 'md')}<div class="body"><div class="mh"><b style="color:${okColor(r.color)}">${esc(r.name)}</b><time>${fmtTime(m.ts)}</time></div><div class="ln">${fmtText(m.text)}</div></div></div>`);
+  }
+  if (!bulk && (near || m.uid === me.uid)) box.scrollTop = box.scrollHeight;
+}
+function sendMessage(text){
+  if (!S.sid || !S.textCh) return;
+  const m = {id:Date.now().toString(36) + rid(5), ch:S.textCh, uid:me.uid, ts:Date.now(), text:text.slice(0, 2000), sys:''};
+  mergeMsgs([m]); saveServer(); appendMsg(m); markRead();
+  broadcast({t:'msg', m}); S.typingSent = 0;
+}
+function renderTyping(){
+  const t = S.typing[S.textCh] || {}, now = Date.now();
+  const names = Object.keys(t).filter(u => t[u] > now).map(u => rec(u).name);
+  $('#typing').innerHTML = names.length ? `<b>${esc(names.join('、'))}</b> が入力中<span class="dots"></span>` : '';
+}
+
+/* ---------- 画面の表示 ---------- */
+function renderRail(){
+  $('#homeBtn').classList.toggle('on', !S.sid);
+  $('#srvList').innerHTML = servers.map(s => {
+    const img = okImg(s.icon), on = s.id === S.sid;
+    const unread = on && S.meta && textChans().some(c => unreadIn(c.id) > 0);
+    return `<div class="rwrap"><button class="ri s-${s.id}${img ? ' img' : ''}${on ? ' on' : ''}${unread ? ' unread' : ''}" data-sid="${s.id}" title="${esc(s.name)}"><span class="pip"></span>${img ? '' : esc(first(s.name))}</button></div>`;
+  }).join('');
+}
+function voiceMembers(ch){
+  const list = [];
+  if (S.voice === ch) list.push({me:true, uid:me.uid, muted:S.muted || S.noMic, deaf:S.deaf, spk:S.speaking, scr:!!S.scrStream});
+  for (const P of [...S.peers.values()].sort((a, b) => a.seat - b.seat)) if (P.ok && P.voice === ch) list.push({P, uid:P.uid, muted:P.muted, deaf:P.deaf, spk:P.spk && !P.muted, scr:P.scr});
+  return list;
+}
+function iconsFor(muted, deaf, live){ return (muted ? ic('mic-off') : '') + (deaf ? ic('head-off') : '') + (live ? '<span class="live">LIVE</span>' : ''); }
+function renderChannels(){
+  const el = $('#chList');
+  if (!S.sid){
+    el.innerHTML = `<div class="empty">${servers.length ? '左のアイコンからサーバーをえらんでね。' : 'まだサーバーがないよ。<br>まんなかの「作る」か、招待リンクで入ろう。'}</div>`;
+    return;
+  }
+  const t = textChans(), v = S.meta.channels.filter(c => c.type === 'voice');
+  let h = `<div class="cat"><span>テキストチャンネル</span><button class="ib" data-new="text" title="テキストチャンネルを作る">${ic('plus')}</button></div>`;
+  for (const c of t){
+    const on = S.view === 'text' && S.textCh === c.id, n = on ? 0 : unreadIn(c.id);
+    h += `<button class="ch${on ? ' on' : ''}${n ? ' unread' : ''}" data-ch="${c.id}">${ic('hash')}<span>${esc(c.name)}</span>${n ? `<b class="badge">${n > 9 ? '9+' : n}</b>` : ''}</button>`;
+  }
+  h += `<div class="cat"><span>ボイスチャンネル</span><button class="ib" data-new="voice" title="ボイスチャンネルを作る">${ic('plus')}</button></div>`;
+  for (const c of v){
+    const on = S.view === 'voice' && S.viewVoice === c.id;
+    h += `<button class="ch${on ? ' on' : ''}" data-vc="${c.id}">${ic('vol')}<span>${esc(c.name)}</span></button><div class="vm">`;
+    for (const m of voiceMembers(c.id)) h += `<div class="mem${m.spk ? ' spk' : ''}" data-spk="${m.me ? 'me' : m.P.seat}">${avHTML(m.uid, 'xs')}<span class="nm">${esc(rec(m.uid).name)}</span><span class="ics">${iconsFor(m.muted, m.deaf, m.scr)}</span></div>`;
+    h += '</div>';
+  }
+  el.innerHTML = renderNetHTML() + h;
+}
+function renderNetHTML(){
+  const s = S.net;
+  if (s === 'online' || s === 'idle') return '';
+  if (s === 'connecting') return `<div class="netbar dots">サーバーにつないでいます</div>`;
+  if (s === 'offline') return `<div class="netbar r">ネットが切れたかも。自動でつなぎなおすよ<span class="dots"></span></div>`;
+  if (s === 'retry') return `<div class="netbar">入れるかためしています<span class="dots"></span></div>`;
+  if (s === 'seats') return `<div class="netbar r">いまは入れないみたい。少ししてから開きなおしてね</div>`;
+  if (s === 'full') return `<div class="netbar r">このサーバーは4人でいっぱいだよ。入れなかった…<br><button class="btn2" data-act="forget">リストから消す</button></div>`;
+  return '';
+}
+function renderNet(){ renderChannels(); }
+function renderBadges(){
+  renderChannels(); renderRail();
+  let n = 0; for (const c of textChans()) n += unreadIn(c.id);
+  document.title = (n ? '(' + n + ') ' : '') + (S.meta ? S.meta.name + ' - ' : '') + 'ふたりボイス';
+}
+function renderUser(){
+  paintAv($('#meAv'), me);
+  $('#meName').textContent = me.name;
+  const muted = S.muted || (S.noMic && S.voice);
+  $('#meSub').textContent = S.deaf ? 'スピーカーミュート中' : muted ? 'ミュート中' : (S.sid && S.net !== 'online' ? 'つないでいます…' : 'オンライン');
+  $('#meDot').classList.toggle('off', !!S.sid && S.net !== 'online');
+  const inV = !!S.voice && S.sid;
+  $('#vstat').classList.toggle('hide', !inV);
+  if (inV){
+    const c = chanById(S.voice), pings = okPeers().filter(P => P.voice === S.voice && P.ping).map(P => P.ping);
+    const avg = pings.length ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : 0;
+    $('#vsSub').textContent = (avg ? 'ping ' + avg + 'ms ・ ' : '') + (c ? c.name : '') + ' / ' + S.meta.name;
+  }
+  const off = S.muted || S.deaf || (S.noMic && !!S.voice);
+  for (const b of [$('#btnMic'), $('#cbMic')]) setBtn(b, off, '#i-mic', '#i-mic-off', 'ミュート (M)', 'ミュート解除 (M)');
+  for (const b of [$('#btnDeaf'), $('#cbDeaf')]) setBtn(b, S.deaf, '#i-head', '#i-head-off', 'スピーカーミュート (D)', 'スピーカーミュート解除 (D)');
+  for (const b of [$('#vsScreen'), $('#cbScreen')]){ b.classList.toggle('hide', !canShare); b.classList.toggle('on', !!S.scrStream); b.title = S.scrStream ? '画面の共有をやめる' : '画面を共有'; }
+}
+function setBtn(b, off, onHref, offHref, onTitle, offTitle){
+  b.classList.toggle('off', off); b.querySelector('use').setAttribute('href', off ? offHref : onHref);
+  b.title = off ? offTitle : onTitle; b.setAttribute('aria-pressed', off);
+}
+function renderMain(){
+  const v = S.sid ? S.view : 'home';
+  $('#vHome').classList.toggle('hide', v !== 'home');
+  $('#vText').classList.toggle('hide', v !== 'text');
+  $('#vVoice').classList.toggle('hide', v !== 'voice');
+  $('#btnMembers').classList.toggle('hide', !S.sid);
+  $('#btnInvite2').classList.toggle('hide', !S.sid);
+  $('#app').classList.toggle('mem-on', !!(S.sid && (innerWidth > 1100 ? cfg.members : S.memOpen)));
+  $('#srvName').textContent = S.sid ? S.meta.name : 'ホーム';
+  $('#srvChev').classList.toggle('hide', !S.sid);
+  const icon = $('#mIcon use');
+  if (v === 'home'){ icon.setAttribute('href', '#i-logo'); $('#mTitle').textContent = 'ホーム'; $('#homeTitle').textContent = servers.length ? 'サーバーを追加しよう' : 'サーバーを作ろう！'; }
+  else if (v === 'text'){ icon.setAttribute('href', '#i-hash'); const c = chanById(S.textCh); $('#mTitle').textContent = c ? c.name : ''; $('#ci').placeholder = c ? '#' + c.name + ' へメッセージを送信' : ''; }
+  else { icon.setAttribute('href', '#i-vol'); const c = chanById(S.viewVoice); $('#mTitle').textContent = c ? c.name : ''; }
+  const online = okPeers().length + (S.sid && S.net === 'online' ? 1 : 0);
+  const b = $('#onlineBadge'); b.textContent = online; b.classList.toggle('hide', !S.sid || online < 2); b.style.background = 'var(--green)';
+}
+function renderMembers(){
+  const el = $('#mlist');
+  if (!S.sid){ el.innerHTML = ''; return; }
+  const onlineUids = new Set(okPeers().map(P => P.uid)); if (S.net === 'online') onlineUids.add(me.uid);
+  const voiceOf = uid => uid === me.uid ? S.voice : ((okPeers().find(P => P.uid === uid) || {}).voice || '');
+  const all = memberList().sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
+  const on = all.filter(m => onlineUids.has(m.uid)), off = all.filter(m => !onlineUids.has(m.uid));
+  const row = (m, isOn) => `<div class="mrow${isOn ? '' : ' off'}"><div class="avw">${avHTML(m.uid, 'sm')}<span class="dot${isOn ? '' : ' off'}"></span></div><span class="nm" style="color:${isOn ? okColor(m.color) : 'inherit'}">${esc(m.name)}${m.uid === me.uid ? '（あなた）' : ''}</span>${m.uid === S.meta.owner ? ic('crown', 'crown') : ''}${isOn && voiceOf(m.uid) ? ic('vol') : ''}${!isOn && m.uid !== me.uid ? `<button class="ib kick" data-kick="${m.uid}" title="メンバーから外す">${ic('x')}</button>` : ''}</div>`;
+  el.innerHTML = `<div class="mcat">オンライン — ${on.length}</div>${on.map(m => row(m, true)).join('')}${off.length ? `<div class="mcat">オフライン — ${off.length}</div>${off.map(m => row(m, false)).join('')}` : ''}
+    <div class="mfoot"><span>メンバー ${all.length} / ${MAX} 人</span>${all.length < MAX ? '<button class="primary" data-act="invite">友だちを招待</button>' : '<span>もういっぱいだよ</span>'}</div>`;
+}
+function renderTiles(){
+  const box = $('#tiles'), vj = $('#vjoin');
+  const inThis = S.voice && S.voice === S.viewVoice;
+  $('#bar').classList.toggle('hide', !inThis);
+  if (!inThis){
+    box.innerHTML = ''; box.classList.add('hide');
+    const c = chanById(S.viewVoice), who = voiceMembers(S.viewVoice);
+    vj.classList.remove('hide');
+    vj.innerHTML = `<h2>${ic('vol')} ${esc(c ? c.name : '')}</h2><p>${who.length ? 'いま ' + who.length + ' 人が話しているよ' : 'まだだれもいないよ'}</p><div class="who">${who.map(m => avHTML(m.uid, 'md')).join('')}</div><button class="primary" data-act="joinvc">ボイスに参加する</button>`;
+    return;
+  }
+  vj.classList.add('hide'); box.classList.remove('hide');
+  const list = voiceMembers(S.voice);
+  box.className = 'tiles n' + list.length;
+  const keys = list.map(m => m.me ? 'me' : String(m.P.seat));
+  for (const el of [...box.children]) if (!keys.includes(el.dataset.k)) el.remove();
+  list.forEach((m, i) => {
+    const k = keys[i];
+    let t = box.querySelector(`[data-k="${k}"]`);
+    if (!t){
+      t = document.createElement('div'); t.className = 'tile'; t.dataset.k = k;
+      t.innerHTML = `<div class="avs"></div><div class="tl"></div>` + (m.me ? '' : `<label class="tvol" title="この人の声の大きさ">${ic('vol')}<input type="range" min="0" max="100" data-vol="${m.uid}"></label>`);
+      if (!m.me) t.querySelector('input').value = volOf(m.uid);
+    }
+    if (box.children[i] !== t) box.insertBefore(t, box.children[i] || null);
+    const r = rec(m.uid);
+    t.style.setProperty('--c', okColor(r.color));
+    t.querySelector('.avs').innerHTML = avHTML(m.uid, 'lg');
+    t.querySelector('.tl').innerHTML = `<span class="nm">${esc(r.name)}</span><span class="ics">${iconsFor(m.muted, m.deaf, m.scr)}</span>`;
+    const canWatch = m.me ? !!S.scrStream : !!(m.P.remoteScr);
+    t.classList.toggle('canwatch', canWatch); t.dataset.watch = canWatch ? k : '';
+    t.classList.toggle('spk', !!m.spk);
+  });
+}
+function renderSpeak(){
+  for (const el of document.querySelectorAll('[data-spk]')){
+    const k = el.dataset.spk, P = k === 'me' ? null : S.peers.get(+k);
+    el.classList.toggle('spk', k === 'me' ? S.speaking : !!(P && P.spk && !P.muted));
+  }
+  for (const el of document.querySelectorAll('#tiles .tile')){
+    const k = el.dataset.k, P = k === 'me' ? null : S.peers.get(+k);
+    el.classList.toggle('spk', k === 'me' ? S.speaking : !!(P && P.spk && !P.muted));
+  }
+  $('#meAv').classList.toggle('spk', S.speaking);
+}
+function currentStream(){
+  if (!S.voice || S.watchOff) return null;
+  const peers = okPeers().filter(P => P.voice === S.voice && P.remoteScr);
+  if (S.watch === 'me' && S.scrStream) return {k:'me', st:S.scrStream};
+  const P = peers.find(P => P.seat === S.watch);
+  if (P) return {k:P.seat, st:P.remoteScr, P};
+  if (peers.length){ const Q = peers[peers.length - 1]; S.watch = Q.seat; return {k:Q.seat, st:Q.remoteScr, P:Q}; }
+  if (S.scrStream){ S.watch = 'me'; return {k:'me', st:S.scrStream}; }
+  return null;
+}
+function renderStage(){
+  const sv = $('#sv'), cur = S.voice === S.viewVoice ? currentStream() : null;
+  $('#scr').classList.toggle('hide', !cur); $('#grid').classList.toggle('sharing', !!cur);
+  if (cur){
+    if (sv.srcObject !== cur.st){ sv.srcObject = cur.st; sv.play().catch(()=>{}); }
+    sv.muted = cur.k === 'me' ? true : S.deaf; sv.volume = cfg.scrVol / 100;
+    $('#scrWho').textContent = cur.k === 'me' ? 'あなたの画面（みんなに見えています）' : rec(cur.P.uid).name + ' の画面';
+    $('#scrVolBox').classList.toggle('hide', cur.k === 'me');
+  } else if (sv.srcObject) sv.srcObject = null;
+}
+function renderAll(){
+  if (!S.sid && S.view !== 'home') S.view = 'home';
+  renderUser(); renderMain(); renderMembers();
+  if (S.view === 'voice'){ renderTiles(); renderStage(); } else { const sv = $('#sv'); if (sv.srcObject) sv.srcObject = null; }
+  renderTyping(); renderBadges();
+}
+
+/* ---------- モーダル ---------- */
+function openModal(id){ closeModals(); $('#' + id).classList.remove('hide'); const f = $('#' + id).querySelector('input:not([readonly]),button.primary'); if (f && innerWidth > 820) setTimeout(() => f.focus(), 0); }
+function closeModals(){
+  for (const m of document.querySelectorAll('.modal')) m.classList.add('hide');
+  $('#srvMenu').classList.add('hide');
+  if (S.micTest){ S.micTest = false; if (!S.voice) stopMic(); }
+}
+function closeDrawer(){ $('#app').classList.remove('drawer'); }
+let confirmFn = null;
+function confirmBox(title, text, ok, fn){ $('#cfTitle').textContent = title; $('#cfText').textContent = text; $('#cfOk').textContent = ok; confirmFn = fn; openModal('mConfirm'); }
+let newIcon = '';
+function openAdd(prefill){
+  newIcon = '';
+  $('#addPick').classList.remove('hide'); $('#addCreate').classList.add('hide'); $('#addCreateFoot').classList.add('hide');
+  $('#addInv').value = prefill || ''; $('#addErr').textContent = ''; previewInvite();
+  openModal('mAdd');
+}
+function previewInvite(){
+  const inv = parseInvite($('#addInv').value), p = $('#addPrev');
+  p.classList.toggle('hide', !inv);
+  if (inv) p.innerHTML = `${ic('link')}<span><b>${esc(inv.name || '友だちのサーバー')}</b> に入るよ</span>`;
+}
+function showCreate(){
+  $('#addPick').classList.add('hide'); $('#addCreate').classList.remove('hide'); $('#addCreateFoot').classList.remove('hide');
+  $('#cName').value = me.name + 'のサーバー'; paintCreateIcon();
+  setTimeout(() => $('#cName').select(), 0);
+}
+function paintCreateIcon(){ paintAv($('#cIcon'), {name:$('#cName').value || '?', color:COLORS[0], icon:newIcon}); $('#cDel').classList.toggle('hide', !newIcon); }
+function openInvite(){
+  if (!S.sid) return;
+  $('#invLink').value = inviteLink();
+  const n = memberList().length;
+  $('#invTitle').textContent = S.meta.name + ' に友だちを招待';
+  $('#invCount').textContent = n >= MAX ? 'このサーバーはもう ' + MAX + ' 人いっぱいだよ。' : 'いまのメンバー ' + n + ' / ' + MAX + ' 人。あと ' + (MAX - n) + ' 人入れるよ。';
+  openModal('mInvite');
+}
+function openServerSettings(){
+  if (!S.sid) return;
+  paintAv($('#sIcon'), {name:S.meta.name, color:COLORS[0], icon:S.meta.icon}); $('#sDel').classList.toggle('hide', !S.meta.icon);
+  $('#sName').value = S.meta.name;
+  const chans = S.meta.channels, nText = textChans().length;
+  $('#sChans').innerHTML = chans.map(c => `<div class="chrow">${ic(c.type === 'text' ? 'hash' : 'vol')}<span>${esc(c.name)}</span>${c.type === 'text' && nText <= 1 ? '' : `<button class="ib" data-delch="${c.id}" title="このチャンネルを消す">${ic('trash')}</button>`}</div>`).join('');
+  openModal('mServer');
+}
+function updateMeta(fn){
+  fn(S.meta); S.meta.ver = Math.max(Date.now(), S.meta.ver + 1); S.meta.by = me.uid;
+  updateServerEntry(); saveServer(); broadcast({t:'meta', meta:S.meta}); renderAll();
+}
+let newChType = 'text';
+function openNewChannel(type){
+  newChType = type || 'text';
+  for (const b of document.querySelectorAll('#mChan .choice')) b.classList.toggle('sel', b.dataset.type === newChType);
+  $('#nName').value = ''; openModal('mChan');
+}
+function makeChannel(){
+  const name = clean($('#nName').value, 20) || (newChType === 'text' ? 'あたらしいチャンネル' : 'ボイス');
+  if (S.meta.channels.length >= 16){ toast('チャンネルはもう作れないよ'); return; }
+  const id = (newChType === 'text' ? 't-' : 'v-') + rid(6);
+  updateMeta(m => m.channels.push({id, name, type:newChType}));
+  closeModals();
+  if (newChType === 'text') openText(id); else toast('ボイスチャンネル「' + name + '」を作ったよ');
+}
+function buildColors(box, cur, onPick){
+  box.innerHTML = COLORS.map(c => `<button type="button" style="--c:${c}" data-c="${c}" aria-pressed="${c === cur}" title="この色にする"></button>`).join('');
+  box.onclick = e => { const b = e.target.closest('button[data-c]'); if (!b) return; for (const x of box.children) x.setAttribute('aria-pressed', x === b); onPick(b.dataset.c); };
+}
+async function fillDevices(){
+  let list = [];
+  try { list = await navigator.mediaDevices.enumerateDevices(); } catch(e){}
+  const opt = (kind, cur, label) => `<option value="">いつもの（${label}）</option>` + list.filter(d => d.kind === kind && d.deviceId && d.deviceId !== 'default' && d.deviceId !== 'communications').map((d, i) => `<option value="${esc(d.deviceId)}"${d.deviceId === cur ? ' selected' : ''}>${esc(d.label || (label + ' ' + (i + 1)))}</option>`).join('');
+  $('#sIn').innerHTML = opt('audioinput', cfg.inputId, 'マイク');
+  $('#sOut').innerHTML = opt('audiooutput', cfg.outputId, 'スピーカー');
+  $('#sOut').disabled = !('setSinkId' in HTMLMediaElement.prototype);
+}
+function openSettings(){
+  paintProfile(); paintAccount();
+  $('#pName').value = me.name;
+  buildColors($('#pColors'), me.color, c => { me.color = c; profileChanged(); });
+  $('#sAuto').checked = cfg.auto; $('#sTh').value = cfg.th; $('#sTh').classList.toggle('hide', cfg.auto);
+  $('#sNoise').checked = cfg.noise; $('#sEcho').checked = cfg.echo; $('#sAgc').checked = cfg.agc; $('#sSnd').checked = cfg.sounds; $('#sMsg').checked = cfg.msgSound;
+  $('#micTest').classList.toggle('hide', !!S.rawStream);
+  fillDevices(); renderMeter(); openModal('mSet');
+}
+function paintAccount(){
+  const u = fbUser; if (!u) return;
+  const user = userOf(u);
+  $('#acName').textContent = user ? user : (u.displayName || 'Googleアカウント');
+  $('#acHow').textContent = user ? 'ユーザー名でログイン中' : 'Googleでログイン中' + (u.email ? '（' + u.email + '）' : '');
+}
+function paintProfile(){ paintAv($('#pAv'), me); $('#pDel').classList.toggle('hide', !me.avatar); }
+function renderMeter(){
+  const pct = v => Math.max(0, Math.min(100, (v + 80) / 80 * 100));
+  const th = cfg.auto ? S.th : cfg.th;
+  $('#mFill').style.width = pct(S.level) + '%';
+  $('#mFill').classList.toggle('ok', S.level > th);
+  $('#mTh').style.left = pct(th) + '%';
+}
+function profileChanged(){
+  me.ver = Math.max(Date.now(), me.ver + 1); saveMe();
+  if (S.sid){ S.members[me.uid] = Object.assign(S.members[me.uid] || myRecord(), {name:me.name, color:me.color, avatar:me.avatar, ver:me.ver, left:false}); saveServer(); broadcast({t:'prof', rec:S.members[me.uid]}); }
+  renderAvCss(); paintProfile(); renderAll(); if (S.view === 'text') renderMessages();
+}
+async function micChanged(){
+  saveCfg();
+  if (!S.rawStream){ toast('次にボイスに入るときから使うよ'); return; }
+  try { await openMic(); toast('マイクを切りかえたよ'); broadcast(vsMsg()); }
+  catch(e){ S.noMic = true; toast('そのマイクは使えなかった…'); }
+  renderAll();
+}
+
+/* ---------- ログイン (Firebase) ---------- */
+const FBCFG = qs.get('emu') ? {apiKey:'demo-key', authDomain:'demo-futari.firebaseapp.com', projectId:'demo-futari', appId:'demo'} : window.FV_FIREBASE;   // ?emu= のときは練習用サーバー
+const USER_DOMAIN = (FBCFG && FBCFG.userDomain) || 'id.goodrobotapp.com';   // ユーザー名ログイン用の、とどかないメールアドレスのドメイン
+let auth = null, fbUser = null, signUp = false;
+function cyrb(str, seed){
+  let h1=0xdeadbeef^seed, h2=0x41c6ce57^seed;
+  for (let i=0;i<str.length;i++){const ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677)}
+  h1=Math.imul(h1^(h1>>>16),2246822507);h1^=Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507);h2^=Math.imul(h1^(h1>>>13),3266489909);
+  return (h2>>>0).toString(16).padStart(8,'0')+(h1>>>0).toString(16).padStart(8,'0');
+}
+function screen(id){
+  for (const x of ['boot','nosetup','login','welcome']) $('#' + x).classList.toggle('hide', x !== id);
+  $('#art').style.display = id === 'boot' || id === 'app' ? 'none' : '';
+  $('#app').classList.toggle('hide', id !== 'app');
+}
+const userOf = u => u && u.email && u.email.endsWith('@' + USER_DOMAIN) ? u.email.slice(0, -USER_DOMAIN.length - 1) : '';
+const hasSaved = () => !!store.get(ak('me'), null);
+if (DEBUG) window.__fvAuth = () => auth;
+function setAccount(u){
+  acct = cyrb(u.uid, 5);
+  const saved = store.get(ak('me'), null);
+  Object.assign(me, {uid:'', name:'', color:COLORS[0], avatar:'', ver:0}, saved && typeof saved === 'object' ? saved : {});
+  me.uid = acct.slice(0, 12);                     // ログインしたアカウントから決まるID（どの端末でも同じ）
+  if (!saved){
+    const old = store.get('me', null);            // ログイン機能の前に使っていたプロフィールがあれば引きつぐ
+    if (old && old.name){ me.name = clean(old.name); me.color = okColor(old.color); me.avatar = okImg(old.avatar) ? old.avatar : ''; }
+    else me.name = clean(u.displayName || userOf(u));
+  }
+  servers = store.get(ak('servers'), []); if (!Array.isArray(servers)) servers = [];
+  cfg.last = store.get(ak('last'), '');
+}
+function initAuth(){
+  if (!window.FB || !FBCFG || !FBCFG.apiKey){ screen('nosetup'); return; }
+  try {
+    const app = FB.initializeApp(FBCFG);
+    auth = FB.getAuth(app); auth.languageCode = 'ja';
+    if (qs.get('emu')) FB.connectAuthEmulator(auth, 'http://' + qs.get('emu'), {disableWarnings:true});
+  } catch(e){ console.warn(e); screen('nosetup'); return; }
+  FB.getRedirectResult(auth).catch(e => loginErr(e));
+  FB.onAuthStateChanged(auth, u => {
+    if (u && fbUser && u.uid === fbUser.uid) return;
+    if (!u){ if (fbUser){ exitServer(); fbUser = null; } showLogin(); return; }
+    fbUser = u; setAccount(u);
+    if (me.name && hasSaved()) startApp(); else showWelcome();
+  });
+}
+function showLogin(){ screen('login'); setTab(false); $('#lErr').textContent = ''; $('#lPass').value = ''; $('#lPass2').value = ''; }
+function setTab(up){
+  signUp = up;
+  $('#login').classList.toggle('up', up);
+  $('#tabIn').setAttribute('aria-selected', String(!up)); $('#tabUp').setAttribute('aria-selected', String(up));
+  $('#lGo').textContent = up ? '登録する' : 'ログイン';
+  $('#gText').textContent = up ? 'Googleで登録' : 'Googleでログイン';
+  $('#lPass').autocomplete = up ? 'new-password' : 'current-password';
+}
+const AUTH_ERR = {
+  'auth/invalid-credential':'ユーザー名かパスワードがちがうよ', 'auth/wrong-password':'ユーザー名かパスワードがちがうよ', 'auth/user-not-found':'そのユーザー名は登録されていないよ',
+  'auth/invalid-login-credentials':'ユーザー名かパスワードがちがうよ', 'auth/email-already-in-use':'そのユーザー名は、もうだれかが使っているよ', 'auth/weak-password':'パスワードは6文字以上にしてね',
+  'auth/too-many-requests':'まちがいが多すぎたよ。少し待ってからためしてね', 'auth/network-request-failed':'インターネットにつながっていないみたい',
+  'auth/popup-closed-by-user':'ログインの窓がとじられたよ。もう一度ためしてね', 'auth/cancelled-popup-request':'', 'auth/user-disabled':'このアカウントは使えなくなっているよ',
+  'auth/unauthorized-domain':'このサイトは、まだFirebaseに登録されていないよ', 'auth/operation-not-allowed':'このログイン方法は、まだFirebaseで有効になっていないよ',
+  'auth/invalid-email':'ユーザー名は英字・数字・_ で3〜20文字にしてね', 'desktop/cancel':'ログインをやめたよ'
+};
+function loginErr(e){
+  if (!e) return;
+  const msg = AUTH_ERR[e.code];
+  if (msg === '') return;
+  $('#lErr').textContent = msg || ('ログインできなかった…（' + (e.code || e.message) + '）');
+  console.warn(e);
+}
+async function googleLogin(){
+  $('#lErr').textContent = '';
+  const b = $('#gLogin'); b.disabled = true;
+  try {
+    if (window.fvDesktop && window.fvDesktop.googleLogin){
+      // Windowsアプリ: いつものブラウザでGoogleにログインして、アプリにもどってくる
+      const idToken = await window.fvDesktop.googleLogin();
+      await FB.signInWithCredential(auth, FB.GoogleAuthProvider.credential(idToken));
+    } else {
+      const prov = new FB.GoogleAuthProvider(); prov.setCustomParameters({prompt:'select_account'});
+      try { await FB.signInWithPopup(auth, prov); }
+      catch(e){
+        if (['auth/popup-blocked','auth/operation-not-supported-in-this-environment','auth/web-storage-unsupported'].includes(e.code)) await FB.signInWithRedirect(auth, prov);
+        else throw e;
+      }
+    }
+  } catch(e){ loginErr(e); }
+  finally { b.disabled = false; }
+}
+async function passLogin(){
+  const user = $('#lUser').value.trim().toLowerCase(), pass = $('#lPass').value;
+  $('#lErr').textContent = '';
+  if (!/^[a-z0-9_]{3,20}$/.test(user)){ $('#lErr').textContent = 'ユーザー名は英字・数字・_ で3〜20文字にしてね'; $('#lUser').focus(); return; }
+  if (pass.length < 6){ $('#lErr').textContent = 'パスワードは6文字以上にしてね'; $('#lPass').focus(); return; }
+  if (signUp && pass !== $('#lPass2').value){ $('#lErr').textContent = 'パスワードが2回ともおなじになっていないよ'; $('#lPass2').focus(); return; }
+  const b = $('#lGo'); b.disabled = true;
+  try {
+    const email = user + '@' + USER_DOMAIN;
+    if (signUp){ const r = await FB.createUserWithEmailAndPassword(auth, email, pass); try { await FB.updateProfile(r.user, {displayName:user}); } catch(e){} }
+    else await FB.signInWithEmailAndPassword(auth, email, pass);
+    $('#lPass').value = ''; $('#lPass2').value = '';
+  } catch(e){ loginErr(e); }
+  finally { b.disabled = false; }
+}
+async function logout(){
+  closeModals(); exitServer();
+  try { await FB.signOut(auth); } catch(e){}
+}
+
+/* ---------- はじめの画面 ---------- */
+let wAvatar = '';
+function showWelcome(){
+  screen('welcome');
+  wAvatar = me.avatar || ''; $('#wName').value = me.name;
+  buildColors($('#wColors'), me.color, c => { me.color = c; paintW(); });
+  paintW();
+}
+function paintW(){ paintAv($('#wAv'), {name:$('#wName').value || '?', color:me.color, avatar:wAvatar}); $('#wDel').classList.toggle('hide', !wAvatar); }
+function startApp(){
+  screen('app');
+  renderAvCss();
+  const inv = (location.hash.match(/^#invite-([A-Za-z0-9._-]+)/) || [])[1];
+  if (cfg.last && servers.some(s => s.id === cfg.last)) enterServer(cfg.last);
+  else if (servers.length) enterServer(servers[0].id);
+  else { S.view = 'home'; renderAll(); }
+  if (inv){ const p = parseInvite('invite-' + inv); if (p && !servers.some(s => s.id === p.id)) openAdd('invite-' + inv); else if (p) enterServer(p.id); try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} }
+}
+
+/* ---------- ボタンなど ---------- */
+$('#wName').addEventListener('input', paintW);
+$('#wPick').onclick = async () => { const d = await chooseIcon(); if (d){ wAvatar = d; paintW(); } };
+$('#wDel').onclick = () => { wAvatar = ''; paintW(); };
+$('#wf').addEventListener('submit', e => {
+  e.preventDefault();
+  const n = clean($('#wName').value);
+  if (!n){ $('#wErr').textContent = 'なまえを入れてね'; $('#wName').focus(); return; }
+  me.name = n; me.avatar = wAvatar; me.ver = Date.now(); saveMe(); ensureCtx();
+  startApp();
+});
+$('#homeBtn').onclick = goHome;
+$('#addBtn').onclick = () => { ensureCtx(); openAdd(); };
+$('#srvList').onclick = e => { const b = e.target.closest('[data-sid]'); if (b){ ensureCtx(); enterServer(b.dataset.sid); closeDrawer(); } };
+$('#homeCreate').onclick = () => { ensureCtx(); openAdd(); showCreate(); };
+$('#homeJoin').addEventListener('submit', e => { e.preventDefault(); ensureCtx(); if (joinByInvite($('#homeInv').value, $('#homeErr'))) $('#homeInv').value = ''; });
+$('#goCreate').onclick = showCreate;
+$('#cBack').onclick = () => openAdd();
+$('#cName').addEventListener('input', paintCreateIcon);
+$('#cPick').onclick = async () => { const d = await chooseIcon(); if (d){ newIcon = d; paintCreateIcon(); } };
+$('#cDel').onclick = () => { newIcon = ''; paintCreateIcon(); };
+$('#cMake').onclick = () => { closeModals(); createServer($('#cName').value, newIcon); };
+$('#addInv').addEventListener('input', previewInvite);
+$('#addJoin').addEventListener('submit', e => { e.preventDefault(); joinByInvite($('#addInv').value, $('#addErr')); });
+$('#invCopy').onclick = () => {
+  const i = $('#invLink'); i.select();
+  const ok = () => { toast('招待リンクをコピーしたよ'); $('#invCopy').textContent = 'コピーした！'; setTimeout(() => $('#invCopy').textContent = 'コピー', 1800); };
+  try { navigator.clipboard.writeText(i.value).then(ok, () => { try{ document.execCommand('copy'); ok(); }catch(e){ toast('コピーできなかった…自分で選んでコピーしてね'); } }); }
+  catch(e){ try{ document.execCommand('copy'); ok(); }catch(e2){ toast('コピーできなかった…'); } }
+};
+$('#srvHead').onclick = e => { if (!S.sid) return; e.stopPropagation(); $('#srvMenu').classList.toggle('hide'); };
+document.addEventListener('click', e => {
+  if (!e.target.closest('#srvMenu') && !e.target.closest('#srvHead')) $('#srvMenu').classList.add('hide');
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  const act = a.dataset.act;
+  if (act === 'invite') openInvite();
+  else if (act === 'server') openServerSettings();
+  else if (act === 'newch') openNewChannel('text');
+  else if (act === 'quit') confirmBox(S.meta.name + ' から抜ける？', '抜けると、このサーバーのチャットはこのパソコンから消えるよ。また入るには招待リンクが必要だよ。', '抜ける', quitServer);
+  else if (act === 'joinvc') joinVoice(S.viewVoice);
+  else if (act === 'forget'){ const sid = S.sid; exitServer(); servers = servers.filter(s => s.id !== sid); saveServers(); store.del(ak('s.' + sid)); goHome(); }
+});
+$('#mlist').addEventListener('click', e => {
+  const k = e.target.closest('[data-kick]'); if (!k) return;
+  const r = S.members[k.dataset.kick]; if (!r) return;
+  confirmBox(r.name + ' をメンバーから外す？', '外すと、あいた席にほかの友だちが入れるよ。' + r.name + ' がまた来たときは、席があいていれば入れるよ。', '外す', () => kickMember(r.uid));
+});
+$('#chList').onclick = e => {
+  const n = e.target.closest('[data-new]'); if (n){ openNewChannel(n.dataset.new); return; }
+  const t = e.target.closest('[data-ch]'); if (t){ openText(t.dataset.ch); return; }
+  const v = e.target.closest('[data-vc]'); if (v){ joinVoice(v.dataset.vc); return; }
+};
+for (const b of document.querySelectorAll('#mChan .choice')) b.onclick = () => { newChType = b.dataset.type; for (const x of document.querySelectorAll('#mChan .choice')) x.classList.toggle('sel', x === b); };
+$('#nMake').onclick = makeChannel;
+$('#nName').addEventListener('keydown', e => { if (e.key === 'Enter') makeChannel(); });
+$('#sPick').onclick = async () => { const d = await chooseIcon(); if (d){ updateMeta(m => m.icon = d); openServerSettings(); } };
+$('#sDel').onclick = () => { updateMeta(m => m.icon = ''); openServerSettings(); };
+$('#sName').addEventListener('change', e => { const v = clean(e.target.value, 30); if (!v){ e.target.value = S.meta.name; return; } updateMeta(m => m.name = v); });
+$('#sNewCh').onclick = () => openNewChannel('text');
+$('#sQuit').onclick = () => confirmBox(S.meta.name + ' から抜ける？', '抜けると、このサーバーのチャットはこのパソコンから消えるよ。また入るには招待リンクが必要だよ。', '抜ける', quitServer);
+$('#sChans').onclick = e => {
+  const b = e.target.closest('[data-delch]'); if (!b) return;
+  const c = chanById(b.dataset.delch); if (!c) return;
+  confirmBox('#' + c.name + ' を消す？', 'みんなの画面からも消えるよ。', '消す', () => { updateMeta(m => m.channels = m.channels.filter(x => x.id !== c.id)); if (S.voice === c.id) leaveVoice(); if (S.textCh === c.id) openText((textChans()[0] || {}).id); openServerSettings(); });
+};
+$('#cfOk').onclick = () => { const f = confirmFn; confirmFn = null; closeModals(); if (f) f(); };
+for (const b of document.querySelectorAll('[data-close]')) b.addEventListener('click', closeModals);
+for (const m of document.querySelectorAll('.modal')) m.addEventListener('click', e => { if (e.target === m) closeModals(); });
+
+for (const id of ['#btnMic','#cbMic']) $(id).onclick = () => setMuted(!(S.muted || S.deaf || (S.noMic && !!S.voice)));
+for (const id of ['#btnDeaf','#cbDeaf']) $(id).onclick = () => setDeaf(!S.deaf);
+for (const id of ['#vsScreen','#cbScreen']) $(id).onclick = toggleScreen;
+for (const id of ['#btnSet','#cbSet']) $(id).onclick = openSettings;
+for (const id of ['#vsLeave','#cbLeave']) $(id).onclick = () => leaveVoice();
+$('#meBtn').onclick = openSettings;
+$('#vsGo').onclick = () => { if (S.voice) showVoice(S.voice); };
+$('#btnMenu').onclick = () => $('#app').classList.add('drawer');
+$('#scrim').onclick = closeDrawer;
+$('#btnMembers').onclick = () => { if (innerWidth > 1100){ cfg.members = !cfg.members; saveCfg(); } else S.memOpen = !S.memOpen; renderMain(); };
+$('#btnInvite2').onclick = openInvite;
+$('#tiles').addEventListener('input', e => { const u = e.target.dataset.vol; if (!u) return; cfg.vol[u] = +e.target.value; saveCfg(); for (const P of S.peers.values()) if (P.uid === u && P.audio) P.audio.volume = volOf(u) / 100; });
+$('#tiles').addEventListener('click', e => { if (e.target.closest('.tvol')) return; const t = e.target.closest('.tile.canwatch'); if (!t) return; S.watch = t.dataset.watch === 'me' ? 'me' : +t.dataset.watch; S.watchOff = false; renderStage(); });
+$('#scrClose').onclick = () => { S.watchOff = true; renderAll(); };
+$('#unlock').onclick = () => { for (const P of S.peers.values()) if (P.audio) P.audio.play().catch(()=>{}); ensureCtx(); $('#unlock').classList.add('hide'); };
+$('#scrVol').value = cfg.scrVol;
+$('#scrVol').oninput = e => { cfg.scrVol = +e.target.value; $('#sv').volume = cfg.scrVol / 100; saveCfg(); };
+$('#scrFull').onclick = () => { const s = $('#scr'); try { document.fullscreenElement ? document.exitFullscreen() : s.requestFullscreen(); } catch(e){} };
+$('#comp').addEventListener('submit', e => { e.preventDefault(); const i = $('#ci'), t = i.value.trim(); if (!t) return; sendMessage(t); i.value = ''; });
+$('#ci').addEventListener('input', () => { const n = Date.now(); if ($('#ci').value && n - S.typingSent > 2500){ S.typingSent = n; broadcast({t:'typing', ch:S.textCh}); } });
+$('#msgs').addEventListener('scroll', () => { const b = $('#msgs'); if (b.scrollHeight - b.scrollTop - b.clientHeight < 40) markRead(); });
+
+$('#pPick').onclick = async () => { const d = await chooseIcon(); if (d){ me.avatar = d; profileChanged(); } };
+$('#pDel').onclick = () => { me.avatar = ''; profileChanged(); };
+$('#pName').addEventListener('change', e => { const v = clean(e.target.value); if (!v){ e.target.value = me.name; return; } me.name = v; profileChanged(); });
+$('#micTest').onclick = async () => { ensureCtx(); S.micTest = true; try { await setupAudio(); $('#micTest').classList.add('hide'); } catch(e){ toast('マイクが使えなかった…ブラウザでマイクを「許可」にしてね'); S.micTest = false; } };
+$('#sAuto').onchange = e => { cfg.auto = e.target.checked; $('#sTh').classList.toggle('hide', cfg.auto); saveCfg(); pushGate(); renderMeter(); };
+$('#sTh').oninput = e => { cfg.th = +e.target.value; saveCfg(); pushGate(); renderMeter(); };
+$('#sSnd').onchange = e => { cfg.sounds = e.target.checked; saveCfg(); };
+$('#sMsg').onchange = e => { cfg.msgSound = e.target.checked; saveCfg(); };
+for (const [id, k] of [['#sNoise','noise'], ['#sEcho','echo'], ['#sAgc','agc']]) $(id).onchange = e => { cfg[k] = e.target.checked; micChanged(); };
+$('#sIn').onchange = e => { cfg.inputId = e.target.value; micChanged(); };
+$('#sOut').onchange = e => {
+  cfg.outputId = e.target.value; saveCfg();
+  for (const el of [$('#sv'), ...[...S.peers.values()].map(P => P.audio).filter(Boolean)]) if (el.setSinkId) el.setSinkId(cfg.outputId).catch(()=>{});
+  if (S.ctx && S.ctx.setSinkId) S.ctx.setSinkId(cfg.outputId).catch(()=>{});
+  toast('スピーカーを切りかえたよ');
+};
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ closeModals(); closeDrawer(); return; }
+  if (!S.sid || !fbUser || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'select' || tag === 'textarea' || !$('#mSet').classList.contains('hide')) return;
+  if (e.code === 'KeyM'){ e.preventDefault(); setMuted(!(S.muted || S.deaf || (S.noMic && !!S.voice))); }
+  if (e.code === 'KeyD'){ e.preventDefault(); setDeaf(!S.deaf); }
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) markRead(); });
+window.addEventListener('resize', () => renderMain());
+window.addEventListener('pagehide', () => { if (S.sid){ broadcast({t:'bye'}); try{ S.peer && S.peer.destroy(); }catch(e){} } });
+if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange', () => { if (!$('#mSet').classList.contains('hide')) fillDevices(); });
+
+startTicker();
+$('#tabIn').onclick = () => { setTab(false); $('#lErr').textContent = ''; };
+$('#tabUp').onclick = () => { setTab(true); $('#lErr').textContent = ''; };
+$('#gLogin').onclick = googleLogin;
+$('#lf').addEventListener('submit', e => { e.preventDefault(); passLogin(); });
+$('#logoutBtn').onclick = () => confirmBox('ログアウトする？', 'もう一度使うときは、またログインしてね。', 'ログアウト', logout);
+initAuth();
+}
+</script>
+</body>
+</html>

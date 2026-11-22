@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ふたりボイス ログイン</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#1f2266,#3b44c4 55%,#6c77ff);color:#dbdee1;font:15px/1.5 "Noto Sans JP","Segoe UI","Meiryo",system-ui,sans-serif}
+.card{width:min(440px,100%);background:#313338;border-radius:10px;padding:32px;display:grid;gap:16px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.logo{width:64px;height:64px;border-radius:20px;background:#5865f2;display:grid;place-items:center;margin:0 auto}
+.logo svg{width:40px;height:40px;stroke:#fff;fill:none;stroke-width:2.2}
+h1{margin:0;color:#f2f3f5;font-size:24px}
+p{margin:0;color:#b5bac1}
+button,a.btn{height:46px;border:0;border-radius:4px;background:#fff;color:#1f1f1f;font:inherit;font-weight:700;font-size:15.5px;cursor:pointer;display:grid;place-items:center;text-decoration:none}
+a.btn{background:#5865f2;color:#fff}
+button:disabled{opacity:.6;cursor:wait}
+#msg:empty{display:none}
+.err{color:#fa777c!important}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="logo"><svg viewBox="0 0 24 24"><circle cx="9.3" cy="12" r="5.6"/><circle cx="14.7" cy="12" r="5.6"/></svg></div>
+  <h1>Windowsアプリにログイン</h1>
+  <p id="lead">Googleアカウントをえらんでね。終わったら、ふたりボイスのアプリにもどるよ。</p>
+  <button id="go" type="button">Googleでログイン</button>
+  <p id="msg"></p>
+  <a class="btn" id="back" href="#" hidden>ふたりボイスを開く</a>
+</main>
+<script>/*@@FIREBASE@@*/</script>
+<script>window.FV_FIREBASE = /*@@FBCONFIG@@*/null;</script>
+<script>
+{
+  const $ = s => document.querySelector(s);
+  const q = new URLSearchParams(location.search);
+  const state = q.get('state') || '';
+  const say = (t, bad) => { $('#msg').textContent = t; $('#msg').classList.toggle('err', !!bad); };
+  const cfg = q.get('emu') ? {apiKey:'demo-key', authDomain:'demo-futari.firebaseapp.com', projectId:'demo-futari', appId:'demo'} : window.FV_FIREBASE;
+  let auth = null;
+  if (!/^[a-z0-9]{16,64}$/.test(state)){ $('#go').disabled = true; say('このページは、ふたりボイスのWindowsアプリから開いてね。', true); }
+  else if (!window.FB || !cfg){ $('#go').disabled = true; say('ログインのしくみの設定が、まだないよ。', true); }
+  else {
+    auth = FB.getAuth(FB.initializeApp(cfg));
+    auth.languageCode = 'ja';
+    if (q.get('emu')) FB.connectAuthEmulator(auth, 'http://' + q.get('emu'), {disableWarnings:true});
+  }
+  $('#go').onclick = async () => {
+    $('#go').disabled = true; say('');
+    try {
+      const prov = new FB.GoogleAuthProvider(); prov.setCustomParameters({prompt:'select_account'});
+      const res = await FB.signInWithPopup(auth, prov);
+      const cred = FB.GoogleAuthProvider.credentialFromResult(res);
+      if (!cred || !cred.idToken) throw new Error('no token');
+      try { await FB.signOut(auth); } catch(e){}      // このブラウザにはログインを残さない
+      const url = 'futarivoice://auth?state=' + state + '&id_token=' + encodeURIComponent(cred.idToken);
+      $('#back').href = url; $('#back').hidden = false; $('#go').hidden = true;
+      $('#lead').textContent = 'ログインできたよ！';
+      say('ブラウザが「ふたりボイスを開く？」と聞いてきたら「開く」をおしてね。何も起きなければ、下のボタンをおしてね。');
+      location.href = url;
+    } catch(e){
+      $('#go').disabled = false;
+      say(e && e.code === 'auth/popup-closed-by-user' ? 'ログインの窓がとじられたよ。もう一度ためしてね。' : 'ログインできなかった…（' + ((e && (e.code || e.message)) || '') + '）', true);
+    }
+  };
+}
+</script>
+</body>
+</html>

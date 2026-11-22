@@ -1,0 +1,13 @@
+node_modules/
+site/
+windows/node_modules/
+windows/dist/
+windows/config.json
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+*.jks
+*.keystore
+test-results/
+*.log

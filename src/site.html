@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ふたりボイス — 友だち4人までのサーバー</title>
+<meta name="description" content="チャットも、通話も、画面共有も。友だち4人までの、自分たちだけのサーバー。Windows・Android・ブラウザで使えるよ。">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#5865f2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ダウンロードサイト：アプリと同じ夜の色。主役は「アプリの画面」の絵と、3つのダウンロード */
+:root{--ink:#f2f3f5;--soft:#b5bac1;--dim:#949ba4;--bg:#16171a;--card:#232428;--line:#35373c;--brand:#5865f2;--brand2:#4752c4;--green:#23a55a;--yellow:#f0b232;--pink:#eb459e;
+  --font:"Noto Sans JP","Segoe UI","Hiragino Sans","Meiryo",system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--soft);font:16px/1.7 var(--font);overflow-x:clip}
+a{color:inherit}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{width:min(1180px,100%);margin:0 auto;padding:0 max(4vw,16px)}
+header{position:sticky;top:0;z-index:10;background:rgba(22,23,26,.86);backdrop-filter:blur(10px);border-bottom:1px solid #222327}
+.nav{display:flex;align-items:center;gap:20px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--ink);font-weight:900;font-size:19px;text-decoration:none}
+.mark{width:36px;height:36px;border-radius:11px;background:var(--brand);display:grid;place-items:center}
+.mark svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2.3}
+.nav .sp{flex:1}
+.nav a.l{color:var(--soft);text-decoration:none;font-weight:500;font-size:15px}
+.nav a.l:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 22px;border-radius:28px;font-weight:700;text-decoration:none;font-size:16px;transition:transform .12s,background .12s;border:0;cursor:pointer;font-family:inherit}
+.btn:hover{transform:translateY(-1px)}
+.btn.pri{background:#fff;color:#23272a}
+.btn.pri:hover{background:#e9ebff;color:var(--brand2)}
+.btn.sec{background:#2b2d31;color:var(--ink)}
+.btn.sec:hover{background:#383a40}
+.btn.blue{background:var(--brand);color:#fff}
+.btn.blue:hover{background:var(--brand2)}
+.btn[aria-disabled=true]{opacity:.5;pointer-events:none}
+.nav .btn{min-height:40px;padding:0 18px;font-size:14.5px}
+
+.hero{position:relative;background:radial-gradient(1200px 600px at 80% -10%,#6c77ff 0,#3b44c4 35%,#23266e 70%,var(--bg) 100%);overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:48px;align-items:center;padding-top:clamp(40px,7vw,96px);padding-bottom:clamp(56px,8vw,110px)}
+.hero h1{margin:0;color:#fff;font-size:clamp(34px,5vw,54px);line-height:1.12;font-weight:900;text-wrap:balance}
+.hero p{margin:18px 0 28px;color:#dfe2ff;font-size:18px;max-width:34em}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.rings{position:absolute;inset:0;pointer-events:none}
+
+/* アプリの画面の絵 */
+.mock{position:relative;border-radius:14px;background:#313338;box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06);display:grid;grid-template-columns:44px 132px minmax(0,1fr);height:clamp(300px,34vw,400px);overflow:hidden;transform:rotate(-1.5deg)}
+.m-rail{background:#1e1f22;display:grid;align-content:start;justify-items:center;gap:8px;padding:10px 0}
+.m-rail i{width:30px;height:30px;border-radius:50%;background:#313338;display:block}
+.m-rail i.on{border-radius:10px;background:linear-gradient(135deg,#9be15d,#1b6b3a)}
+.m-rail i.add{background:#313338;box-shadow:inset 0 0 0 2px #23a55a}
+.m-side{background:#2b2d31;padding:12px 8px;display:grid;align-content:start;gap:5px;font-size:11px;color:#949ba4}
+.m-side b{color:#f2f3f5;font-size:12px;margin-bottom:6px}
+.m-side span{padding:3px 6px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-side span.on{background:#404249;color:#fff}
+.m-side em{font-style:normal;display:flex;align-items:center;gap:6px;padding-left:12px;color:#dbdee1}
+.m-side em::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px #2b2d31,0 0 0 3.5px var(--green)}
+.m-main{background:#111214;padding:14px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr auto;gap:10px}
+.tile{border-radius:9px;background:color-mix(in srgb,var(--c) 30%,#1e1f22);display:grid;place-items:center;position:relative;outline:2.5px solid transparent;outline-offset:-2.5px}
+.tile.spk{outline-color:var(--green);animation:talk 2.4s infinite}
+.tile.spk2{outline-color:var(--green);animation:talk 2.4s 1.2s infinite}
+@keyframes talk{0%,40%{outline-color:var(--green)}55%,100%{outline-color:transparent}}
+.tile i{width:44%;max-width:58px;aspect-ratio:1;border-radius:50%;background:var(--c);display:grid;place-items:center;color:#fff;font-style:normal;font-weight:900;font-size:clamp(14px,1.8vw,22px)}
+.tile small{position:absolute;left:7px;bottom:6px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:1px 6px;border-radius:4px}
+.m-bar{grid-column:1/-1;display:flex;justify-content:center;gap:8px}
+.m-bar i{width:28px;height:28px;border-radius:50%;background:#2b2d31;display:block}
+.m-bar i.red{background:#da373c}
+.bubble{position:absolute;right:-14px;bottom:44px;background:#fff;color:#23272a;border-radius:16px 16px 4px 16px;padding:10px 14px;font-weight:700;font-size:14px;box-shadow:0 12px 30px rgba(0,0,0,.35);transform:rotate(1.5deg)}
+
+section.band{padding:clamp(56px,7vw,96px) 0}
+.kicker{color:var(--brand);font-weight:700;font-size:14px;margin:0 0 6px}
+h2{margin:0 0 10px;color:var(--ink);font-size:clamp(28px,3.4vw,40px);line-height:1.15;text-wrap:balance}
+.lead{margin:0 0 32px;max-width:40em}
+.dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.dcard{position:relative;background:var(--card);border-radius:16px;padding:26px;display:grid;gap:14px;align-content:start;border:1px solid var(--line)}
+.dcard.rec{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand),0 20px 50px rgba(88,101,242,.18)}
+.dcard .tag{position:absolute;top:-12px;left:22px;background:var(--brand);color:#fff;font-size:12.5px;font-weight:700;padding:2px 12px;border-radius:12px;display:none}
+.dcard.rec .tag{display:block}
+.dicon{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;color:#fff}
+.dicon svg.i{width:30px;height:30px}
+.dcard h3{margin:0;color:var(--ink);font-size:22px}
+.dcard .req{margin:-8px 0 0;color:var(--dim);font-size:14px}
+.dcard ol{margin:0;padding-left:1.3em;font-size:14.5px;color:var(--soft)}
+.dcard ol li{margin:3px 0}
+.dcard .btn{width:100%}
+.soon{font-size:13.5px;color:var(--yellow)}
+
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;counter-reset:s}
+.step{background:var(--card);border-radius:16px;padding:24px;border:1px solid var(--line);counter-increment:s}
+.step::before{content:counter(s);display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--brand);color:#fff;font-weight:900;font-size:19px;margin-bottom:12px}
+.step h3{margin:0 0 6px;color:var(--ink);font-size:18px}
+.step p{margin:0;font-size:15px}
+.feat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:22px}
+.feat div{border-top:2px solid var(--line);padding-top:14px}
+.feat b{display:block;color:var(--ink);font-size:16px;margin-bottom:2px}
+.feat span{font-size:14.5px}
+
+.faq{display:grid;gap:10px;max-width:820px}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 20px}
+summary{cursor:pointer;list-style:none;padding:16px 0;color:var(--ink);font-weight:700;display:flex;justify-content:space-between;gap:12px}
+summary::after{content:"+";color:var(--dim);font-size:22px;line-height:1}
+details[open] summary::after{content:"−"}
+details p{margin:0 0 16px}
+footer{border-top:1px solid #222327;padding:28px 0 40px;font-size:13.5px;color:var(--dim)}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+:focus-visible{outline:2px solid #00a8fc;outline-offset:3px}
+
+@media (max-width:960px){
+  .hero .wrap{grid-template-columns:minmax(0,1fr)}
+  .mock{transform:none}
+  .dl,.steps{grid-template-columns:minmax(0,1fr)}
+  .feat{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:600px){
+  .nav a.l{display:none}
+  .mock{grid-template-columns:0 0 minmax(0,1fr)}
+  .m-rail,.m-side{display:none}
+  .bubble{right:8px}
+  .feat{grid-template-columns:minmax(0,1fr)}
+  .cta .btn{flex:1}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-logo" viewBox="0 0 24 24"><circle cx="9.3" cy="12" r="5.6"/><circle cx="14.7" cy="12" r="5.6"/></symbol>
+  <symbol id="i-win" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="12" rx="2"/><path d="M8.5 20h7M12 16.5V20"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.8 3.9 5.8 3.9 9s-1.3 6.2-3.9 9c-2.6-2.8-3.9-5.8-3.9-9S9.4 5.8 12 3z"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></symbol>
+</svg>
+
+<header><div class="wrap nav">
+  <a class="brand" href="#"><span class="mark"><svg viewBox="0 0 24 24"><use href="#i-logo"/></svg></span>ふたりボイス</a>
+  <span class="sp"></span>
+  <a class="l" href="#download">ダウンロード</a><a class="l" href="#how">つかいかた</a><a class="l" href="#faq">よくある質問</a>
+  <a class="btn blue" href="app/">ブラウザで開く</a>
+</div></header>
+
+<section class="hero">
+  <svg class="rings" viewBox="0 0 1440 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="2"><circle cx="160" cy="620" r="160"/><circle cx="160" cy="620" r="270"/><circle cx="160" cy="620" r="380"/></g>
+    <g fill="#fff" fill-opacity=".5"><circle cx="300" cy="90" r="2.5"/><circle cx="640" cy="60" r="2"/><circle cx="520" cy="520" r="2"/><circle cx="1320" cy="560" r="2.5"/></g>
+  </svg>
+  <div class="wrap">
+    <div>
+      <h1>友だちと集まる、<br>自分たちだけの<br>サーバー。</h1>
+      <p>チャットも、通話も、画面共有も。最大4人までの小さなサーバーで、ゲームしながらおしゃべりしよう。</p>
+      <div class="cta">
+        <a class="btn pri" href="#download"><svg class="i"><use href="#i-dl"/></svg>ダウンロード</a>
+        <a class="btn sec" href="app/">ブラウザで開く</a>
+      </div>
+    </div>
+    <div style="position:relative">
+      <div class="mock" aria-label="アプリの画面のイメージ" role="img">
+        <div class="m-rail"><i class="on"></i><i></i><i class="add"></i></div>
+        <div class="m-side">
+          <b>ロブ広ボイス</b>
+          <span># ざつだん</span><span># 攻略メモ</span>
+          <span class="on">ゲーム通話</span>
+          <em style="--c:#f0b232">みつき</em><em style="--c:#5865f2">ゆうと</em><em style="--c:#eb459e">はると</em><em style="--c:#23a55a">そうた</em>
+        </div>
+        <div class="m-main">
+          <div class="tile spk" style="--c:#f0b232"><i>み</i><small>みつき</small></div>
+          <div class="tile" style="--c:#5865f2"><i>ゆ</i><small>ゆうと</small></div>
+          <div class="tile spk2" style="--c:#eb459e"><i>は</i><small>はると</small></div>
+          <div class="tile" style="--c:#23a55a"><i>そ</i><small>そうた</small></div>
+          <div class="m-bar"><i></i><i></i><i></i><i class="red"></i></div>
+        </div>
+      </div>
+      <div class="bubble">つぎ、ランクいこう！</div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="download"><div class="wrap">
+  <p class="kicker">ダウンロード</p>
+  <h2>使う機械をえらんでね</h2>
+  <p class="lead">どれを使っても、同じアカウントでログインできるよ。パソコンの友だちとスマホの友だちでも、いっしょに話せるよ。</p>
+  <div class="dl">
+    <div class="dcard" id="cWin">
+      <span class="tag">あなたの機械はこれ</span>
+      <div class="dicon" style="background:#3ba5d8"><svg class="i"><use href="#i-win"/></svg></div>
+      <h3>Windows版</h3>
+      <p class="req">Windows 10 / 11</p>
+      <a class="btn blue dlbtn" data-file="FutariVoice-Setup.exe" href="#"><svg class="i"><use href="#i-dl"/></svg>ダウンロード（.exe）</a>
+      <ol>
+        <li>ダウンロードしたファイルを開く</li>
+        <li>青い画面「WindowsによってPCが保護されました」が出たら「詳細情報」→「実行」</li>
+        <li>デスクトップの「ふたりボイス」から開く</li>
+      </ol>
+    </div>
+    <div class="dcard" id="cAnd">
+      <span class="tag">あなたの機械はこれ</span>
+      <div class="dicon" style="background:var(--green)"><svg class="i"><use href="#i-phone"/></svg></div>
+      <h3>Android版</h3>
+      <p class="req">Android 7 以上・Chrome が入っていること</p>
+      <a class="btn blue dlbtn" data-file="FutariVoice.apk" href="#"><svg class="i"><use href="#i-dl"/></svg>ダウンロード（.apk）</a>
+      <ol>
+        <li>ダウンロードしたAPKをタップ</li>
+        <li>「この提供元のアプリを許可」をオンにする</li>
+        <li>「インストール」をタップ</li>
+      </ol>
+    </div>
+    <div class="dcard" id="cWeb">
+      <span class="tag">あなたの機械はこれ</span>
+      <div class="dicon" style="background:var(--brand)"><svg class="i"><use href="#i-globe"/></svg></div>
+      <h3>ブラウザ版</h3>
+      <p class="req">Chrome・Edge（パソコン・スマホ）</p>
+      <a class="btn blue" href="app/">ブラウザで開く</a>
+      <ol>
+        <li>インストールしなくても、すぐ使えるよ</li>
+        <li>マイクを使っていいか聞かれたら「許可」</li>
+      </ol>
+    </div>
+  </div>
+  <p class="soon" id="soon" hidden>Windows版とAndroid版は、いまじゅんび中だよ。先にブラウザ版を使ってね。</p>
+</div></section>
+
+<section class="band" id="how" style="background:#1b1c1f"><div class="wrap">
+  <p class="kicker">つかいかた</p>
+  <h2>3ステップで、友だちと話せるよ</h2>
+  <p class="lead">はじめての人も、だいじょうぶ。</p>
+  <div class="steps">
+    <div class="step"><h3>ログインする</h3><p>Googleアカウントか、ユーザー名とパスワードで登録してね。名前とアイコンの画像も決められるよ。</p></div>
+    <div class="step"><h3>サーバーを作る</h3><p>「作る」をおすと、自分のサーバーができるよ。チャンネルもふやせるよ。</p></div>
+    <div class="step"><h3>招待リンクを送る</h3><p>友だちにリンクを送ろう。友だちがリンクをはると、同じサーバーに入れるよ（最大4人）。</p></div>
+  </div>
+  <div class="feat">
+    <div><b>ゲームしながら話せる</b><span>話したときだけ声がとどくよ。</span></div>
+    <div><b>画面共有</b><span>ゲームの画面をみんなに見せられるよ。</span></div>
+    <div><b>チャット</b><span>あとから入った人にも、前の話がとどくよ。</span></div>
+    <div><b>声は直接とどく</b><span>声は、友だちの機械と直接つながって送られるよ。</span></div>
+  </div>
+</div></section>
+
+<section class="band" id="faq"><div class="wrap">
+  <p class="kicker">よくある質問</p>
+  <h2>こまったときは</h2>
+  <div class="faq" style="margin-top:22px">
+    <details><summary>お金はかかる？</summary><p>かからないよ。無料で使えるよ。</p></details>
+    <details><summary>何人まで入れる？</summary><p>1つのサーバーに4人までだよ。オフラインのメンバーは、メンバー一覧の「×」で外して、席をあけられるよ。</p></details>
+    <details><summary>声が聞こえない・とどかない</summary><p>マイクを「許可」したか、ミュートになっていないか見てね。設定の「入力感度」で、バーが白い線をこえるかたしかめられるよ。</p></details>
+    <details><summary>パスワードをわすれた</summary><p>ユーザー名で作ったアカウントは、いまはパスワードをリセットできないよ。新しく登録しなおしてね。Googleでログインしていれば、わすれる心配はないよ。</p></details>
+    <details><summary>iPhoneでも使える？</summary><p>iPhone用のアプリはまだないよ。ブラウザ版をためしてみてね（まだ、ちゃんとためしていないよ）。</p></details>
+  </div>
+</div></section>
+
+<footer><div class="wrap"><span>ふたりボイス</span><span>声と画面は PeerJS（WebRTC）、ログインは Firebase を使っているよ</span></div></footer>
+
+<script>
+{
+  const REPO = '@@REPO@@';
+  const ready = /^[\w.-]+\/[\w.-]+$/.test(REPO);
+  for (const a of document.querySelectorAll('.dlbtn')){
+    if (ready) a.href = 'https://github.com/' + REPO + '/releases/latest/download/' + a.dataset.file;
+    else a.setAttribute('aria-disabled', 'true');
+  }
+  if (!ready) document.getElementById('soon').hidden = false;
+  const ua = navigator.userAgent;
+  const pick = /Android/i.test(ua) ? 'cAnd' : /Windows/i.test(ua) ? 'cWin' : 'cWeb';
+  document.getElementById(pick).classList.add('rec');
+}
+</script>
+</body>
+</html>

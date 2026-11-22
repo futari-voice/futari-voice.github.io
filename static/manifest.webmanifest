@@ -1,0 +1,29 @@
+{
+  "name": "ふたりボイス",
+  "short_name": "ふたりボイス",
+  "description": "友だち4人までのサーバー（チャット・通話・画面共有）",
+  "start_url": "app/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#313338",
+  "theme_color": "#1e1f22",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

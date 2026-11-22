@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.futarivoice.twa",
+      "sha256_cert_fingerprints": ["CC:84:B9:2A:96:AE:BF:BA:DE:ED:4B:30:0C:66:78:1D:A4:8C:8C:25:83:47:33:F9:F2:3F:7A:BC:EE:00:95:A1"]
+    }
+  }
+]
