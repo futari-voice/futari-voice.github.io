@@ -1,4 +1,4 @@
-# main にプッシュするたびに：サイトを作ってテスト → Windows版とAndroid版を作る → リリース・サイト公開（GitHub Pages）→ 本物のネットでテスト
+# main にプッシュするたびに：サイトを作ってテスト → Windows版とAndroid版を作る → リリース・サイト公開（GitHub Pages）→ 本物のネットでテスト・Android版をエミュレーターでテスト
 name: ビルドして公開
 
 on:
@@ -41,16 +41,20 @@ jobs:
           echo "base=$BASE" >> "$GITHUB_OUTPUT"
           echo "url=https://$HOST$BASE" >> "$GITHUB_OUTPUT"
           echo "サイト: https://$HOST$BASE/"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
       - run: npm ci
       - name: サイトを組み立てる
         run: node scripts/build.mjs
-      - name: 練習用サーバーで4人テスト
+      - name: 練習用サーバーでテスト（4人のサーバー・フレンド・個人チャット・個人通話）
         run: |
           npx playwright install --with-deps chromium
           npx peerjs --port 9000 --host 127.0.0.1 > peer.log 2>&1 &
           (cd site && python3 -m http.server 8080 --bind 127.0.0.1 > ../http.log 2>&1 &)
           sleep 3
-          npx firebase emulators:exec --only auth --project demo-futari "node tests/local.mjs"
+          npx firebase emulators:exec --only auth,firestore --project demo-futari "node tests/local.mjs && FS_EMU=127.0.0.1:8085 node tests/social.mjs"
       - uses: actions/configure-pages@v5
       - name: サイトを公開の準備
         uses: actions/upload-pages-artifact@v3
@@ -175,6 +179,36 @@ jobs:
       - name: GitHub Pagesに出す
         id: deployment
         uses: actions/deploy-pages@v4
+
+  android-test:
+    name: Android版をエミュレーターでためす
+    needs: [site, android, deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: android, path: dist }
+      - name: エミュレーターを速く動かすじゅんび（KVM）
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: エミュレーターでためす
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash tests/android-smoke.sh "${{ needs.site.outputs.url }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-screen
+          path: android-login.png
+          if-no-files-found: ignore
 
   live-test:
     name: 本物のネットでテスト
