@@ -150,6 +150,16 @@ public class MainActivity extends Activity {
             main.post(() -> Notifs.show(ctx(), title, text, tag, target));
         }
 
+        /** 今のアプリのバージョン（アップデートがあるか調べるため） */
+        @JavascriptInterface
+        public int appVersion() { return BuildConfig.VERSION_CODE; }
+
+        /** 新しいバージョンをダウンロードして、今のアプリと入れかえる */
+        @JavascriptInterface
+        public void update(final String url) {
+            main.post(() -> Updater.start(ctx(), url));
+        }
+
         @JavascriptInterface
         public void cancel(final String tag) {
             main.post(() -> Notifs.cancel(ctx(), tag));

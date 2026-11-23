@@ -33,6 +33,20 @@ adb shell input keyevent KEYCODE_BACK; sleep 2
 if alive; then ok "もどるボタンをおしても、とじずにうしろで動きつづける"; else ng "もどるボタンでとじない"; fi
 if hasActivity; then ok "アプリの画面ものこっている"; else ng "アプリの画面ものこっている"; fi
 
+# アプリの中のアップデート：はじめは「許可して」が出る → 許可したら新しいAPKをダウンロードして中身をたしかめる
+adb shell am force-stop $PKG; sleep 2
+adb logcat -c
+adb shell am start -W -n $PKG/.MainActivity -a android.intent.action.VIEW -d "$SITE/app/?debug=1\&updtest=1"
+if waitlog '\[FV\] upd needperm' 120; then ok "アップデート：はじめは「この提供元のアプリを許可」の画面が出る"; else ng "アップデートの許可の画面が出る"; fi
+sleep 3; adb shell input keyevent KEYCODE_BACK; sleep 2
+adb shell appops set $PKG REQUEST_INSTALL_PACKAGES allow
+adb shell am force-stop $PKG; sleep 2
+adb logcat -c
+adb shell am start -W -n $PKG/.MainActivity -a android.intent.action.VIEW -d "$SITE/app/?debug=1\&updtest=1"
+if waitlog '\[FV\] upd error' 180; then
+  if log | grep -q '\[FV\] upd progress' && log | grep -q 'もう新しいバージョン'; then ok "アップデート：新しいAPKをダウンロードして、中身をたしかめられる"; else ng "アップデートのダウンロード"; log | grep '\[FV\] upd' | tail -5; fi
+else ng "アップデートのダウンロード（時間切れ）"; log | grep '\[FV\]' | tail -8; fi
+
 # 「とじても待つ」：通話していなくても、アプリをスワイプで消しても、うしろで待ちつづける
 adb shell am force-stop $PKG; sleep 2
 adb logcat -c

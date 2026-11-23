@@ -33,6 +33,12 @@ try {
   ok((await s.textContent('h1')).includes('サーバー'), 'ダウンロードサイトが開く');
   const links = await s.$$eval('.dlbtn', a => a.map(x => x.href));
   ok(links.length === 2 && links.every(h => h.startsWith('https://github.com/')), 'ダウンロードボタンがGitHubのリリースを指している');
+  const ver = await fetch(SITE + '/version.json', {cache:'no-store'}).then(r => r.json()).catch(() => null);
+  ok(!!(ver && ver.build > 0 && ver.android && ver.windows), 'アップデート用のファイル（version.json）がある（' + (ver ? ver.name : 'なし') + '）');
+  if (ver && ver.android){
+    const h = await fetch(ver.android.url, {method:'HEAD', redirect:'follow'}).catch(() => null);
+    ok(!!(h && h.ok), 'アップデート用のAPKをダウンロードできる');
+  }
   if (new URL(SITE).pathname.replace(/\/$/, '') === ''){
     const al = await fetch(SITE + '/.well-known/assetlinks.json').then(r => r.json()).catch(() => null);
     ok(Array.isArray(al) && al[0].target.package_name === 'app.futarivoice.twa', 'Android用の確認ファイル（assetlinks.json）がある');

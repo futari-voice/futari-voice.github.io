@@ -1,6 +1,9 @@
 // ふたりボイス Windows版
 // 中身は公開しているWebアプリ（いつも最新）。Windowsアプリとしての窓・マイク・画面共有・Googleログインのお手伝いをする。
-const { app, BrowserWindow, shell, ipcMain, session, desktopCapturer, dialog, Tray, Menu, Notification } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, session, desktopCapturer, dialog, Tray, Menu, Notification, net } = require('electron');
+const fs = require('fs');
+const os = require('os');
+const { spawn } = require('child_process');
 const path = require('path');
 const crypto = require('crypto');
 const APP_URL = require('./config.json').url;           // 例: https://xxxx.web.app/app/
@@ -33,6 +36,45 @@ app.on('open-url', (e, u) => { e.preventDefault(); handleUrl(u); });
 const fromApp = e => !!(e.senderFrame && e.senderFrame.url.startsWith(ORIGIN));
 ipcMain.on('fv:set-bg', (e, v) => { if (fromApp(e)) keepBg = !!v; });
 ipcMain.on('fv:focus', e => { if (fromApp(e)) focusWin(); });
+
+// ---- アプリの中でアップデート：新しいインストーラーをダウンロードして、だまって入れかえて、また開く ----
+ipcMain.handle('fv:version', e => (fromApp(e) ? app.getVersion() : ''));
+let updating = false;
+ipcMain.handle('fv:update', async (e, url) => {
+  if (!fromApp(e)) return { ok: false, error: 'not allowed' };
+  if (updating) return { ok: false, error: 'busy' };
+  if (!/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/releases\/download\/v[0-9.]+\/FutariVoice-Setup\.exe$/.test(String(url))) return { ok: false, error: 'アップデートの場所がへんだよ' };
+  updating = true;
+  const send = (st, v) => { if (win && !win.isDestroyed()) win.webContents.send('fv:upd', st, String(v == null ? '' : v)); };
+  try {
+    const res = await net.fetch(url);
+    if (!res.ok) throw new Error('ダウンロードできなかった（' + res.status + '）');
+    const total = +res.headers.get('content-length') || 0;
+    const file = path.join(os.tmpdir(), 'FutariVoice-Update-' + Date.now() + '.exe');
+    const out = fs.createWriteStream(file);
+    const reader = res.body.getReader();
+    let got = 0, last = -1;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      got += value.length;
+      if (!out.write(Buffer.from(value))) await new Promise(r => out.once('drain', r));
+      const pct = total ? Math.floor(got * 100 / total) : 0;
+      if (Math.floor(pct / 5) !== Math.floor(last / 5)) { last = pct; send('progress', pct); }
+    }
+    await new Promise((resolve, reject) => out.end(err => (err ? reject(err) : resolve())));
+    if (got < 1000000 || (total && got !== total)) throw new Error('ダウンロードがとちゅうで止まった');
+    send('installing', '');
+    // /S = だまって入れる、--force-run = 入れたあとにまた開く
+    spawn(file, ['/S', '--updated', '--force-run'], { detached: true, stdio: 'ignore' }).unref();
+    setTimeout(() => { quitting = true; app.quit(); }, 1500);
+    return { ok: true };
+  } catch (err) {
+    updating = false;
+    send('error', err.message || err);
+    return { ok: false, error: String(err.message || err) };
+  }
+});
 
 function makeTray() {
   if (tray) return;
