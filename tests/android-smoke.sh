@@ -40,10 +40,17 @@ adb shell am start -W -n $PKG/.MainActivity -a android.intent.action.VIEW -d "$S
 waitlog '\[FV\] standby on' 150; sleep 4
 if fg; then ok "通話していなくても「待つ」しくみが動く"; else ng "「待つ」しくみが動く"; adb shell dumpsys activity services $PKG | head -30; fi
 if adb shell dumpsys notification --noredact 2>/dev/null | grep -q "standby\|待っている\|futarivoice"; then ok "待っているおしらせが出ている"; else warn "おしらせの文字を見つけられなかった"; fi
-# 最近使ったアプリの画面を開いて、上にスワイプして消す
-adb shell input keyevent KEYCODE_APP_SWITCH; sleep 3
+# 最近使ったアプリの画面を開いて、アプリを消す（「Clear all」をおす／だめなら上にスワイプ）
+tapText(){ adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; local b; b=$(adb shell cat /sdcard/ui.xml 2>/dev/null | tr '>' '\n' | grep -i "text=\"$1\"" | grep -o 'bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' | head -1 | grep -o '[0-9]*'); [ -z "$b" ] && return 1; set -- $b; adb shell input tap $((($1+$3)/2)) $((($2+$4)/2)); }
 SIZE=$(adb shell wm size | grep -o '[0-9]*x[0-9]*' | tail -1); W=${SIZE%x*}; H=${SIZE#*x}
-adb shell input swipe $((W/2)) $((H/2)) $((W/2)) $((H/12)) 250; sleep 3
+for try in 1 2 3; do
+  hasActivity || break
+  adb shell input keyevent KEYCODE_APP_SWITCH; sleep 4
+  if ! tapText "Clear all"; then
+    adb shell input swipe $((W/2)) $((H*55/100)) $((W/2)) $((H/20)) 600
+  fi
+  sleep 4
+done
 adb shell input keyevent KEYCODE_HOME; sleep 2
 if hasActivity; then
   warn "エミュレーターで、アプリをスワイプで消せなかった（このチェックはとばすよ）"

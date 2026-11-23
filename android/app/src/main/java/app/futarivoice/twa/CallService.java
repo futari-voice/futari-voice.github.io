@@ -26,6 +26,7 @@ public class CallService extends Service {
     static boolean inCall = false, standby = false;
     static String callTitle = "", callText = "";
     static boolean running = false;
+    private static CallService instance;
 
     private PowerManager.WakeLock wake;
     private WifiManager.WifiLock wifi;
@@ -53,6 +54,16 @@ public class CallService extends Service {
     private static void update(Context c) {
         if (c == null) return;
         Intent i = new Intent(c, CallService.class);
+        // もう動いているときは、おしらせを書きかえるだけ（うしろにいても、これならできる）
+        if (keepAlive() && instance != null) {
+            try {
+                instance.goForeground();
+                instance.locks(inCall);
+                return;
+            } catch (Exception e) {
+                Log.w("FV", "update", e);
+            }
+        }
         if (keepAlive()) {
             try {
                 if (Build.VERSION.SDK_INT >= 26) c.startForegroundService(i); else c.startService(i);
@@ -87,6 +98,7 @@ public class CallService extends Service {
         }
         locks(inCall);
         running = true;
+        instance = this;
         return START_NOT_STICKY;
     }
 
@@ -156,6 +168,7 @@ public class CallService extends Service {
     @Override
     public void onDestroy() {
         running = false;
+        if (instance == this) instance = null;
         try { if (wake != null && wake.isHeld()) wake.release(); } catch (Exception ignored) {}
         try { if (wifi != null && wifi.isHeld()) wifi.release(); } catch (Exception ignored) {}
         wake = null;
