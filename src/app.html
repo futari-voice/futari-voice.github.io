@@ -1178,7 +1178,8 @@ function onServers(list){
   const first = !SRV.init; SRV.init = true;
   const before = new Map(SV);
   SV.clear();
-  for (const d of list) if (okSid(d.id)) SV.set(d.id, normSrv(d));
+  // 入ったばかりのときに見える「作りかけ」（名前などがまだない）は、まだ使わない
+  for (const d of list) if (okSid(d.id) && typeof d.name === 'string' && typeof d.owner === 'string' && Array.isArray(d.channels)) SV.set(d.id, normSrv(d));
   let readChanged = false;
   for (const [sid, s] of SV){
     if (!SRV.read[sid]){ SRV.read[sid] = {_base:first ? serverNow() : 0}; readChanged = true; }   // あとから入ったサーバーは、前のメッセージも「新しい」にする
@@ -1334,7 +1335,8 @@ function openText(ch){
   if (innerWidth > 820) setTimeout(() => $('#ci').focus(), 0);
 }
 function showVoice(ch){ if (!chanById(ch)) return; S.view = 'voice'; S.viewVoice = ch; M.deep = true; renderAll(); }
-function watchMsgs(){
+function watchMsgs(tries){
+  tries = tries || 0;
   const key = S.sid + '/' + S.textCh;
   if (SRV.msgKey === key) return;
   if (SRV.msgUnsub){ try{ SRV.msgUnsub(); }catch(e){} SRV.msgUnsub = null; }
@@ -1346,7 +1348,11 @@ function watchMsgs(){
     S.msgsReady = true;
     if (S.view === 'text' && S.sid === sid && S.textCh === ch){ renderMessages(true); markRead(); }
     watchUsers();
-  }, e => { console.warn('msgs', e && (e.code || e.message)); }, {order:'ts', last:150});
+  }, e => {
+    console.warn('msgs', e && (e.code || e.message));
+    // 入った直後などで、まだ見られなかったときは、少ししてからもう一度
+    if (SRV.msgKey === key && tries < 6) setTimeout(() => { if (SRV.msgKey === key){ SRV.msgKey = ''; watchMsgs(tries + 1); } }, 1500 * (tries + 1));
+  }, {order:'ts', last:150});
 }
 function markRead(){
   if (S.view !== 'text' || !S.sid || !S.textCh || !S.meta) return;
@@ -1387,14 +1393,18 @@ async function sendMessage(text){
 }
 
 /* ---------- ボイスにいる人（データベース） ---------- */
-function watchVoiceDocs(){
+function watchVoiceDocs(tries){
+  tries = tries || 0;
   if (SRV.voiceUnsub){ try{ SRV.voiceUnsub(); }catch(e){} }
   const sid = S.sid; SRV.voice = [];
   SRV.voiceUnsub = DBX.query('servers/' + sid + '/voice', [], list => {
     if (S.sid !== sid) return;
     SRV.voice = list.filter(d => okFid(d.id) && okCh(d.ch)).map(d => ({uid:d.id, ch:d.ch, at:+d.at || 0, mute:!!d.mute, deaf:!!d.deaf, scr:!!d.scr}));
     watchUsers(); renderChannels(); renderMembers(); renderRail(); if (S.view === 'voice') renderTiles();
-  }, e => console.warn('voice', e && (e.code || e.message)));
+  }, e => {
+    console.warn('voice', e && (e.code || e.message));
+    if (S.sid === sid && tries < 6) setTimeout(() => { if (S.sid === sid) watchVoiceDocs(tries + 1); }, 1500 * (tries + 1));
+  });
 }
 const vFresh = v => serverNow() - v.at < 150000;
 const vlist = ch => SRV.voice.filter(v => v.ch === ch && v.uid !== F.fuid && vFresh(v));
