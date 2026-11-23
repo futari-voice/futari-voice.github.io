@@ -55,7 +55,7 @@ try {
 
   // サーバー（ふつう／中継サーバーだけ）
   for (const relay of [false, true]){
-    const url = SITE + '/app/?debug=1' + (relay ? '&relay=1' : '');
+    const url = SITE + '/app/?debug=1&nonews=1' + (relay ? '&relay=1' : '');
     const tag = relay ? '（中継サーバーだけで）' : '';
     try {
       const A = await page(b, url, 'A', errs); users.push(A);
@@ -84,7 +84,7 @@ try {
   }
 
   // フレンド・個人チャット・個人通話（本物のデータベースと、きまり）
-  const url = SITE + '/app/?debug=1';
+  const url = SITE + '/app/?debug=1&nonews=1';
   const ua = 'ci_fa_' + R, ub = 'ci_fb_' + R;
   const A = await page(b, url, 'FA', errs); users.push(A); await register(A, ua, 'ci-pass-' + R, 'フレンドA');
   const B = await page(b, url, 'FB', errs); users.push(B); await register(B, ub, 'ci-pass-' + R, 'フレンドB');

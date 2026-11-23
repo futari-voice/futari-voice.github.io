@@ -2969,6 +2969,7 @@ function onNews(list){
   const fresh = F.news.filter(n => (n.at || 0) > seen && n.by !== F.fuid && !F.newsShown.has(n.id));
   if (!fresh.length) return;
   for (const n of fresh) F.newsShown.add(n.id);
+  if (qs.has('nonews')){ store.set(ak('newsSeen'), Math.max(seen, ...fresh.map(n => n.at || 0))); return; }   // テスト用：おしらせを出さない
   if (fresh.some(n => n.kind === 'update')) checkUpdate(true);
   const items = NEWS.fresh && !$('#mNews').classList.contains('hide') ? [...fresh, ...NEWS.items].slice(0, 5) : fresh.slice(0, 5);
   showNews(items, true);
