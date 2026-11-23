@@ -195,6 +195,18 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: エミュレーターでためす
+        id: emu1
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash tests/android-smoke.sh "${{ needs.site.outputs.url }}"
+      - name: エミュレーターでためす（もう一回。ダウンロードの失敗などのとき）
+        if: steps.emu1.outcome == 'failure'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
