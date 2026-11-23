@@ -207,7 +207,7 @@ jobs:
         if: always()
         with:
           name: android-screen
-          path: android-login.png
+          path: android-*.png
           if-no-files-found: ignore
 
   live-test:
