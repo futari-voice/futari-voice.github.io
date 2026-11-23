@@ -704,6 +704,11 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
       <label class="sw"><span>まわりの音をへらす（ノイズ抑制）</span><input type="checkbox" class="tg" id="sNoise"></label>
       <label class="sw"><span>声がはね返るのをふせぐ（エコー除去）</span><input type="checkbox" class="tg" id="sEcho"></label>
       <label class="sw"><span>声の大きさを自動でそろえる</span><input type="checkbox" class="tg" id="sAgc"></label>
+      <h3>おしらせ（通知）</h3>
+      <label class="sw"><span>メッセージ・フレンド申請・電話がきたら、おしらせを出す</span><input type="checkbox" class="tg" id="sNote"></label>
+      <button class="btn2 hide" id="noteAllow" style="justify-self:start">このパソコン（ブラウザ）で、おしらせを許可する</button>
+      <label class="sw hide" id="sBgRow"><span id="sBgText"></span><input type="checkbox" class="tg" id="sBg"></label>
+      <p class="hint" id="noteHint"></p>
       <h3>音のおしらせ</h3>
       <label class="sw"><span>ボイスに入る・出るときの音</span><input type="checkbox" class="tg" id="sSnd"></label>
       <label class="sw"><span>メッセージがきたときの音</span><input type="checkbox" class="tg" id="sMsg"></label>
@@ -767,7 +772,7 @@ let acct = '';
 const ak = k => 'a.' + acct + '.' + k;
 const me = {uid:'', name:'', color:COLORS[0], avatar:'', ver:0};
 const saveMe = () => store.set(ak('me'), me);
-const cfg = Object.assign({inputId:'',outputId:'',auto:true,th:-50,echo:true,noise:true,agc:true,vol:{},scrVol:80,sounds:true,msgSound:true,members:true,last:''}, store.get('cfg2', {}));
+const cfg = Object.assign({inputId:'',outputId:'',auto:true,th:-50,echo:true,noise:true,agc:true,vol:{},scrVol:80,sounds:true,msgSound:true,members:true,last:'',note:true,bg:true}, store.get('cfg2', {}));
 const saveCfg = () => store.set('cfg2', cfg);
 let servers = [];
 const saveServers = () => store.set(ak('servers'), servers);
@@ -1227,9 +1232,13 @@ function onData(P, c, d){
       if (added.length){
         const m = added[0]; saveServer();
         if (S.typing[m.ch]) delete S.typing[m.ch][P.uid];
-        const seen = S.view === 'text' && S.textCh === m.ch && !document.hidden;
+        const seen = S.view === 'text' && S.textCh === m.ch && pageSeen();
         if (S.view === 'text' && S.textCh === m.ch) appendMsg(m); else renderChannels();
-        if (seen) markRead(); else { playSound('msg'); renderBadges(); }
+        if (seen) markRead(); else {
+          playSound('msg'); renderBadges();
+          const c = chanById(m.ch);
+          showNote(S.meta.name + (c ? ' #' + c.name : ''), rec(m.uid).name + '：' + String(m.text).slice(0, 100), 'srv-' + S.sid, 'srv:' + S.sid + ':' + m.ch);
+        }
         renderTyping();
       }
       break;
@@ -1822,6 +1831,7 @@ function openSettings(){
   $('#sAuto').checked = cfg.auto; $('#sTh').value = cfg.th; $('#sTh').classList.toggle('hide', cfg.auto);
   $('#sNoise').checked = cfg.noise; $('#sEcho').checked = cfg.echo; $('#sAgc').checked = cfg.agc; $('#sSnd').checked = cfg.sounds; $('#sMsg').checked = cfg.msgSound;
   $('#micTest').classList.toggle('hide', !!S.rawStream);
+  paintNoteSettings();
   fillDevices(); renderMeter(); openModal('mSet');
 }
 function paintAccount(){
@@ -1897,7 +1907,7 @@ function initAuth(){
   FB.getRedirectResult(auth).catch(e => loginErr(e));
   FB.onAuthStateChanged(auth, u => {
     if (u && fbUser && u.uid === fbUser.uid) return;
-    if (!u){ if (fbUser){ dcEnd(''); hideIncoming(); DC.incoming = null; socialStop(); exitServer(); fbUser = null; } showLogin(); return; }
+    if (!u){ if (fbUser){ dcEnd(''); hideIncoming(); DC.incoming = null; socialStop(); exitServer(); fbUser = null; } syncBg(); showLogin(); return; }
     fbUser = u; setAccount(u);
     if (me.name && hasSaved()) startApp(); else showWelcome();
   });
@@ -2050,7 +2060,7 @@ function socialStart(){
   W(DBX.query('requests', [['to', '==', F.fuid]], list => {
     const before = new Set(F.inReq.map(r => r.from)), first = !F.reqInit;
     F.inReq = list; F.reqInit = true;
-    if (!first && list.some(r => !before.has(r.from))){ playSound('msg'); const r = list.find(r => !before.has(r.from)); setTimeout(() => { if (document.hidden) bridgeNotify('フレンド申請がきたよ', prof(r.from).name + ' からフレンド申請がきたよ', 'req'); }, 1500); }
+    if (!first && list.some(r => !before.has(r.from))){ playSound('msg'); const r = list.find(r => !before.has(r.from)); setTimeout(() => showNote('フレンド申請がきたよ', prof(r.from).name + ' からフレンド申請がきたよ', 'req', 'req'), 1500); }
     watchUsers(); renderSocial();
   }, dbErr));
   W(DBX.query('requests', [['from', '==', F.fuid]], list => { F.outReq = list; watchUsers(); renderSocial(); }, dbErr));
@@ -2139,14 +2149,14 @@ function onDms(list){
     const l = d.last || {}, p = prev.get(d.id), pl = (p && p.last) || {};
     if (!l.from || l.from === F.fuid || (+l.ts || 0) <= (+pl.ts || 0) || !pl.ts && p) continue;
     const fid = (d.members || []).find(m => m !== F.fuid);
-    const looking = S.view === 'dm' && F.dm === fid && !document.hidden;
-    if (!looking){ playSound('msg'); if (document.hidden) bridgeNotify(prof(fid).name, String(l.text || '').slice(0, 100), 'dm-' + fid); }
+    const looking = S.view === 'dm' && F.dm === fid && pageSeen();
+    if (!looking){ playSound('msg'); showNote(prof(fid).name, String(l.text || '').slice(0, 100), 'dm-' + fid, 'dm:' + fid); }
   }
   if (S.view === 'dm') markDmRead();
   renderSocial();
 }
 function markDmRead(){
-  if (S.view !== 'dm' || !F.dm || document.hidden) return;
+  if (S.view !== 'dm' || !F.dm || !pageSeen()) return;
   const pid = pairOf(F.fuid, F.dm), d = F.dms.get(pid);
   const ts = Math.max(+F.dmRead[pid] || 0, d && d.last ? +d.last.ts || 0 : 0, F.dmMsgs.length ? +F.dmMsgs[F.dmMsgs.length - 1].ts || 0 : 0);
   if (ts !== (+F.dmRead[pid] || 0)){ F.dmRead[pid] = ts; store.set(ak('dmread'), F.dmRead); renderHomeSide(); renderHomeBadge(); }
@@ -2331,11 +2341,11 @@ function showIncoming(d){
   $('#ringName').textContent = u.name;
   $('#mRing').classList.remove('hide');
   startRing('in');
-  bridgeNotify(u.name + ' から電話だよ', 'タップして出てね', 'call');
+  showNote(u.name + ' から電話だよ', '「出る」をおすと話せるよ', 'call', 'call');
   clearTimeout(DC.ringT);
   DC.ringT = setTimeout(() => { if (DC.incoming && DC.incoming.cid === d.cid){ hideIncoming(); DC.incoming = null; toast(u.name + ' から電話がきていたよ'); renderAll(); } }, 45000);
 }
-function hideIncoming(){ $('#mRing').classList.add('hide'); stopRing(); clearTimeout(DC.ringT); bridgeCancel('call'); }
+function hideIncoming(){ $('#mRing').classList.add('hide'); stopRing(); clearTimeout(DC.ringT); cancelNote('call'); }
 async function acceptCall(){
   const d = DC.incoming; if (!d) return;
   hideIncoming(); DC.incoming = null;
@@ -2448,13 +2458,14 @@ function renderFriends(){
   if (!DBX){ el.innerHTML = `<div class="fempty"><p>フレンド機能は、いまは使えないよ。</p></div>`; return; }
   if (F.err && !F.meDoc && !F.friends.size){ el.innerHTML = `<div class="fempty"><div class="hicon">${ic('people')}</div><p>フレンド機能につながらなかった…<br>少ししてから開きなおしてね（${esc(F.err)}）</p></div>`; return; }
   const fr = [...F.friends.keys()].sort((a, b) => prof(a).name.localeCompare(prof(b).name, 'ja'));
+  const banner = canAskNote() && cfg.note ? `<div class="fsec"><div class="addbox" style="grid-template-columns:1fr auto;align-items:center"><p>メッセージや電話がきたら、パソコンにおしらせを出せるよ。</p><button class="primary" type="button" id="noteAsk">おしらせをオンにする</button></div></div>` : '';
   if (F.tab === 'online' || F.tab === 'all'){
     const list = F.tab === 'online' ? fr.filter(isOnline) : fr;
     if (!list.length){
-      el.innerHTML = `<div class="fempty"><div class="hicon">${ic('people')}</div><p>${fr.length ? 'いまオンラインのフレンドはいないよ。' : 'まだフレンドがいないよ。<br>友だちのユーザーIDで、フレンド申請を送ろう！'}</p>${fr.length ? '' : '<button class="primary" data-ftab="add">フレンドを追加</button>'}</div>`;
+      el.innerHTML = banner + `<div class="fempty"><div class="hicon">${ic('people')}</div><p>${fr.length ? 'いまオンラインのフレンドはいないよ。' : 'まだフレンドがいないよ。<br>友だちのユーザーIDで、フレンド申請を送ろう！'}</p>${fr.length ? '' : '<button class="primary" data-ftab="add">フレンドを追加</button>'}</div>`;
       return;
     }
-    el.innerHTML = `<div class="fsec"><h3>${F.tab === 'online' ? 'オンライン' : 'すべてのフレンド'} — ${list.length}</h3>${list.map(f => friendRow(f, '')).join('')}</div>`;
+    el.innerHTML = banner + `<div class="fsec"><h3>${F.tab === 'online' ? 'オンライン' : 'すべてのフレンド'} — ${list.length}</h3>${list.map(f => friendRow(f, '')).join('')}</div>`;
     return;
   }
   if (F.tab === 'req'){
@@ -2482,8 +2493,60 @@ function renderFriends(){
 /* ---------- Androidアプリとの橋 ---------- */
 const AND = window.FVAndroid || null;
 let lastLive = '';
-function bridgeNotify(title, text, tag){ if (AND && AND.notifyMsg) try{ AND.notifyMsg(String(title), String(text), String(tag || 'msg')); }catch(e){} }
-function bridgeCancel(tag){ if (AND && AND.cancel) try{ AND.cancel(String(tag)); }catch(e){} }
+// 画面を見ているか（パソコンでは、ほかの窓（ゲームなど）を見ているときは「見ていない」）
+const pageSeen = () => !document.hidden && (!!AND || document.hasFocus());
+const NOTES = {};
+function showNote(title, text, tag, target){
+  if (!cfg.note || pageSeen()) return;
+  title = String(title); text = String(text); tag = String(tag || 'msg');
+  if (AND){
+    try { if (AND.note) AND.note(title, text, tag, String(target || '')); else if (AND.notifyMsg) AND.notifyMsg(title, text, tag); } catch(e){}
+    return;
+  }
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    if (NOTES[tag]) try{ NOTES[tag].close(); }catch(e){}
+    const n = new Notification(title, {body:text, tag, icon:'../icon-192.png', requireInteraction:tag === 'call'});
+    n.onclick = () => { try{ window.focus(); }catch(e){} if (window.fvDesktop && window.fvDesktop.focus) window.fvDesktop.focus(); openTarget(target); try{ n.close(); }catch(e){} };
+    NOTES[tag] = n;
+  } catch(e){ console.warn('note', e); }
+}
+function cancelNote(tag){
+  if (AND){ if (AND.cancel) try{ AND.cancel(String(tag)); }catch(e){} return; }
+  if (NOTES[tag]){ try{ NOTES[tag].close(); }catch(e){} delete NOTES[tag]; }
+}
+// おしらせをおしたときに開く画面
+function openTarget(t){
+  t = String(t || '');
+  if (!fbUser || $('#app').classList.contains('hide')) return;
+  if (t.startsWith('dm:')){ const fid = t.slice(3); if (F.friends.has(fid)) openDm(fid); }
+  else if (t === 'req'){ F.tab = 'req'; goHome(); }
+  else if (t.startsWith('srv:')){ const [, sid, ch] = t.split(':'); if (servers.some(s => s.id === sid)){ enterServer(sid); if (ch && chanById(ch)) openText(ch); } }
+  else if (t === 'call'){ if (DC.incoming) $('#mRing').classList.remove('hide'); else if (DC.fid) openDm(DC.fid); }
+}
+// アプリをとじても待つ（Android：小さなおしらせ／Windows：右下のタスクトレイ）
+function syncBg(){
+  const on = !!(cfg.bg && cfg.note && fbUser);
+  if (AND && AND.standby) try{ AND.standby(on); }catch(e){}
+  if (window.fvDesktop && window.fvDesktop.setBackground) try{ window.fvDesktop.setBackground(!!cfg.bg); }catch(e){}
+}
+function canAskNote(){ return !AND && !(window.fvDesktop && window.fvDesktop.platform) && 'Notification' in window && Notification.permission === 'default'; }
+function askNote(){ try { Notification.requestPermission().then(() => { renderFriends(); paintNoteSettings(); }); } catch(e){} }
+function paintNoteSettings(){
+  $('#sNote').checked = cfg.note;
+  $('#noteAllow').classList.toggle('hide', !canAskNote());
+  const desk = window.fvDesktop && window.fvDesktop.platform === 'windows';
+  $('#sBgRow').classList.toggle('hide', !(AND || desk));
+  $('#sBgText').textContent = AND ? 'アプリをとじても、メッセージや電話を待つ（スマホの上に小さなおしらせが出るよ）' : '×でとじても、右下（タスクトレイ）で待つ';
+  $('#sBg').checked = cfg.bg;
+  let h = '';
+  if (!AND && !desk){
+    if (!('Notification' in window)) h = 'このブラウザでは、おしらせが出せないよ。';
+    else if (Notification.permission === 'denied') h = 'ブラウザで、おしらせがブロックされているよ。アドレスバーのマークから「通知」を許可してね。';
+    else h = 'ブラウザ版は、このページを開いているあいだだけ、おしらせが出るよ。とじていても受け取りたいときは、Windows版かAndroid版を使ってね。';
+  } else if (AND) h = 'スマホの設定で「ふたりボイス」の通知をオフにしていると、おしらせは出ないよ。';
+  $('#noteHint').textContent = h;
+}
 function bridgeLive(){
   if (!AND) return;
   let live = null;
@@ -2514,6 +2577,9 @@ if (AND){
     return false;
   };
   window.__fvHangup = () => { if (DC.state) hangup(); else if (S.voice) leaveVoice(); };
+  window.__fvAnswer = () => { if (DC.incoming) acceptCall(); };
+  window.__fvDecline = () => { if (DC.incoming) declineCall(); };
+  window.__fvOpenTarget = t => openTarget(t);
   window.__fvOpenLink = url => {
     const inv = (String(url).match(/#invite-([A-Za-z0-9._-]+)/) || [])[1];
     if (!inv || !fbUser || $('#app').classList.contains('hide')) return;
@@ -2524,6 +2590,7 @@ if (AND){
   if (DEBUG){
     setInterval(() => console.info('[FV] alive ' + document.visibilityState), 3000);
     if (qs.has('fgtest')) setTimeout(() => { try { AND.callState(true, 'テスト', 'テスト中'); console.info('[FV] fgtest on'); } catch(e){ console.info('[FV] fgtest error ' + e); } }, 3000);
+    if (qs.has('standbytest')) setTimeout(() => { try { AND.standby(true); console.info('[FV] standby on'); } catch(e){ console.info('[FV] standby error ' + e); } }, 3000);
   }
 }
 
@@ -2539,7 +2606,7 @@ function paintW(){ paintAv($('#wAv'), {name:$('#wName').value || '?', color:me.c
 function startApp(){
   screen('app');
   renderAvCss();
-  socialStart();
+  socialStart(); syncBg();
   const inv = (location.hash.match(/^#invite-([A-Za-z0-9._-]+)/) || [])[1];
   if (cfg.last && servers.some(s => s.id === cfg.last)) enterServer(cfg.last);
   else if (servers.length) enterServer(servers[0].id);
@@ -2592,6 +2659,7 @@ $('#fbody').addEventListener('click', e => {
   const u = e.target.closest('[data-unf]');
   if (u){ const fid = u.dataset.unf; confirmBox(prof(fid).name + ' とのフレンドをやめる？', 'やめると、個人チャットや個人通話ができなくなるよ。また申請すれば、フレンドにもどれるよ。', 'やめる', () => removeFriend(fid)); return; }
   if (e.target.closest('#copyId')) copyText('@' + F.uname, $('#copyId'), 'ユーザーIDをコピーしたよ');
+  if (e.target.closest('#noteAsk')) askNote();
 });
 $('#fbody').addEventListener('submit', e => {
   e.preventDefault();
@@ -2676,6 +2744,9 @@ $('#sAuto').onchange = e => { cfg.auto = e.target.checked; $('#sTh').classList.t
 $('#sTh').oninput = e => { cfg.th = +e.target.value; saveCfg(); pushGate(); renderMeter(); };
 $('#sSnd').onchange = e => { cfg.sounds = e.target.checked; saveCfg(); };
 $('#sMsg').onchange = e => { cfg.msgSound = e.target.checked; saveCfg(); };
+$('#sNote').onchange = e => { cfg.note = e.target.checked; saveCfg(); syncBg(); paintNoteSettings(); if (cfg.note && canAskNote()) askNote(); };
+$('#sBg').onchange = e => { cfg.bg = e.target.checked; saveCfg(); syncBg(); };
+$('#noteAllow').onclick = askNote;
 for (const [id, k] of [['#sNoise','noise'], ['#sEcho','echo'], ['#sAgc','agc']]) $(id).onchange = e => { cfg[k] = e.target.checked; micChanged(); };
 $('#sIn').onchange = e => { cfg.inputId = e.target.value; micChanged(); };
 $('#sOut').onchange = e => {
@@ -2694,6 +2765,7 @@ document.addEventListener('keydown', e => {
   if (e.code === 'KeyD'){ e.preventDefault(); setDeaf(!S.deaf); }
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden){ markRead(); markDmRead(); ensureCtx(); } });
+window.addEventListener('focus', () => { markRead(); markDmRead(); });
 window.addEventListener('resize', () => renderMain());
 window.addEventListener('pagehide', () => { if (DC.state) hangup(); if (S.sid){ broadcast({t:'bye'}); try{ S.peer && S.peer.destroy(); }catch(e){} } });
 if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange', () => { if (!$('#mSet').classList.contains('hide')) fillDevices(); });

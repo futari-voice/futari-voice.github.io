@@ -8,6 +8,9 @@ const FS = process.env.FS_EMU || '';
 const URL = SITE + '/app/?server=' + (process.env.PEER || '127.0.0.1:9000') + '&emu=' + (process.env.EMU || '127.0.0.1:9099') + (FS ? '&fsemu=' + FS : '');
 const fake = FS ? null : createFakeDB();
 const setup = fake ? ctx => fake.attach(ctx) : null;
+// パソコンのおしらせ（Notification）を、ためし用のにせものにする
+const NOTE_STUB = `window.__notes = []; window.Notification = class { constructor(t, o){ o = o || {}; window.__notes.push([t, o.body, o.tag]); this.onclick = null; window.__lastNote = this; } close(){} static get permission(){ return 'granted'; } static requestPermission(){ return Promise.resolve('granted'); } };`;
+const setupB = async ctx => { if (fake) await fake.attach(ctx); await ctx.addInitScript(NOTE_STUB); };
 console.log(FS ? '本物の Firestore エミュレーターでためすよ' : 'にせデータベースでためすよ');
 const errs = [];
 const b = await launch();
@@ -15,7 +18,7 @@ const R = Math.floor(Math.random() * 1e6);
 const ua = 'fa_' + R, ub = 'fb_' + R;
 try {
   const A = await page(b, URL, 'A', errs, setup); await register(A, ua, 'pass1234', 'あおい');
-  const B = await page(b, URL, 'B', errs, setup); await register(B, ub, 'pass1234', 'ベル');
+  const B = await page(b, URL, 'B', errs, setupB); await register(B, ub, 'pass1234', 'ベル');
   await waitFor(A, '__fvF.uname === ' + JSON.stringify(ua), 15000, 'ID').catch(() => {});
   ok(await A.evaluate(n => __fvF.uname === n, ua), 'ユーザー名で登録した人は、そのままユーザーIDになる');
 
@@ -94,6 +97,20 @@ try {
   await waitFor(A, () => __fvDC.state === 'active' && !__fv.voice, 25000, 'ボイス→個人通話');
   ok(true, 'ボイス中に個人通話に出ると、ボイスからぬけて個人通話になる');
   await A.click('#dcHang'); await waitFor(B, () => !__fvDC.state, 15000, '切る2');
+
+  // パソコンのおしらせ
+  await B.evaluate(() => { document.hasFocus = () => false; });
+  await A.fill('#dmIn', 'おしらせテスト'); await A.press('#dmIn', 'Enter');
+  await waitFor(B, () => __notes.some(n => n[0] === 'あおい' && String(n[1]).includes('おしらせテスト')), 10000, 'おしらせ');
+  ok(true, 'ほかの窓（ゲームなど）を見ているときにメッセージがきたら、パソコンのおしらせが出る');
+  await B.evaluate(() => { document.hasFocus = () => true; __fv.view = 'home'; window.__lastNote.onclick(); });
+  ok(await B.evaluate(() => __fv.view === 'dm' && document.getElementById('dmMsgs').textContent.includes('おしらせテスト')), 'おしらせをおすと、その個人チャットが開く');
+  await B.evaluate(() => { document.hasFocus = () => false; });
+  await A.click('#btnCall');
+  await waitFor(B, () => __notes.some(n => n[2] === 'call'), 10000, '電話のおしらせ');
+  ok(true, '電話がきたときも、パソコンのおしらせが出る');
+  await B.evaluate(() => { document.hasFocus = () => true; });
+  await B.click('#ringNo'); await waitFor(A, () => !__fvDC.state, 15000, 'ことわる2');
 
   // フレンドをやめる
   await A.click('#homeBtn'); await A.click('[data-ftab="all"]'); await A.click('#fbody [data-unf]'); await A.click('#cfOk');

@@ -3,4 +3,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('fvDesktop', {
   platform: 'windows',
   googleLogin: () => ipcRenderer.invoke('fv:google-login'),
+  setBackground: on => ipcRenderer.send('fv:set-bg', !!on),
+  focus: () => ipcRenderer.send('fv:focus'),
 });

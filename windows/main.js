@@ -1,6 +1,6 @@
 // ふたりボイス Windows版
 // 中身は公開しているWebアプリ（いつも最新）。Windowsアプリとしての窓・マイク・画面共有・Googleログインのお手伝いをする。
-const { app, BrowserWindow, shell, ipcMain, session, desktopCapturer, dialog } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, session, desktopCapturer, dialog, Tray, Menu, Notification } = require('electron');
 const path = require('path');
 const crypto = require('crypto');
 const APP_URL = require('./config.json').url;           // 例: https://xxxx.web.app/app/
@@ -14,6 +14,7 @@ if (!app.requestSingleInstanceLock()) { app.quit(); }
 
 let win = null;
 let pending = null;   // Googleログインを待っているところ { state, resolve, reject, timer }
+let tray = null, keepBg = true, quitting = false, hintShown = false;   // ×でとじても右下（タスクトレイ）で待つ
 
 function focusWin() { if (!win) return; if (win.isMinimized()) win.restore(); win.show(); win.focus(); }
 // ブラウザでGoogleログインが終わると futarivoice://auth?state=...&id_token=... でもどってくる
@@ -28,6 +29,23 @@ function handleUrl(u) {
 }
 app.on('second-instance', (_e, argv) => { const u = argv.find(a => a.startsWith(SCHEME + '://')); if (u) handleUrl(u); else focusWin(); });
 app.on('open-url', (e, u) => { e.preventDefault(); handleUrl(u); });
+
+const fromApp = e => !!(e.senderFrame && e.senderFrame.url.startsWith(ORIGIN));
+ipcMain.on('fv:set-bg', (e, v) => { if (fromApp(e)) keepBg = !!v; });
+ipcMain.on('fv:focus', e => { if (fromApp(e)) focusWin(); });
+
+function makeTray() {
+  if (tray) return;
+  tray = new Tray(path.join(__dirname, 'icon.ico'));
+  tray.setToolTip('ふたりボイス');
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: 'ふたりボイスを開く', click: () => { if (win) focusWin(); else createWindow(); } },
+    { type: 'separator' },
+    { label: 'おわる', click: () => { quitting = true; app.quit(); } },
+  ]));
+  tray.on('click', () => { if (win) focusWin(); else createWindow(); });
+}
+app.on('before-quit', () => { quitting = true; });
 
 ipcMain.handle('fv:google-login', async (e) => {
   if (!e.senderFrame || !e.senderFrame.url.startsWith(ORIGIN)) throw new Error('not allowed');
@@ -73,6 +91,16 @@ function createWindow() {
   win.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:/.test(url)) shell.openExternal(url); return { action: 'deny' }; });
   win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith(ORIGIN) && !url.startsWith('file:')) { e.preventDefault(); if (/^https?:/.test(url)) shell.openExternal(url); } });
   win.webContents.on('did-fail-load', (_e, code, _desc, url, isMain) => { if (isMain && code !== -3 && url.startsWith(ORIGIN)) win.loadFile(path.join(__dirname, 'offline.html'), { query: { u: APP_URL } }); });
+  // ×をおしても、おわらずに右下（タスクトレイ）で待つ（メッセージや電話のおしらせを出すため）
+  win.on('close', e => {
+    if (quitting || !keepBg) return;
+    e.preventDefault();
+    win.hide();
+    if (!hintShown) {
+      hintShown = true;
+      try { new Notification({ title: 'ふたりボイスは右下で待っているよ', body: 'メッセージや電話がきたら、おしらせするよ。おわるときは、右下のアイコンを右クリックして「おわる」をおしてね。', icon: path.join(__dirname, 'icon.ico') }).show(); } catch (err) { /* おしらせが出せなくても大丈夫 */ }
+    }
+  });
   win.on('closed', () => { win = null; });
   win.loadURL(APP_URL);
 }
@@ -80,6 +108,7 @@ function createWindow() {
 app.whenReady().then(() => {
   setupSession();
   createWindow();
+  try { makeTray(); } catch (err) { keepBg = false; }
   const u = process.argv.find(a => a.startsWith(SCHEME + '://')); if (u) handleUrl(u);
 });
 app.on('window-all-closed', () => app.quit());
