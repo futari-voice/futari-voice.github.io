@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "time": "2026-11-23T22:25:43.267Z",
+  "version": "1.0.15",
+  "checks": {
+    "site": true,
+    "version": true,
+    "app": true
+  }
+}
