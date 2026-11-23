@@ -198,6 +198,14 @@ try {
   ok(await shown(A, 'admLock'), 'ロックすると、またパスワードの画面になる');
   await A.keyboard.press('Escape');
 
+  // 設定から、アップデートを確認できる
+  await A.click('#btnSet'); await waitShown(A, 'mSet');
+  ok((await A.textContent('#verName')).includes('ブラウザ版'), '設定に、いまのバージョンが出る（' + await A.textContent('#verName') + '）');
+  await A.click('#updCheck');
+  await waitFor(A, () => /いちばん新しい|新しいバージョン|画面を新しく/.test(document.getElementById('toast').textContent), 10000, 'アップデートを確認');
+  ok(true, '「アップデートを確認する」で、新しいバージョンがあるかわかる（' + await A.textContent('#toast') + '）');
+  await A.keyboard.press('Escape');
+
   // フレンドをやめる
   await A.click('#homeBtn'); await A.click('[data-ftab="all"]'); await A.click('#fbody [data-unf]'); await A.click('#cfOk');
   await waitFor(B, () => __fvF.friends.size === 0, 15000, 'フレンドをやめる');

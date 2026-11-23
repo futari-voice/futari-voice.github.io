@@ -819,6 +819,8 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
       <label class="sw"><span>ボイスに入る・出るときの音</span><input type="checkbox" class="tg" id="sSnd"></label>
       <label class="sw"><span>メッセージがきたときの音</span><input type="checkbox" class="tg" id="sMsg"></label>
       <p class="hint">キーボード：<kbd>M</kbd> マイクのミュート、<kbd>D</kbd> スピーカーミュート（このアプリの画面を見ているときだけ使えるよ）</p>
+      <h3>アプリのバージョン</h3>
+      <div class="acct"><div><b id="verName"></b><span id="verSub"></span></div><button class="btn2" id="updCheck">アップデートを確認する</button></div>
       <h3>管理者</h3>
       <div class="admrow"><div class="hicon"><svg class="i"><use href="#i-shield"/></svg></div><div><b>管理者パネル</b><span>全員へのおしらせ（アップデートなど）を送れるよ。パスワードが必要だよ</span></div><button class="btn2" id="admOpen">開く</button></div>
     </div>
@@ -1989,7 +1991,7 @@ function openSettings(){
   $('#sAuto').checked = cfg.auto; $('#sTh').value = cfg.th; $('#sTh').classList.toggle('hide', cfg.auto);
   $('#sNoise').checked = cfg.noise; $('#sEcho').checked = cfg.echo; $('#sAgc').checked = cfg.agc; $('#sSnd').checked = cfg.sounds; $('#sMsg').checked = cfg.msgSound;
   $('#micTest').classList.toggle('hide', !!S.rawStream);
-  paintNoteSettings();
+  paintNoteSettings(); paintVersion();
   fillDevices(); renderMeter(); openModal('mSet');
 }
 function paintAccount(){
@@ -3025,11 +3027,11 @@ const DESK = window.fvDesktop && window.fvDesktop.platform === 'windows' ? windo
 const UPD = {info:null, state:'', pct:0, msg:'', closed:'', last:0, web:0};
 const cmpVer = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
 async function checkUpdate(force){
-  if (!force && Date.now() - UPD.last < 20 * 60 * 1000) return;
+  if (!force && Date.now() - UPD.last < 60 * 1000) return;
   UPD.last = Date.now();
   let v = null;
   try { v = await fetch('../version.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null); } catch(e){}
-  if (!v || !v.build) return;
+  if (!v || typeof v.build !== 'number') return false;
   if (BUILD && v.build > BUILD){ UPD.web = v.build; tryWebReload(); }
   let info = null;
   if (AND && v.android && v.android.url){
@@ -3039,9 +3041,35 @@ async function checkUpdate(force){
     if (DESK.installUpdate && DESK.appVersion){ let cur = ''; try { cur = await DESK.appVersion(); } catch(e){} if (cur && cmpVer(v.windows.version, cur) > 0) info = {kind:'windows', name:v.name, url:v.windows.url}; }
     else info = {kind:'legacy', name:v.name, url:v.windows.url};
   }
-  if (['progress', 'installing', 'confirm'].includes(UPD.state)) return;
+  if (['progress', 'installing', 'confirm'].includes(UPD.state)) return true;
   UPD.info = info; UPD.state = info ? 'ready' : '';
   renderUpd();
+  return true;
+}
+// 設定の「アプリのバージョン」
+async function paintVersion(){
+  let name;
+  if (AND){ let c = 0; try { c = +AND.appVersion() || 0; } catch(e){} name = c ? 'Android版 1.0.' + c : 'Android版（古いバージョン）'; }
+  else if (DESK){ let v = ''; try { v = DESK.appVersion ? await DESK.appVersion() : ''; } catch(e){} name = v ? 'Windows版 ' + v : 'Windows版（古いバージョン）'; }
+  else name = 'ブラウザ版';
+  $('#verName').textContent = name;
+  $('#verSub').textContent = (BUILD ? '画面のバージョン：1.0.' + BUILD + '。' : '') + (AND || DESK ? '' : 'ブラウザ版は、開くたびに新しい画面になるよ');
+}
+async function manualCheck(){
+  const b = $('#updCheck'); b.disabled = true; b.textContent = 'しらべているよ…';
+  UPD.closed = '';
+  const ok = await checkUpdate(true);
+  b.disabled = false; b.textContent = 'アップデートを確認する';
+  if (!ok){ toast('しらべられなかった…。インターネットにつながっているか、たしかめてね', 5000); return; }
+  if (UPD.info){ closeModals(); renderUpd(); toast('新しいバージョン（' + UPD.info.name + '）があるよ！上の「' + ($('#updGo').textContent || 'アップデート') + '」をおしてね', 6000); return; }
+  if (BUILD && UPD.web > BUILD){
+    if (S.voice || DC.state){ toast('画面の新しいバージョンがあるよ。通話がおわったら、新しくなるよ', 5000); return; }
+    toast('画面を新しくするよ');
+    const u = new URL(location.href); u.searchParams.set('v', UPD.web);
+    setTimeout(() => location.replace(u.toString()), 900);
+    return;
+  }
+  toast('いちばん新しいバージョンだよ！');
 }
 // 画面（Web）の部分が新しくなっていたら、だれも見ていないときに読みこみなおす（通話中はしない）
 function tryWebReload(){
@@ -3097,7 +3125,8 @@ if (DESK && DESK.onUpdate) DESK.onUpdate((st, v) => window.__fvUpd(st, v));
 $('#updGo').onclick = startUpdate;
 $('#updX').onclick = () => { if (UPD.info) UPD.closed = UPD.info.name; if (!['progress', 'installing'].includes(UPD.state)) UPD.state = UPD.info ? 'ready' : ''; $('#updBar').classList.add('hide'); };
 document.addEventListener('visibilitychange', () => { if (document.hidden) tryWebReload(); else checkUpdate(); });
-setInterval(() => checkUpdate(), 30 * 60 * 1000);
+setInterval(() => checkUpdate(), 10 * 60 * 1000);
+$('#updCheck').onclick = manualCheck;
 setTimeout(() => checkUpdate(true), 4000);
 
 /* ---------- はじめの画面 ---------- */
