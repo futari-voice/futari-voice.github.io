@@ -337,6 +337,47 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
 .ringbox p{margin:0;color:var(--soft)}
 .ringbox .bar{padding:8px 0 0;gap:28px}
 .cb.green{background:var(--green)}.cb.green:hover{background:#1a8a4a}
+/* まるいボタンの下に、なにをするボタンかを書く */
+.cb[data-l]{position:relative;margin-bottom:18px}
+.cb[data-l]::after{content:attr(data-l);position:absolute;top:calc(100% + 5px);left:50%;transform:translateX(-50%);font-size:11.5px;font-weight:700;color:var(--soft);white-space:nowrap;pointer-events:none}
+/* 個人通話のビデオ */
+.dcstage{display:none;position:relative;width:100%;flex:1;min-height:0;gap:8px}
+.dcall.vid{flex:0 0 auto;height:min(62vh,640px);padding-top:12px;grid-template-rows:minmax(0,1fr) auto auto;gap:10px}
+.dcall.vid .dcstage{display:flex}
+.dcall.vid .dcavs{display:none}
+.dcall.big{position:fixed;inset:0;z-index:62;height:auto;padding:12px}
+.dcv{position:relative;flex:1;min-width:0;background:#000;border-radius:10px;overflow:hidden}
+.dcv.scr{flex:3}
+.dcv video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.dcv.cam video{object-fit:cover}
+.dcv.me{position:absolute;right:10px;bottom:10px;width:min(30%,190px);aspect-ratio:4/3;flex:none;border:2px solid var(--side);z-index:2;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.dcv.me video{object-fit:cover}
+.dcv.me.mirror video{transform:scaleX(-1)}
+.dcname{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.62);color:#fff;font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;z-index:1}
+.dcv .ib{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.55);color:#fff;z-index:3}
+.dcsharing{position:absolute;left:10px;top:10px;z-index:3;background:var(--red2);color:#fff;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px}
+@media (max-width:640px){ .dcstage{flex-direction:column} .dcall.vid{height:min(66vh,620px)} }
+/* ヘッダーの文字つきボタン */
+.ib.hb{width:auto;padding:0 10px;gap:6px;display:flex;align-items:center;font-weight:700;font-size:13.5px;color:var(--soft)}
+.ib.hb:hover{color:var(--text)}
+@media (max-width:520px){ .ib.hb span{display:none} .ib.hb{padding:0 6px} }
+/* いる場所 */
+.loc{display:grid;gap:6px;margin:4px 0 2px;max-width:340px}
+.loc iframe{width:100%;height:190px;border:0;border-radius:10px;background:var(--rail)}
+.loc a{font-size:13.5px;font-weight:700}
+.loc small{color:var(--dim);font-size:11px}
+.comp .ib.lb{margin-left:-4px}
+/* はじめかた */
+.guide{display:grid;gap:10px}
+.gstep{display:flex;align-items:center;gap:12px;background:var(--side);border-radius:10px;padding:12px 14px}
+.gstep b.n{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none;font-size:15px}
+.gstep div{flex:1;display:grid;gap:2px}
+.gstep div b{color:var(--head)}
+.gstep div span{color:var(--soft);font-size:13px}
+.gstep .primary{flex:none;height:34px;padding:0 12px}
+.dmhint{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+.dmhint span{background:var(--side);border-radius:14px;padding:4px 10px;font-size:12.5px;color:var(--soft);display:flex;align-items:center;gap:5px}
+.dmhint svg.i{width:15px;height:15px}
 .updbar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:10px;background:var(--side);border:1px solid #3f4147;border-radius:10px;padding:8px 8px 8px 14px;box-shadow:0 8px 24px rgba(0,0,0,.45);width:max-content;max-width:calc(100% - 20px);font-size:14px;line-height:1.4}
 .updbar.hide{display:none}
 .updbar .primary{height:34px;padding:0 14px;white-space:nowrap;flex:none}
@@ -406,6 +447,11 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
   <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 3.5h3.5l2 5-2.5 1.5a11 11 0 0 0 6 6l1.5-2.5 5 2v3.5a2 2 0 0 1-2 2A16.5 16.5 0 0 1 3 5.5a2 2 0 0 1 2-2z"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5.5h16v10.5H9.5L5 20v-4H4z"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><rect x="3" y="6.5" width="12.5" height="11" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3"/></symbol>
+  <symbol id="i-cam-off" viewBox="0 0 24 24"><rect x="3" y="6.5" width="12.5" height="11" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3M3 3l18 18"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></symbol>
+  <symbol id="i-flip" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6M20 12a8 8 0 0 1-13.7 5.6M17.7 3v3.4h-3.4M6.3 21v-3.4h3.4"/></symbol>
+  <symbol id="i-big" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></symbol>
   <symbol id="i-at" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.8"/><path d="M15.8 8.2v5.3a2.7 2.7 0 0 0 5.2 1V12a9 9 0 1 0-4.2 7.6"/></symbol>
 </svg>
 <svg class="art" id="art" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="display:none">
@@ -528,7 +574,8 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
       <button class="ib menu" id="btnMenu" title="メニュー"><svg class="i"><use href="#i-menu"/></svg></button>
       <svg class="i" id="mIcon"><use href="#i-hash"/></svg><b id="mTitle"></b>
       <span class="sp"></span>
-      <button class="ib hide" id="btnCall" title="通話する"><svg class="i"><use href="#i-phone"/></svg></button>
+      <button class="ib hb hide" id="btnCall" title="通話する"><svg class="i"><use href="#i-phone"/></svg><span>通話</span></button>
+      <button class="ib hb hide" id="btnVideo" title="ビデオ通話する（カメラつき）"><svg class="i"><use href="#i-cam"/></svg><span>ビデオ</span></button>
       <button class="ib" id="btnInvite2" title="友だちを招待"><svg class="i"><use href="#i-invite"/></svg></button>
       <button class="ib" id="btnMembers" title="メンバー"><svg class="i"><use href="#i-people"/></svg><b class="badge hide" id="onlineBadge"></b></button>
     </header>
@@ -566,16 +613,25 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
 
     <section class="view hide" id="vDm">
       <div class="dcall hide" id="dcPanel">
+        <div class="dcstage" id="dcStage">
+          <div class="dcv scr hide" id="dcScrBox"><video id="dcRemoteScr" autoplay playsinline muted></video><span class="dcname" id="dcScrName"></span><button class="ib" type="button" id="dcBig" title="大きく見る"><svg class="i"><use href="#i-big"/></svg></button></div>
+          <div class="dcv cam hide" id="dcCamBox"><video id="dcRemoteCam" autoplay playsinline muted></video><span class="dcname" id="dcCamName"></span></div>
+          <div class="dcv me hide" id="dcMeBox"><video id="dcLocalCam" autoplay playsinline muted></video><span class="dcname">じぶん</span></div>
+          <span class="dcsharing hide" id="dcSharing">画面を共有中</span>
+        </div>
         <div class="dcavs"><div class="av" id="dcMe"></div><div class="av" id="dcYou"></div></div>
         <p id="dcState"></p>
         <div class="bar">
-          <button class="cb" id="dcMic" title="ミュート (M)"><svg class="i"><use href="#i-mic"/></svg></button>
-          <button class="cb" id="dcDeaf" title="スピーカーミュート (D)"><svg class="i"><use href="#i-head"/></svg></button>
-          <button class="cb red" id="dcHang" title="通話を切る"><svg class="i fill"><use href="#i-hang"/></svg></button>
+          <button class="cb" id="dcMic" title="ミュート (M)" data-l="マイク"><svg class="i"><use href="#i-mic"/></svg></button>
+          <button class="cb" id="dcDeaf" title="スピーカーミュート (D)" data-l="スピーカー"><svg class="i"><use href="#i-head"/></svg></button>
+          <button class="cb" id="dcCam" title="カメラをつける" data-l="カメラ"><svg class="i"><use href="#i-cam"/></svg></button>
+          <button class="cb hide" id="dcFlip" title="前と後ろのカメラを切りかえる" data-l="切りかえ"><svg class="i"><use href="#i-flip"/></svg></button>
+          <button class="cb" id="dcScreen" title="画面を共有" data-l="画面共有"><svg class="i"><use href="#i-screen"/></svg></button>
+          <button class="cb red" id="dcHang" title="通話を切る" data-l="切る"><svg class="i fill"><use href="#i-hang"/></svg></button>
         </div>
       </div>
       <div class="msgs" id="dmMsgs"></div>
-      <form class="comp" id="dmComp"><input id="dmIn" autocomplete="off" maxlength="2000"><button class="ib" type="submit" title="送信"><svg class="i"><use href="#i-send"/></svg></button></form>
+      <form class="comp" id="dmComp"><button class="ib lb" type="button" id="dmLoc" title="いる場所を送る"><svg class="i"><use href="#i-pin"/></svg></button><input id="dmIn" autocomplete="off" maxlength="2000"><button class="ib" type="submit" title="送信"><svg class="i"><use href="#i-send"/></svg></button></form>
     </section>
 
     <section class="view hide" id="vText">
@@ -600,11 +656,11 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
         <div class="vjoin hide" id="vjoin"></div>
       </div>
       <div class="bar" id="bar">
-        <button class="cb" id="cbMic" title="ミュート (M)"><svg class="i"><use href="#i-mic"/></svg></button>
-        <button class="cb" id="cbDeaf" title="スピーカーミュート (D)"><svg class="i"><use href="#i-head"/></svg></button>
-        <button class="cb" id="cbScreen" title="画面を共有"><svg class="i"><use href="#i-screen"/></svg></button>
-        <button class="cb" id="cbSet" title="設定"><svg class="i"><use href="#i-gear"/></svg></button>
-        <button class="cb red" id="cbLeave" title="ボイスから出る"><svg class="i fill"><use href="#i-hang"/></svg></button>
+        <button class="cb" id="cbMic" title="ミュート (M)" data-l="マイク"><svg class="i"><use href="#i-mic"/></svg></button>
+        <button class="cb" id="cbDeaf" title="スピーカーミュート (D)" data-l="スピーカー"><svg class="i"><use href="#i-head"/></svg></button>
+        <button class="cb" id="cbScreen" title="画面を共有" data-l="画面共有"><svg class="i"><use href="#i-screen"/></svg></button>
+        <button class="cb" id="cbSet" title="設定" data-l="設定"><svg class="i"><use href="#i-gear"/></svg></button>
+        <button class="cb red" id="cbLeave" title="ボイスから出る" data-l="出る"><svg class="i fill"><use href="#i-hang"/></svg></button>
       </div>
     </section>
   </main>
@@ -739,8 +795,8 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
     <b id="ringName"></b>
     <p>から電話だよ</p>
     <div class="bar">
-      <button class="cb red" id="ringNo" title="切る"><svg class="i fill"><use href="#i-hang"/></svg></button>
-      <button class="cb green" id="ringYes" title="出る"><svg class="i"><use href="#i-phone"/></svg></button>
+      <button class="cb red" id="ringNo" title="切る" data-l="ことわる"><svg class="i fill"><use href="#i-hang"/></svg></button>
+      <button class="cb green" id="ringYes" title="出る" data-l="出る"><svg class="i"><use href="#i-phone"/></svg></button>
     </div>
   </div>
 </div>
@@ -1662,6 +1718,7 @@ function renderMain(){
   $('#btnMembers').classList.toggle('hide', !S.sid || home);
   $('#btnInvite2').classList.toggle('hide', !S.sid || home);
   $('#btnCall').classList.toggle('hide', v !== 'dm' || DC.fid === F.dm || !F.friends.has(F.dm));
+  $('#btnVideo').classList.toggle('hide', v !== 'dm' || !F.friends.has(F.dm) || (DC.fid === F.dm && !!DC.camStream));
   $('#app').classList.toggle('mem-on', !!(S.sid && !home && (innerWidth > 1100 ? cfg.members : S.memOpen)));
   $('#srvName').textContent = S.sid && !home ? S.meta.name : 'ホーム';
   $('#srvChev').classList.toggle('hide', !S.sid || home);
@@ -2184,10 +2241,32 @@ function openDm(fid){
   S.view = 'dm'; closeDrawer(); closeModals(); renderAll(); renderDmMsgs(); markDmRead();
   if (innerWidth > 820) setTimeout(() => $('#dmIn').focus(), 0);
 }
+/* いる場所（地図） */
+const LOC_RE = /^📍loc:(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)$/;
+const preview = t => LOC_RE.test(String(t)) ? '📍 いる場所' : String(t);
+function locCard(text){
+  const m = LOC_RE.exec(String(text)); if (!m) return '';
+  const lat = +m[1], lng = +m[2];
+  if (!(Math.abs(lat) <= 90 && Math.abs(lng) <= 180)) return '';
+  const d = 0.006, bb = [lng - d, lat - d * 0.8, lng + d, lat + d * 0.8].map(x => x.toFixed(5)).join(',');
+  return `<div class="loc"><iframe loading="lazy" title="地図" referrerpolicy="no-referrer-when-downgrade" src="https://www.openstreetmap.org/export/embed.html?bbox=${bb}&amp;layer=mapnik&amp;marker=${lat},${lng}"></iframe><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" rel="noopener noreferrer">📍 地図アプリで大きく見る</a><small>地図 © OpenStreetMap</small></div>`;
+}
+function askLocation(){
+  if (!F.dm || !F.friends.has(F.dm)) return;
+  if (!navigator.geolocation){ toast('この端末では、いる場所がわからないよ'); return; }
+  const name = prof(F.dm).name;
+  confirmBox('いる場所を送る？', `いまいる場所を、地図にして ${name} に送るよ。知っている友だちにだけ送ってね。`, '送る', () => {
+    toast('いる場所をしらべているよ…', 9000);
+    navigator.geolocation.getCurrentPosition(
+      p => { sendDm('📍loc:' + p.coords.latitude.toFixed(5) + ',' + p.coords.longitude.toFixed(5)); toast('いる場所を送ったよ'); },
+      e => toast(e && e.code === 1 ? (AND ? '場所を使う許可がないよ。スマホの「設定」→「アプリ」→「ふたりボイス」→「権限」で「位置情報」を許可してね' : '場所を使う許可がないよ。アドレスバーのマークから「位置情報」を許可してね') : 'いる場所がわからなかった…外や窓の近くで、もう一度ためしてね', 8000),
+      {enableHighAccuracy:true, timeout:20000, maximumAge:30000});
+  });
+}
 function renderDmMsgs(){
   if (S.view !== 'dm' || !F.dm) return;
   const box = $('#dmMsgs'), u = prof(F.dm);
-  box.innerHTML = `<div class="welcome"><div style="margin-bottom:8px">${favHTML(F.dm, 'lg')}</div><h2>${esc(u.name)}</h2><p>${u.uname ? '@' + esc(u.uname) + '<br>' : ''}ここが ${esc(u.name)} との個人チャットのはじまりだよ。</p></div>`;
+  box.innerHTML = `<div class="welcome"><div style="margin-bottom:8px">${favHTML(F.dm, 'lg')}</div><h2>${esc(u.name)}</h2><p>${u.uname ? '@' + esc(u.uname) + '<br>' : ''}ここが ${esc(u.name)} との個人チャットのはじまりだよ。</p><div class="dmhint"><span>${ic('phone')} 上の「通話」で話せる</span><span>${ic('cam')} 「ビデオ」でカメラつき</span><span>${ic('pin')} 下のピンで、いる場所を送れる</span></div></div>`;
   for (const m of F.dmMsgs) appendDm(m, true);
   box.scrollTop = box.scrollHeight;
 }
@@ -2197,9 +2276,9 @@ function appendDm(m, bulk){
   const mine = m.from === F.fuid, name = mine ? me.name : prof(m.from).name, color = mine ? me.color : prof(m.from).color;
   const ts = +m.ts || Date.now();
   if (last && last.classList.contains('mg') && last.dataset.uid === m.from && ts - (+last.dataset.ts) < 300000){
-    last.querySelector('.body').insertAdjacentHTML('beforeend', `<div class="ln">${fmtText(m.text)}</div>`); last.dataset.ts = ts;
+    last.querySelector('.body').insertAdjacentHTML('beforeend', `<div class="ln">${locCard(m.text) || fmtText(m.text)}</div>`); last.dataset.ts = ts;
   } else {
-    box.insertAdjacentHTML('beforeend', `<div class="mg" data-uid="${esc(m.from)}" data-ts="${ts}">${favHTML(m.from, 'md')}<div class="body"><div class="mh"><b style="color:${okColor(color)}">${esc(name)}</b><time>${fmtTime(ts)}</time></div><div class="ln">${fmtText(m.text)}</div></div></div>`);
+    box.insertAdjacentHTML('beforeend', `<div class="mg" data-uid="${esc(m.from)}" data-ts="${ts}">${favHTML(m.from, 'md')}<div class="body"><div class="mh"><b style="color:${okColor(color)}">${esc(name)}</b><time>${fmtTime(ts)}</time></div><div class="ln">${locCard(m.text) || fmtText(m.text)}</div></div></div>`);
   }
   if (!bulk && (near || mine)) box.scrollTop = box.scrollHeight;
 }
@@ -2209,12 +2288,13 @@ async function sendDm(text){
   const fid = F.dm, pid = pairOf(F.fuid, fid), id = Date.now().toString(36) + rid(5);
   text = text.slice(0, 2000);
   try {
-    await DBX.batch([['set', 'dms/' + pid + '/msgs/' + id, {from:F.fuid, text, ts:NOW}], ['set', 'dms/' + pid, {members:[F.fuid, fid].sort(), last:{from:F.fuid, text:text.slice(0, 120), ts:NOW}}]]);
+    await DBX.batch([['set', 'dms/' + pid + '/msgs/' + id, {from:F.fuid, text, ts:NOW}], ['set', 'dms/' + pid, {members:[F.fuid, fid].sort(), last:{from:F.fuid, text:preview(text).slice(0, 120), ts:NOW}}]]);
   } catch(e){ toast('送れなかった…（' + (e.code || e.message) + '）'); }
 }
 
 /* ---------- 個人通話 (フレンドと1対1。よび出しはデータベース、声はWebRTCで直接) ---------- */
-const DC = {state:'', fid:'', pid:'', cid:'', role:'', pc:null, audio:null, unsub:null, t0:0, ringT:null, lostT:null, incoming:null, ring:null, ana:null, spk:false, spkT:null, sender:null};
+const DC = {state:'', fid:'', pid:'', cid:'', role:'', pc:null, audio:null, unsub:null, t0:0, ringT:null, lostT:null, incoming:null, ring:null, ana:null, spk:false, spkT:null, sender:null,
+  camTx:null, scrTx:null, dc:null, camStream:null, scrStream:null, peerCam:false, peerScr:false, facing:'user', big:false};
 if (DEBUG) window.__fvDC = DC;
 const iceDone = pc => new Promise(res => {
   if (pc.iceGatheringState === 'complete') return res();
@@ -2247,9 +2327,18 @@ async function dcAudio(){
   }
 }
 function dcNewPC(){
-  const pc = new RTCPeerConnection({iceServers:ICE, iceTransportPolicy:qs.has('relay') ? 'relay' : 'all'});
+  const pc = new RTCPeerConnection({iceServers:ICE, iceTransportPolicy:qs.has('relay') ? 'relay' : 'all', bundlePolicy:'max-bundle'});
   DC.pc = pc;
-  pc.ontrack = e => { if (DC.pc === pc) dcPlay(e.streams[0] || new MediaStream([e.track])); };
+  pc.ontrack = e => {
+    if (DC.pc !== pc) return;
+    if (e.track.kind === 'audio'){ dcPlay(e.streams[0] || new MediaStream([e.track])); return; }
+    // ビデオ：1本目はカメラ、2本目は画面共有
+    const vids = pc.getTransceivers().filter(t => t.receiver && t.receiver.track && t.receiver.track.kind === 'video');
+    const el = vids.indexOf(e.transceiver) === 1 ? $('#dcRemoteScr') : $('#dcRemoteCam');
+    el.srcObject = new MediaStream([e.track]);
+    const p = el.play(); if (p && p.catch) p.catch(() => {});
+  };
+  pc.ondatachannel = e => { if (DC.pc === pc) setupDc(e.channel); };
   pc.addEventListener('iceconnectionstatechange', () => {
     if (DC.pc !== pc) return;
     const s = pc.iceConnectionState;
@@ -2282,8 +2371,8 @@ function dcPlay(st){
     }, 150);
   } catch(e){}
 }
-async function startDmCall(fid){
-  if (DC.state){ if (DC.fid === fid) openDm(fid); else toast('いまは ' + prof(DC.fid).name + ' と通話中だよ'); return; }
+async function startDmCall(fid, video){
+  if (DC.state){ if (DC.fid === fid){ openDm(fid); if (video) dcCamOn(); } else toast('いまは ' + prof(DC.fid).name + ' と通話中だよ'); return; }
   if (!F.friends.has(fid)){ toast('フレンドとだけ通話できるよ'); return; }
   if (!isOnline(fid)) toast(prof(fid).name + ' はオフラインかも。よんでみるね');
   ensureCtx();
@@ -2296,6 +2385,11 @@ async function startDmCall(fid){
   pushGate();
   try {
     const pc = dcNewPC(); dcAddTrack(pc);
+    DC.camTx = pc.addTransceiver('video', {direction:'sendrecv'});
+    DC.scrTx = pc.addTransceiver('video', {direction:'sendrecv'});
+    setupDc(pc.createDataChannel('ctl'));
+    if (video) await dcCamOn();
+    if (DC.cid !== cid) return;
     const offer = await pc.createOffer(); offer.sdp = opusTune(offer.sdp);
     await pc.setLocalDescription(offer); await iceDone(pc);
     if (DC.cid !== cid) return;
@@ -2369,6 +2463,9 @@ async function acceptCall(){
     const pc = dcNewPC();
     await pc.setRemoteDescription({type:'offer', sdp:d.offer});
     dcAddTrack(pc);
+    const vids = pc.getTransceivers().filter(t => t.receiver && t.receiver.track && t.receiver.track.kind === 'video');
+    for (const t of vids) try { t.direction = 'sendrecv'; } catch(e){}
+    DC.camTx = vids[0] || null; DC.scrTx = vids[1] || null;
     const ans = await pc.createAnswer(); ans.sdp = opusTune(ans.sdp);
     await pc.setLocalDescription(ans); await iceDone(pc);
     if (DC.cid !== d.cid) return;
@@ -2390,8 +2487,11 @@ function dcEnd(msg, write){
   if (DC.unsub){ try{ DC.unsub(); }catch(e){} }
   if (DC.pc){ try{ DC.pc.close(); }catch(e){} }
   if (DC.audio){ DC.audio.srcObject = null; }
+  for (const st of [DC.camStream, DC.scrStream]) if (st) st.getTracks().forEach(t => t.stop());
+  for (const id of ['#dcRemoteCam', '#dcRemoteScr', '#dcLocalCam']) $(id).srcObject = null;
   const was = DC.state;
-  Object.assign(DC, {state:'', fid:'', pid:'', cid:'', role:'', pc:null, unsub:null, t0:0, ana:null, spk:false, sender:null});
+  Object.assign(DC, {state:'', fid:'', pid:'', cid:'', role:'', pc:null, unsub:null, t0:0, ana:null, spk:false, sender:null,
+    camTx:null, scrTx:null, dc:null, camStream:null, scrStream:null, peerCam:false, peerScr:false, big:false});
   if (!S.voice && !S.micTest) stopMic();
   pushGate();
   if (was === 'active') playSound('leave');
@@ -2399,6 +2499,67 @@ function dcEnd(msg, write){
   renderAll();
 }
 function hangup(){ dcEnd('', true); }
+
+/* カメラ・画面共有（はじめに用意したビデオの通り道に、映像を入れたり止めたりする） */
+function setupDc(ch){
+  DC.dc = ch;
+  ch.onopen = () => { dcSend({t:'cam', on:!!DC.camStream}); dcSend({t:'scr', on:!!DC.scrStream}); };
+  ch.onmessage = e => {
+    let m; try { m = JSON.parse(e.data); } catch(err){ return; }
+    if (m.t === 'cam'){ DC.peerCam = !!m.on; renderDc(); }
+    if (m.t === 'scr'){ DC.peerScr = !!m.on; if (!m.on) DC.big = false; renderDc(); }
+  };
+}
+function dcSend(m){ try { if (DC.dc && DC.dc.readyState === 'open') DC.dc.send(JSON.stringify(m)); } catch(e){} }
+function setBitrate(sender, bps){
+  try { const p = sender.getParameters(); if (!p.encodings || !p.encodings.length) p.encodings = [{}]; p.encodings[0].maxBitrate = bps; const r = sender.setParameters(p); if (r && r.catch) r.catch(() => {}); } catch(e){}
+}
+const OLD_APP = '相手のアプリが少し古いみたい。相手にアプリを開きなおしてもらってね';
+async function dcCamOn(){
+  if (!DC.state || DC.camStream) return;
+  if (!DC.camTx){ toast(OLD_APP, 6000); return; }
+  ensureCtx();
+  let st;
+  try { st = await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640}, height:{ideal:480}, frameRate:{ideal:24, max:30}, facingMode:DC.facing}}); }
+  catch(e){ toast(AND ? 'カメラが使えないよ。スマホの「設定」→「アプリ」→「ふたりボイス」→「権限」で、カメラを「許可」にしてね' : 'カメラが使えないよ。カメラをつないで、使っていいか「許可」してね', 8000); return; }
+  if (!DC.state || !DC.camTx || DC.camStream){ st.getTracks().forEach(t => t.stop()); return; }
+  const t = st.getVideoTracks()[0]; try { t.contentHint = 'motion'; } catch(e){}
+  DC.camStream = st;
+  try { await DC.camTx.sender.replaceTrack(t); } catch(e){}
+  setBitrate(DC.camTx.sender, 800000);
+  $('#dcLocalCam').srcObject = st;
+  dcSend({t:'cam', on:true}); renderDc();
+}
+function dcCamOff(){
+  if (!DC.camStream) return;
+  DC.camStream.getTracks().forEach(t => t.stop()); DC.camStream = null;
+  if (DC.camTx) DC.camTx.sender.replaceTrack(null).catch(() => {});
+  $('#dcLocalCam').srcObject = null;
+  dcSend({t:'cam', on:false}); renderDc();
+}
+async function dcFlip(){ DC.facing = DC.facing === 'user' ? 'environment' : 'user'; if (DC.camStream){ dcCamOff(); await dcCamOn(); } }
+async function dcScreen(){
+  if (DC.scrStream){ dcScrOff(); return; }
+  if (!DC.state) return;
+  if (!canShare || AND){ toast('スマホでは画面共有ができないよ。パソコンからならできるよ', 5000); return; }
+  if (!DC.scrTx){ toast(OLD_APP, 6000); return; }
+  let st;
+  try { st = await navigator.mediaDevices.getDisplayMedia({video:{frameRate:{ideal:30, max:60}}, audio:false}); } catch(e){ return; }
+  if (!DC.state || !DC.scrTx){ st.getTracks().forEach(t => t.stop()); return; }
+  const t = st.getVideoTracks()[0]; try { t.contentHint = 'motion'; } catch(e){}
+  t.addEventListener('ended', () => dcScrOff());
+  DC.scrStream = st;
+  try { await DC.scrTx.sender.replaceTrack(t); } catch(e){}
+  setBitrate(DC.scrTx.sender, 2500000);
+  dcSend({t:'scr', on:true}); renderDc();
+  toast('画面の共有をはじめたよ');
+}
+function dcScrOff(){
+  if (!DC.scrStream) return;
+  DC.scrStream.getTracks().forEach(t => t.stop()); DC.scrStream = null;
+  if (DC.scrTx) DC.scrTx.sender.replaceTrack(null).catch(() => {});
+  dcSend({t:'scr', on:false}); renderDc();
+}
 function renderDcSpeak(){
   $('#dcMe').classList.toggle('spk', !!DC.state && S.speaking);
   $('#dcYou').classList.toggle('spk', DC.state === 'active' && DC.spk);
@@ -2413,11 +2574,28 @@ function renderDc(){
   const st = DC.state === 'calling' ? 'よびだし中…' : DC.state === 'connecting' ? 'つないでいます…' : '通話中 ' + fmtDur(Date.now() - DC.t0);
   $('#dcT').textContent = DC.state === 'active' ? '通話中' : st.replace(/ .*/, '');
   $('#dcSub').textContent = u.name + (DC.state === 'active' ? ' ・ ' + fmtDur(Date.now() - DC.t0) : '');
+  const vid = !!(DC.camStream || DC.peerCam || DC.peerScr);
+  $('#dcPanel').classList.toggle('vid', show && vid);
+  $('#dcPanel').classList.toggle('big', show && vid && DC.big);
+  $('#dcScrBox').classList.toggle('hide', !DC.peerScr);
+  $('#dcCamBox').classList.toggle('hide', !DC.peerCam);
+  $('#dcMeBox').classList.toggle('hide', !DC.camStream);
+  $('#dcMeBox').classList.toggle('mirror', DC.facing === 'user');
+  $('#dcSharing').classList.toggle('hide', !DC.scrStream || !vid);
+  $('#dcScrName').textContent = u.name + ' の画面';
+  $('#dcCamName').textContent = u.name;
+  $('#dcCam').classList.toggle('on', !!DC.camStream);
+  $('#dcCam use').setAttribute('href', DC.camStream ? '#i-cam' : '#i-cam-off');
+  $('#dcCam').title = DC.camStream ? 'カメラを止める' : 'カメラをつける';
+  $('#dcFlip').classList.toggle('hide', !(DC.camStream && (AND || /Android|iPhone|iPad/i.test(navigator.userAgent))));
+  $('#dcScreen').classList.toggle('hide', !canShare || !!AND);
+  $('#dcScreen').classList.toggle('on', !!DC.scrStream);
+  $('#dcScreen').title = DC.scrStream ? '画面の共有をやめる' : '画面を共有';
   if (show){
     paintAv($('#dcMe'), me);
     paintAv($('#dcYou'), {name:u.name, color:u.color, avatar:u.avatar});
     $('#dcYou').classList.toggle('ring', DC.state !== 'active');
-    $('#dcState').textContent = st;
+    $('#dcState').textContent = st + (DC.scrStream && !vid ? ' ・ 画面を共有中' : '');
     const off = S.muted || S.deaf || S.noMic;
     setBtn($('#dcMic'), off, '#i-mic', '#i-mic-off', 'ミュート (M)', 'ミュート解除 (M)');
     setBtn($('#dcDeaf'), S.deaf, '#i-head', '#i-head-off', 'スピーカーミュート (D)', 'スピーカーミュート解除 (D)');
@@ -2471,6 +2649,15 @@ function renderFriends(){
   if (F.tab === 'online' || F.tab === 'all'){
     const list = F.tab === 'online' ? fr.filter(isOnline) : fr;
     if (!list.length){
+      if (!fr.length && !servers.length){
+        el.innerHTML = banner + `<div class="fsec"><h3>はじめかた</h3><div class="guide">
+          <div class="gstep"><b class="n">1</b><div><b>自分のユーザーIDを見る</b><span>友だちに教えると、フレンド申請を送ってもらえるよ</span></div><button class="primary" type="button" data-ftab="add">見る</button></div>
+          <div class="gstep"><b class="n">2</b><div><b>フレンドを追加する</b><span>友だちのユーザーIDを入れて、申請を送ろう</span></div><button class="primary" type="button" data-ftab="add">追加</button></div>
+          <div class="gstep"><b class="n">3</b><div><b>話そう！</b><span>フレンドの 💬 でチャット、📞 で通話。ビデオや画面共有もできるよ</span></div></div>
+          <div class="gstep"><b class="n">＋</b><div><b>サーバーを作る</b><span>4人まで集まれる場所。下の「作る」からどうぞ</span></div></div>
+        </div></div>`;
+        return;
+      }
       el.innerHTML = banner + `<div class="fempty"><div class="hicon">${ic('people')}</div><p>${fr.length ? 'いまオンラインのフレンドはいないよ。' : 'まだフレンドがいないよ。<br>友だちのユーザーIDで、フレンド申請を送ろう！'}</p>${fr.length ? '' : '<button class="primary" data-ftab="add">フレンドを追加</button>'}</div>`;
       return;
     }
@@ -2580,6 +2767,7 @@ if (AND){
   }
   window.__fvBack = () => {
     if (!$('#mRing').classList.contains('hide')) return true;
+    if (DC.big){ DC.big = false; renderDc(); return true; }
     if ([...document.querySelectorAll('.modal')].some(m => !m.classList.contains('hide'))){ closeModals(); return true; }
     if ($('#app').classList.contains('hide')) return false;
     if (innerWidth <= 820 && !$('#app').classList.contains('drawer')){ $('#app').classList.add('drawer'); return true; }
@@ -2600,6 +2788,11 @@ if (AND){
     setInterval(() => console.info('[FV] alive ' + document.visibilityState), 3000);
     if (qs.has('fgtest')) setTimeout(() => { try { AND.callState(true, 'テスト', 'テスト中'); console.info('[FV] fgtest on'); } catch(e){ console.info('[FV] fgtest error ' + e); } }, 3000);
     if (qs.has('updtest')) setTimeout(async () => { try { const v = await fetch('../version.json?t=' + Date.now()).then(r => r.json()); console.info('[FV] updtest ' + v.android.code + ' / ' + AND.appVersion()); AND.update(v.android.url); } catch(e){ console.info('[FV] updtest error ' + e); } }, 3000);
+    if (qs.has('camtest')) setTimeout(async () => {
+      try { const st = await navigator.mediaDevices.getUserMedia({video:true}); const t = st.getVideoTracks()[0]; console.info('[FV] camtest ok ' + JSON.stringify(t.getSettings().width || 0)); st.getTracks().forEach(x => x.stop()); }
+      catch(e){ console.info('[FV] camtest error ' + e.name); }
+      navigator.geolocation.getCurrentPosition(p => console.info('[FV] geotest ok ' + p.coords.latitude.toFixed(2)), e => console.info('[FV] geotest error ' + e.code), {timeout:30000, maximumAge:600000});
+    }, 3000);
     if (qs.has('standbytest')) setTimeout(() => { try { AND.standby(true); console.info('[FV] standby on'); } catch(e){ console.info('[FV] standby error ' + e); } }, 3000);
   }
 }
@@ -2758,6 +2951,13 @@ $('#fbody').addEventListener('submit', e => {
 });
 $('#dmComp').addEventListener('submit', e => { e.preventDefault(); const i = $('#dmIn'), t = i.value.trim(); if (!t) return; sendDm(t); i.value = ''; });
 $('#btnCall').onclick = () => { if (F.dm) startDmCall(F.dm); };
+$('#btnVideo').onclick = () => { if (F.dm) startDmCall(F.dm, true); };
+$('#dcCam').onclick = () => { if (DC.camStream) dcCamOff(); else dcCamOn(); };
+$('#dcFlip').onclick = dcFlip;
+$('#dcScreen').onclick = dcScreen;
+$('#dcBig').onclick = () => { DC.big = !DC.big; renderDc(); };
+$('#dmLoc').onclick = askLocation;
+document.addEventListener('visibilitychange', () => { if (document.hidden && AND && DC.camStream){ dcCamOff(); toast('アプリをうしろに回したので、カメラを止めたよ'); } });
 $('#dcHang').onclick = hangup;
 $('#dcLeave').onclick = hangup;
 $('#dcGo').onclick = () => { if (DC.fid) openDm(DC.fid); };

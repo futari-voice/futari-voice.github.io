@@ -102,7 +102,7 @@ ipcMain.handle('fv:google-login', async (e) => {
 
 function setupSession() {
   const ses = session.defaultSession;
-  const ok = new Set(['media', 'display-capture', 'clipboard-sanitized-write', 'fullscreen', 'notifications']);
+  const ok = new Set(['media', 'display-capture', 'clipboard-sanitized-write', 'fullscreen', 'notifications', 'geolocation']);
   ses.setPermissionRequestHandler((wc, perm, cb, details) => cb(ok.has(perm) && String(details.requestingUrl || wc.getURL()).startsWith(ORIGIN)));
   ses.setPermissionCheckHandler((wc, perm, origin) => ok.has(perm) && String(origin || '').startsWith(ORIGIN));
   // 画面共有: どの画面・どの窓を見せるか、えらんでもらう

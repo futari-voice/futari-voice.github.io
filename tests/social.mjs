@@ -7,17 +7,20 @@ const SITE = process.env.SITE || 'http://127.0.0.1:8080';
 const FS = process.env.FS_EMU || '';
 const URL = SITE + '/app/?server=' + (process.env.PEER || '127.0.0.1:9000') + '&emu=' + (process.env.EMU || '127.0.0.1:9099') + (FS ? '&fsemu=' + FS : '');
 const fake = FS ? null : createFakeDB();
-const setup = fake ? ctx => fake.attach(ctx) : null;
+const geo = async ctx => { await ctx.grantPermissions(['microphone', 'camera', 'geolocation']); await ctx.setGeolocation({latitude:35.68123, longitude:139.76712}); };
+const setup = async ctx => { if (fake) await fake.attach(ctx); await geo(ctx); };
 // パソコンのおしらせ（Notification）を、ためし用のにせものにする
 const NOTE_STUB = `window.__notes = []; window.Notification = class { constructor(t, o){ o = o || {}; window.__notes.push([t, o.body, o.tag]); this.onclick = null; window.__lastNote = this; } close(){} static get permission(){ return 'granted'; } static requestPermission(){ return Promise.resolve('granted'); } };`;
-const setupB = async ctx => { if (fake) await fake.attach(ctx); await ctx.addInitScript(NOTE_STUB); };
+const setupB = async ctx => { if (fake) await fake.attach(ctx); await geo(ctx); await ctx.addInitScript(NOTE_STUB); };
 console.log(FS ? '本物の Firestore エミュレーターでためすよ' : 'にせデータベースでためすよ');
 const errs = [];
 const b = await launch();
 const R = Math.floor(Math.random() * 1e6);
 const ua = 'fa_' + R, ub = 'fb_' + R;
 try {
+  const shot = async (P, n) => { if (process.env.SHOTS) await P.screenshot({ path: process.env.SHOTS + '/' + n + '.png' }); };
   const A = await page(b, URL, 'A', errs, setup); await register(A, ua, 'pass1234', 'あおい');
+  await sleep(800); await shot(A, 'guide');
   const B = await page(b, URL, 'B', errs, setupB); await register(B, ub, 'pass1234', 'ベル');
   await waitFor(A, '__fvF.uname === ' + JSON.stringify(ua), 15000, 'ID').catch(() => {});
   ok(await A.evaluate(n => __fvF.uname === n, ua), 'ユーザー名で登録した人は、そのままユーザーIDになる');
@@ -75,6 +78,40 @@ try {
   await waitShown(A, 'mRing', 15000); await A.click('#ringNo');
   await waitFor(B, () => !__fvDC.state, 15000, 'ことわる');
   ok(true, '電話をことわると、かけた人の通話もおわる');
+
+  // いる場所を送る
+  await A.click('#dmLoc'); await A.click('#cfOk');
+  ok(await waitFor(B, () => !!document.querySelector('#dmMsgs .loc iframe[src*="marker=35.68123,139.76712"]'), 15000, '場所').then(() => true), 'いる場所を送ると、相手に地図が出る');
+  ok(await B.evaluate(() => [...__fvF.dms.values()].some(d => d.last && d.last.text === '📍 いる場所')), 'チャットの一覧には「📍 いる場所」と出る');
+  await sleep(1500); await shot(B, 'location');
+
+  // ビデオ通話・画面共有
+  await A.click('#btnVideo');
+  await waitShown(B, 'mRing', 15000); await B.click('#ringYes');
+  await waitFor(A, () => __fvDC.state === 'active', 25000, 'ビデオ通話A');
+  ok(await A.evaluate(() => !!__fvDC.camStream && !document.getElementById('dcMeBox').classList.contains('hide')), 'ビデオでかけると、自分のカメラが映る');
+  await waitFor(B, () => !document.getElementById('dcCamBox').classList.contains('hide') && document.getElementById('dcRemoteCam').videoWidth > 0, 15000, '相手のカメラ');
+  ok(true, '相手のカメラの映像がとどく（' + await B.evaluate(() => document.getElementById('dcRemoteCam').videoWidth + 'x' + document.getElementById('dcRemoteCam').videoHeight) + '）');
+  console.log('  SDPの長さ: ' + await A.evaluate(() => __fvDC.pc.localDescription.sdp.length) + ' / ' + await B.evaluate(() => __fvDC.pc.localDescription.sdp.length));
+  await B.click('#dcScreen');
+  await waitFor(A, () => !document.getElementById('dcScrBox').classList.contains('hide') && document.getElementById('dcRemoteScr').videoWidth > 0, 15000, '画面共有');
+  ok(true, '個人通話で画面共有ができる（' + await A.evaluate(() => document.getElementById('dcRemoteScr').videoWidth + 'x' + document.getElementById('dcRemoteScr').videoHeight) + '）');
+  await shot(A, 'video-pc');
+  await A.setViewportSize({ width: 390, height: 800 }); await sleep(600); await shot(A, 'video-phone');
+  await A.setViewportSize({ width: 1280, height: 800 }); await sleep(300);
+  await A.click('#dcBig');
+  await sleep(400); await shot(A, 'video-big');
+  ok(await A.evaluate(() => document.getElementById('dcPanel').classList.contains('big')), '画面共有を大きく見られる');
+  await A.click('#dcBig');
+  await B.click('#dcCam');
+  await waitFor(A, () => !document.getElementById('dcCamBox').classList.contains('hide') && document.getElementById('dcRemoteCam').videoWidth > 0, 15000, 'Bのカメラ');
+  ok(true, 'あとからカメラをつけても、相手に映る');
+  await A.click('#dcCam');
+  await waitFor(B, () => document.getElementById('dcCamBox').classList.contains('hide'), 10000, 'カメラを止める');
+  ok(true, 'カメラを止めると、相手の画面からも消える');
+  ok((await dcBytes(A)) > 1000, '声もとどいている');
+  await A.click('#dcHang'); await waitFor(B, () => !__fvDC.state && !__fvDC.camStream && !__fvDC.scrStream, 15000, 'ビデオを切る');
+  ok(true, '切ると、カメラも画面共有も止まる');
 
   // サーバーのボイス中にホームを見ても、ボイスは切れない
   await A.click('#addBtn'); await A.click('#goCreate'); await A.fill('#cName', 'ゲーム部'); await A.click('#cMake');

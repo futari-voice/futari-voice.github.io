@@ -47,6 +47,26 @@ if waitlog '\[FV\] upd error' 180; then
   if log | grep -q '\[FV\] upd progress' && log | grep -q 'もう新しいバージョン'; then ok "アップデート：新しいAPKをダウンロードして、中身をたしかめられる"; else ng "アップデートのダウンロード"; log | grep '\[FV\] upd' | tail -5; fi
 else ng "アップデートのダウンロード（時間切れ）"; log | grep '\[FV\]' | tail -8; fi
 
+# カメラと、いる場所（アプリの中のページから使えるか）
+adb shell am force-stop $PKG; sleep 2
+adb shell pm grant $PKG android.permission.CAMERA || true
+adb shell pm grant $PKG android.permission.ACCESS_FINE_LOCATION || true
+adb shell pm grant $PKG android.permission.ACCESS_COARSE_LOCATION || true
+adb emu geo fix 139.767 35.681 >/dev/null 2>&1 || true
+adb logcat -c
+adb shell am start -W -n $PKG/.MainActivity -a android.intent.action.VIEW -d "$SITE/app/?debug=1\&camtest=1"
+if waitlog '\[FV\] camtest' 150; then
+  if log | grep -q '\[FV\] camtest ok'; then ok "アプリの中でカメラが使える"
+  elif log | grep -q 'camtest error NotAllowedError'; then ng "アプリの中でカメラが使える（ことわられた）"
+  else warn "エミュレーターにカメラがないみたい: $(log | grep -o 'camtest error.*' | head -1)"; fi
+else ng "カメラのテスト（時間切れ）"; fi
+adb emu geo fix 139.767 35.681 >/dev/null 2>&1 || true
+if waitlog '\[FV\] geotest' 40; then
+  if log | grep -q '\[FV\] geotest ok'; then ok "アプリの中で、いる場所がわかる"
+  elif log | grep -q 'geotest error 1'; then ng "いる場所（ことわられた）"
+  else warn "エミュレーターで、いる場所がとれなかった: $(log | grep -o 'geotest error.*' | head -1)"; fi
+else warn "いる場所のテスト（時間切れ）"; fi
+
 # 「とじても待つ」：通話していなくても、アプリをスワイプで消しても、うしろで待ちつづける
 adb shell am force-stop $PKG; sleep 2
 adb logcat -c

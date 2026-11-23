@@ -13,7 +13,7 @@ export async function page(browser, url, name, errs, setup){
   if (setup) await setup(ctx);
   const p = await ctx.newPage(); p._n = name;
   p.on('pageerror', e => errs.push(name + ': ' + e.message));
-  await p.addInitScript(() => { navigator.mediaDevices.getDisplayMedia = async () => { const c = document.createElement('canvas'); c.width = 640; c.height = 360; const g = c.getContext('2d'); let t = 0; setInterval(() => { t++; g.fillStyle = '#246'; g.fillRect(0, 0, 640, 360); g.fillStyle = '#fff'; g.font = '40px sans-serif'; g.fillText('GAME ' + t, 40, 180); }, 33); return c.captureStream(30); }; });
+  await p.addInitScript(() => { if (navigator.mediaDevices) navigator.mediaDevices.getDisplayMedia = async () => { const c = document.createElement('canvas'); c.width = 640; c.height = 360; const g = c.getContext('2d'); let t = 0; setInterval(() => { t++; g.fillStyle = '#246'; g.fillRect(0, 0, 640, 360); g.fillStyle = '#fff'; g.font = '40px sans-serif'; g.fillText('GAME ' + t, 40, 180); }, 33); return c.captureStream(30); }; });
   await p.goto(url);
   return p;
 }

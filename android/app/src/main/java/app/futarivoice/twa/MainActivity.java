@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.ViewGroup;
 import android.webkit.ConsoleMessage;
 import android.webkit.CookieManager;
+import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.RenderProcessGoneDetail;
@@ -44,7 +45,7 @@ public class MainActivity extends Activity {
     static final String ACTION_ANSWER = "app.futarivoice.ANSWER";
     static final String ACTION_DECLINE = "app.futarivoice.DECLINE";
     static final String EXTRA_OPEN = "open";
-    private static final int REQ_MIC = 11, REQ_FILE = 12, REQ_NOTIF = 13;
+    private static final int REQ_MIC = 11, REQ_FILE = 12, REQ_NOTIF = 13, REQ_GEO = 14;
 
     // ---- アプリ全体で1つだけの画面 ----
     static WebView web;
@@ -55,6 +56,8 @@ public class MainActivity extends Activity {
     private static final Handler main = new Handler(Looper.getMainLooper());
 
     private static PermissionRequest pendingPerm;
+    private static GeolocationPermissions.Callback geoCb;
+    private static String geoOrigin;
     private static ValueCallback<Uri[]> fileCb;
     private static boolean askedNotif = false, askedBattery = false;
 
@@ -86,6 +89,7 @@ public class MainActivity extends Activity {
         s.setSupportMultipleWindows(true);
         s.setJavaScriptCanOpenWindowsAutomatically(false);
         s.setAllowFileAccess(false);
+        s.setGeolocationEnabled(true);
         s.setUserAgentString(s.getUserAgentString() + " FutariVoiceAndroid/" + BuildConfig.VERSION_NAME);
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(w, true);
@@ -261,12 +265,14 @@ public class MainActivity extends Activity {
     public void onRequestPermissionsResult(int code, String[] perms, int[] res) {
         super.onRequestPermissionsResult(code, perms, res);
         if (code == REQ_MIC && pendingPerm != null) {
-            if (res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED) {
-                pendingPerm.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
-            } else {
-                pendingPerm.deny();
-            }
+            grantAllowed(this, pendingPerm);
             pendingPerm = null;
+        }
+        if (code == REQ_GEO && geoCb != null) {
+            boolean ok = false;
+            for (int r : res) if (r == PackageManager.PERMISSION_GRANTED) ok = true;
+            geoCb.invoke(geoOrigin, ok, false);
+            geoCb = null;
         }
     }
 
@@ -334,24 +340,55 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** マイク・カメラのうち、スマホの許可があるものだけ Web の画面にわたす */
+    static void grantAllowed(Context c, PermissionRequest r) {
+        ArrayList<String> ok = new ArrayList<>();
+        for (String res : r.getResources()) {
+            if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(res) && c.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) ok.add(res);
+            if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(res) && c.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) ok.add(res);
+        }
+        if (ok.isEmpty()) r.deny(); else r.grant(ok.toArray(new String[0]));
+    }
+
     static class Chrome extends WebChromeClient {
         @Override
         public void onPermissionRequest(PermissionRequest r) {
-            boolean audio = false;
-            for (String res : r.getResources()) if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(res)) audio = true;
             Uri o = r.getOrigin();
             Activity a = current;
-            if (!audio || o == null || !BuildConfig.SITE_HOST.equalsIgnoreCase(o.getHost())) { r.deny(); return; }
+            if (o == null || !BuildConfig.SITE_HOST.equalsIgnoreCase(o.getHost())) { r.deny(); return; }
             Context c = a != null ? a : ctx();
-            if (c != null && c.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                r.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
-            } else if (a != null) {
-                if (pendingPerm != null) pendingPerm.deny();
-                pendingPerm = r;
-                a.requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_MIC);
-            } else {
-                r.deny();
+            if (c == null) { r.deny(); return; }
+            ArrayList<String> need = new ArrayList<>();
+            for (String res : r.getResources()) {
+                if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(res) && c.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.RECORD_AUDIO);
+                if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(res) && c.checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.CAMERA);
             }
+            if (need.isEmpty() || a == null) { grantAllowed(c, r); return; }
+            if (pendingPerm != null) pendingPerm.deny();
+            pendingPerm = r;
+            a.requestPermissions(need.toArray(new String[0]), REQ_MIC);
+        }
+
+        /** いる場所（位置情報）を Web の画面に教えていいか */
+        @Override
+        public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback cb) {
+            Uri o = Uri.parse(origin);
+            Activity a = current;
+            if (!BuildConfig.SITE_HOST.equalsIgnoreCase(o.getHost())) { cb.invoke(origin, false, false); return; }
+            Context c = a != null ? a : ctx();
+            boolean has = c != null && (c.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    || c.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
+            if (has) { cb.invoke(origin, true, false); return; }
+            if (a == null) { cb.invoke(origin, false, false); return; }
+            if (geoCb != null) geoCb.invoke(geoOrigin, false, false);
+            geoCb = cb;
+            geoOrigin = origin;
+            a.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_GEO);
+        }
+
+        @Override
+        public void onGeolocationPermissionsHidePrompt() {
+            if (geoCb != null) { geoCb.invoke(geoOrigin, false, false); geoCb = null; }
         }
 
         @Override
