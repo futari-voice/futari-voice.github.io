@@ -1,0 +1,83 @@
+name: 見はりbot（なかまボイスのチェック）
+# 30分ごとに、サイト・アプリ・バージョン情報がちゃんと動いているかチェックして、
+# けっかを status ブランチの status.json に書く。問題があれば管理者にissueで知らせる。
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: サイトをチェックする
+        id: check
+        run: |
+          cat > /tmp/check.mjs <<'EOF'
+          import fs from 'node:fs';
+          const base = 'https://futari-voice.github.io';
+          async function get(path){
+            const c = new AbortController(); const t = setTimeout(() => c.abort(), 15000);
+            try { const r = await fetch(base + path, {signal:c.signal, cache:'no-store'}); return {ok:r.ok, status:r.status, body:await r.text()}; }
+            catch(e){ return {ok:false, status:0, body:'', err:String(e)}; }
+            finally { clearTimeout(t); }
+          }
+          const checks = {};
+          checks.site = (await get('/')).ok;
+          const ver = await get('/version.json'); let version = null, verOk = false;
+          try { const j = JSON.parse(ver.body); version = j.name || null; verOk = ver.ok && typeof j.build === 'number'; } catch(e){}
+          checks.version = verOk;
+          const app = await get('/app/'); checks.app = app.ok && /なかまボイス/.test(app.body);
+          const ok = checks.site && checks.version && checks.app;
+          const out = { ok, time: new Date().toISOString(), version, checks };
+          fs.writeFileSync('/tmp/status.json', JSON.stringify(out, null, 2));
+          console.log(JSON.stringify(out));
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, 'ok=' + ok + '\n');
+          EOF
+          node /tmp/check.mjs
+
+      - name: けっかを status ブランチに書く
+        run: |
+          git config user.name "nakama-bot"
+          git config user.email "174059698258+nakamabot@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin status >/dev/null 2>&1; then
+            git fetch origin status
+            git checkout -B status origin/status
+          else
+            git checkout --orphan status
+            git rm -rf . >/dev/null 2>&1 || true
+            git clean -fdx >/dev/null 2>&1 || true
+          fi
+          cp /tmp/status.json status.json
+          git add status.json
+          git commit -m "status $(date -u +%FT%TZ)" || { echo 'かわってないよ'; exit 0; }
+          git push origin status
+
+      - name: 問題があれば管理者に知らせる
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ok='${{ steps.check.outputs.ok }}'
+          title="⚠️ なかまボイスが動いていないかも"
+          num=$(gh issue list --state open --search "in:title $title" --json number -q '.[0].number' 2>/dev/null || echo "")
+          now=$(date -u +'%Y-%m-%d %H:%M UTC')
+          if [ "$ok" != "true" ]; then
+            body="見はりbotのチェックで、なかまボイスにうまくつながらなかったよ（$now）。status ブランチの status.json を見てね。"
+            if [ -z "$num" ]; then gh issue create --title "$title" --body "$body" >/dev/null && echo "issueを作ったよ"; else gh issue comment "$num" --body "$body" >/dev/null && echo "issueにコメントしたよ"; fi
+          else
+            if [ -n "$num" ]; then gh issue comment "$num" --body "✅ なおったみたい（$now）" >/dev/null; gh issue close "$num" >/dev/null && echo "issueを閉じたよ"; fi
+            echo "ぜんぶOK"
+          fi
