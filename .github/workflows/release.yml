@@ -54,7 +54,7 @@ jobs:
           npx peerjs --port 9000 --host 127.0.0.1 > peer.log 2>&1 &
           (cd site && python3 -m http.server 8080 --bind 127.0.0.1 > ../http.log 2>&1 &)
           sleep 3
-          npx firebase emulators:exec --only auth,firestore --project demo-futari "node tests/local.mjs && FS_EMU=127.0.0.1:8085 node tests/social.mjs"
+          npx firebase emulators:exec --only auth,firestore --project demo-futari "FS_EMU=127.0.0.1:8085 node tests/local.mjs && FS_EMU=127.0.0.1:8085 node tests/social.mjs"
       - uses: actions/configure-pages@v5
       - name: サイトを公開の準備
         uses: actions/upload-pages-artifact@v3
