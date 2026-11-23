@@ -1,3 +1,7 @@
+import { createHash } from 'crypto';
+// テスト用の管理者パスワード（本物ではない）
+export const TEST_ADMIN_PASS = 'test-admin-1234';
+const TEST_ADMIN_HASH = '5041115d321d95432dd5f9ea5b6fc96a350ed0b8f1759d2f2566331e1458ae73';
 // テスト用の「にせデータベース」。本物の Firestore（エミュレーター）が使えない場所で、画面の動きをためすためのもの。
 // きまり（firestore.rules）はためさない。きまりは CI の本物のエミュレーターでためす。
 const CLIENT = `(() => {
@@ -17,6 +21,7 @@ const CLIENT = `(() => {
     watch: (p, cb) => W({kind:'doc', path:p}, cb),
     query: (c, wh, cb, onErr, opt) => W({kind:'query', coll:c, wh, opt}, cb),
     claim: (name, uid, old) => call('claim', {name, uid, old}),
+    count: (c, wh) => call('count', {coll:c, wh}),
   };
 })();`;
 
@@ -36,6 +41,7 @@ export function createFakeDB(){
       if (o === '==' && x !== v) return false;
       if (o === 'array-contains' && !(Array.isArray(x) && x.includes(v))) return false;
       if (o === 'in' && !v.includes(x)) return false;
+      if (o === '>' && !(x > (v && v.__ms != null ? v.__ms : v))) return false;
     }
     return true;
   };
@@ -53,7 +59,18 @@ export function createFakeDB(){
       w.page.evaluate(([i, x]) => window.__fvDbPush && window.__fvDbPush(i, JSON.parse(x)), [id, r]).catch(() => watchers.delete(id));
     }
   };
+  // 本物のルールと同じ：管理者パスワードの形が合わないと書けない・管理者だけおしらせを送れる
+  const keyOk = k => typeof k === 'string' && k.length === 64 && createHash('sha256').update(k).digest('hex') === TEST_ADMIN_HASH;
+  const isAdmin = page => keyOk((docs.get('admins/' + page.__uid) || {}).key);
+  const guard = (page, path, data) => {
+    if (path.startsWith('admins/') && !keyOk(data && data.key)) throw new Error('permission-denied (admins)');
+    if (path.startsWith('news/') && !isAdmin(page)) throw new Error('permission-denied (news)');
+  };
   async function handle(page, op, a){
+    if (op === 'set' || op === 'del'){
+      if (a.path.startsWith('admins/')) page.__uid = a.path.split('/')[1];
+      if (op === 'set' || a.path.startsWith('news/')) guard(page, a.path, a.data);
+    }
     switch (op){
       case 'get': return docs.has(a.path) ? docs.get(a.path) : null;
       case 'set': put(a.path, a.data, a.merge); notify(); return true;
@@ -68,6 +85,7 @@ export function createFakeDB(){
       }
       case 'watch': { const id = ++seq, w = {page, kind:a.kind, path:a.path, coll:a.coll, wh:a.wh, opt:a.opt}; watchers.set(id, w); const r = result(w); w.last = JSON.stringify(r); return {id, data:r}; }
       case 'unwatch': watchers.delete(a.id); return true;
+      case 'count': return [...docs.keys()].filter(p => match(a.coll, a.wh || [], p)).length;
     }
     return null;
   }

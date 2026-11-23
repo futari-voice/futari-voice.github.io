@@ -50,6 +50,7 @@ svg.fill{fill:currentColor;stroke:none}
 .btn2{height:38px;padding:0 16px;border-radius:4px;background:#4e5058;color:#fff;font-weight:600}
 .btn2:hover{background:#6d6f78}
 .btn2.red{background:var(--red2)}.btn2.red:hover{background:#a12828}
+.btn2.green{background:var(--green)}.btn2.green:hover{background:#1a8a4a}
 .link{color:#00a8fc;font-weight:500}
 .err{color:#fa777c;margin:0;font-size:14px}
 .err:empty{display:none}
@@ -368,6 +369,45 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
 .loc small{color:var(--dim);font-size:11px}
 .comp .ib.lb{margin-left:-4px}
 /* はじめかた */
+/* 管理者パネル・運営からのおしらせ */
+.admrow{display:flex;align-items:center;gap:14px;padding:14px;border-radius:8px;background:var(--side)}
+.admrow>div:nth-child(2){flex:1;display:grid;gap:2px;line-height:1.4}
+.admrow b{color:var(--head)}
+.admrow span{color:var(--dim);font-size:13.5px}
+.admlock{display:grid;justify-items:center;gap:10px;text-align:center;padding:12px 0 8px}
+.admlock>b{color:var(--head);font-size:17px}
+.admlock form{display:flex;gap:8px;width:min(380px,100%)}
+.admlock input{flex:1;min-width:0;height:44px;border:0;border-radius:4px;background:var(--rail);color:var(--text);padding:0 12px;font-size:16px;outline:none}
+.admlock input:focus{outline:2px solid var(--brand)}
+.admmain{display:grid;gap:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--side);border-radius:8px;padding:12px 14px;display:grid;gap:2px}
+.stat b{font-size:22px;color:var(--head);line-height:1.2}
+.stat span{font-size:12px;color:var(--dim);font-weight:700}
+.kinds{display:flex;gap:8px;flex-wrap:wrap}
+.kchip{height:36px;padding:0 14px;border-radius:18px;border:1px solid #4e5058;color:var(--soft);font-weight:700}
+.kchip:hover{background:var(--hover)}
+.kchip.sel{border-color:var(--brand);background:rgba(88,101,242,.18);color:var(--head)}
+.fl textarea{min-height:110px;resize:vertical;border:0;border-radius:4px;background:var(--rail);color:var(--text);padding:10px 12px;font:inherit;font-size:16px;font-weight:400;line-height:1.5;outline:none}
+.fl textarea:focus{outline:2px solid var(--brand)}
+.admsend{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.admsend .primary.arm{background:var(--red2)}
+.newslist{display:grid;gap:10px}
+.news{border-radius:10px;background:var(--side);padding:12px 14px 14px 16px;display:grid;gap:6px;border-left:4px solid var(--brand)}
+.news.k-update{border-left-color:var(--green)}
+.news.k-warn{border-left-color:#f0b232}
+.news .nh{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim)}
+.news .nh .grow{flex:1}
+.nbadge{font-weight:800;font-size:11.5px;padding:2px 9px;border-radius:10px;background:rgba(88,101,242,.22);color:#c9cdfb}
+.k-update .nbadge{background:rgba(35,165,90,.22);color:#8fe0b0}
+.k-warn .nbadge{background:rgba(240,178,50,.22);color:#f6d38a}
+.news>b{color:var(--head);font-size:16px;overflow-wrap:anywhere}
+.news p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text);line-height:1.55}
+.news .link.red{color:#fa777c;font-size:12.5px;font-weight:700}
+#mNews{z-index:60}
+#mNews header b{display:flex;align-items:center;gap:8px}
+#mNews header svg.i{color:var(--brand)}
+@media (max-width:520px){ .stats{grid-template-columns:1fr 1fr} .stat:last-child{grid-column:1/-1} }
 .guide{display:grid;gap:10px}
 .gstep{display:flex;align-items:center;gap:12px;background:var(--side);border-radius:10px;padding:12px 14px}
 .gstep b.n{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none;font-size:15px}
@@ -449,6 +489,9 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
   <symbol id="i-cam" viewBox="0 0 24 24"><rect x="3" y="6.5" width="12.5" height="11" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3"/></symbol>
   <symbol id="i-cam-off" viewBox="0 0 24 24"><rect x="3" y="6.5" width="12.5" height="11" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3M3 3l18 18"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/><circle cx="12" cy="15.5" r="1.3"/></symbol>
+  <symbol id="i-mega" viewBox="0 0 24 24"><path d="M4 10v4a1 1 0 0 0 1 1h2l6 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></symbol>
   <symbol id="i-flip" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6M20 12a8 8 0 0 1-13.7 5.6M17.7 3v3.4h-3.4M6.3 21v-3.4h3.4"/></symbol>
   <symbol id="i-big" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></symbol>
@@ -771,11 +814,60 @@ kbd{background:var(--rail);border-radius:4px;padding:1px 6px;font:inherit;font-w
       <button class="btn2 hide" id="noteAllow" style="justify-self:start">このパソコン（ブラウザ）で、おしらせを許可する</button>
       <label class="sw hide" id="sBgRow"><span id="sBgText"></span><input type="checkbox" class="tg" id="sBg"></label>
       <p class="hint" id="noteHint"></p>
+      <button class="btn2" id="newsAll" style="justify-self:start">運営からのおしらせを見る</button>
       <h3>音のおしらせ</h3>
       <label class="sw"><span>ボイスに入る・出るときの音</span><input type="checkbox" class="tg" id="sSnd"></label>
       <label class="sw"><span>メッセージがきたときの音</span><input type="checkbox" class="tg" id="sMsg"></label>
       <p class="hint">キーボード：<kbd>M</kbd> マイクのミュート、<kbd>D</kbd> スピーカーミュート（このアプリの画面を見ているときだけ使えるよ）</p>
+      <h3>管理者</h3>
+      <div class="admrow"><div class="hicon"><svg class="i"><use href="#i-shield"/></svg></div><div><b>管理者パネル</b><span>全員へのおしらせ（アップデートなど）を送れるよ。パスワードが必要だよ</span></div><button class="btn2" id="admOpen">開く</button></div>
     </div>
+  </div>
+</div>
+
+<!-- 管理者パネル -->
+<div class="modal hide" id="mAdmin" role="dialog" aria-modal="true" aria-label="管理者パネル">
+  <div class="mbox wide">
+    <header><b>管理者パネル</b><button class="ib" data-close title="とじる"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="mbody">
+      <div class="admlock" id="admLock">
+        <div class="hicon"><svg class="i"><use href="#i-lock"/></svg></div>
+        <b>パスワードを入れてね</b>
+        <p class="hint">管理者だけが使えるページだよ</p>
+        <form id="admForm"><input type="password" id="admPass" maxlength="100" autocomplete="current-password" aria-label="パスワード" placeholder="パスワード"><button class="primary" type="submit" id="admGo">開く</button></form>
+        <p class="err" id="admErr"></p>
+      </div>
+      <div class="admmain hide" id="admMain">
+        <div class="stats">
+          <div class="stat"><b id="stUsers">–</b><span>登録している人</span></div>
+          <div class="stat"><b id="stOnline">–</b><span>いまオンライン</span></div>
+          <div class="stat"><b id="stVer">–</b><span>いちばん新しいバージョン</span></div>
+        </div>
+        <h3>全員におしらせを送る</h3>
+        <div class="kinds" id="admKinds">
+          <button type="button" class="kchip sel" data-k="info">📢 おしらせ</button>
+          <button type="button" class="kchip" data-k="update">⬆️ アップデート</button>
+          <button type="button" class="kchip" data-k="warn">⚠️ だいじ</button>
+        </div>
+        <label class="fl">タイトル<input id="admTitle" maxlength="60" autocomplete="off" placeholder="例：新しいバージョンが出たよ！"></label>
+        <label class="fl">本文<textarea id="admText" maxlength="1000" placeholder="例：ビデオ通話ができるようになったよ。"></textarea></label>
+        <p class="hint">「⬆️ アップデート」を選ぶと、受け取った人の画面に「アップデートする」ボタンも出るよ。送ると、ふたりボイスを使っている全員の画面に出て、アプリをとじている人にはスマホやパソコンのおしらせがとどくよ。</p>
+        <div class="admsend"><button class="btn2" type="button" id="admTpl">アップデートのおしらせを書く</button><button class="primary" type="button" id="admSend">全員に送る</button></div>
+        <p class="err" id="admSendErr"></p>
+        <h3>送ったおしらせ</h3>
+        <div class="newslist" id="admList"></div>
+        <button class="link" type="button" id="admLockBtn" style="justify-self:start">ロックする（パスワードの画面にもどす）</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 運営からのおしらせ -->
+<div class="modal hide" id="mNews" role="dialog" aria-modal="true" aria-label="運営からのおしらせ">
+  <div class="mbox">
+    <header><b><svg class="i"><use href="#i-mega"/></svg><span id="newsTitle">運営からのおしらせ</span></b><button class="ib" id="newsX" title="とじる"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="mbody"><div class="newslist" id="newsList"></div></div>
+    <div class="mfoot2"><button class="btn2 green hide" id="newsUpd">アップデートする</button><button class="primary" id="newsOk">OK</button></div>
   </div>
 </div>
 
@@ -2053,7 +2145,7 @@ function firestoreDB(app){
   const norm = v => v && typeof v.toMillis === 'function' ? v.toMillis() : Array.isArray(v) ? v.map(norm) : (v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, norm(x)])) : v);
   const data = s => s.exists() ? norm(s.data({serverTimestamps:'estimate'})) : null;
   const q = (c, wh, opt) => {
-    const parts = wh.map(([f, o, v]) => FB.where(f === '__id' ? FB.documentId() : f, o, v));
+    const parts = wh.map(([f, o, v]) => FB.where(f === '__id' ? FB.documentId() : f, o, v && v.__ms != null ? FB.Timestamp.fromMillis(v.__ms) : v));
     if (opt && opt.last) parts.push(FB.orderBy(opt.order), FB.limitToLast(opt.last));
     return FB.query(FB.collection(db, c), ...parts);
   };
@@ -2064,6 +2156,7 @@ function firestoreDB(app){
     batch: ops => { const b = FB.writeBatch(db); for (const [op, p, d, merge] of ops){ if (op === 'del') b.delete(ref(p)); else b.set(ref(p), conv(d), merge ? {merge:true} : {}); } return b.commit(); },
     watch: (p, cb, onErr) => FB.onSnapshot(ref(p), s => cb(data(s)), onErr),
     query: (c, wh, cb, onErr, opt) => FB.onSnapshot(q(c, wh, opt), s => cb(s.docs.map(d => Object.assign(norm(d.data({serverTimestamps:'estimate'})), {id:d.id}))), onErr),
+    count: async (c, wh) => (await FB.getCountFromServer(q(c, wh))).data().count,
     claim: (name, uid, old) => FB.runTransaction(db, async tx => {
       const s = await tx.get(ref('unames/' + name));
       if (s.exists() && s.data().uid !== uid) return false;
@@ -2078,8 +2171,11 @@ function firestoreDB(app){
 /* ---------- フレンド・個人チャット ---------- */
 const F = {on:false, err:'', fuid:'', uname:'', meDoc:null, skew:0, hbAt:0, hb:null, started:0,
   friends:new Map(), users:new Map(), inReq:[], outReq:[], dms:new Map(), calls:[],
-  unsub:[], userUnsub:[], userKey:'', tab:'online', dm:'', dmMsgs:[], dmUnsub:null, dmRead:{}, addMsg:'', addErr:'', busy:false};
+  unsub:[], userUnsub:[], userKey:'', tab:'online', dm:'', dmMsgs:[], dmUnsub:null, dmRead:{}, addMsg:'', addErr:'', busy:false, news:[], newsShown:new Set()};
 const pairOf = (a, b) => a < b ? a + '_' + b : b + '_' + a;
+const NEWS_KIND = {info:'📢 おしらせ', update:'⬆️ アップデート', warn:'⚠️ だいじ'};
+const NEWS = {items:[], fresh:false};                  // いま出している「運営からのおしらせ」
+const ADM = {on:false, kind:'info', tries:0, wait:0, sendArm:0, delArm:''};   // 管理者パネル
 if (DEBUG){ window.__fvF = F; window.__fvDBX = () => DBX; }
 const serverNow = () => Date.now() + F.skew;
 const isHome = () => S.view === 'home' || S.view === 'dm';
@@ -2107,7 +2203,8 @@ function socialStop(){
   for (const u of F.userUnsub.splice(0)) try{ u(); }catch(e){}
   if (F.dmUnsub){ try{ F.dmUnsub(); }catch(e){} F.dmUnsub = null; }
   clearInterval(F.hb);
-  Object.assign(F, {on:false, err:'', fuid:'', uname:'', meDoc:null, friends:new Map(), users:new Map(), inReq:[], outReq:[], dms:new Map(), calls:[], userKey:'', dm:'', dmMsgs:[], reqInit:false, dmsInit:false});
+  Object.assign(F, {on:false, err:'', fuid:'', uname:'', meDoc:null, friends:new Map(), users:new Map(), inReq:[], outReq:[], dms:new Map(), calls:[], userKey:'', dm:'', dmMsgs:[], reqInit:false, dmsInit:false, news:[], newsShown:new Set()});
+  ADM.on = false;
 }
 function socialStart(){
   socialStop();
@@ -2132,6 +2229,7 @@ function socialStart(){
   W(DBX.query('requests', [['from', '==', F.fuid]], list => { F.outReq = list; watchUsers(); renderSocial(); }, dbErr));
   W(DBX.query('dms', [['members', 'array-contains', F.fuid]], onDms, dbErr));
   W(DBX.query('calls', [['members', 'array-contains', F.fuid]], onCalls, dbErr));
+  W(DBX.query('news', [], onNews, e => console.warn('news', e && (e.code || e.message)), {order:'at', last:20}));
   pushProfile().then(() => { if (!F.uname && userOf(fbUser)) claimUname(userOf(fbUser), true); });
   F.hb = setInterval(pushProfile, 60000);
 }
@@ -2719,6 +2817,7 @@ function openTarget(t){
   else if (t === 'req'){ F.tab = 'req'; goHome(); }
   else if (t.startsWith('srv:')){ const [, sid, ch] = t.split(':'); if (servers.some(s => s.id === sid)){ enterServer(sid); if (ch && chanById(ch)) openText(ch); } }
   else if (t === 'call'){ if (DC.incoming) $('#mRing').classList.remove('hide'); else if (DC.fid) openDm(DC.fid); }
+  else if (t === 'news'){ if ($('#mNews').classList.contains('hide')) showNews(F.news.slice(0, 10), false); }
 }
 // アプリをとじても待つ（Android：小さなおしらせ／Windows：右下のタスクトレイ）
 function syncBg(){
@@ -2797,6 +2896,129 @@ if (AND){
   }
 }
 
+/* ---------- 運営からのおしらせ（全員にとどく） ---------- */
+function newsHTML(n, admin){
+  const k = NEWS_KIND[n.kind] ? n.kind : 'info';
+  const del = admin ? `<button class="link red" type="button" data-del="${esc(n.id)}">${ADM.delArm === n.id ? '本当に消す？（もう一回おす）' : '消す'}</button>` : '';
+  return `<div class="news k-${k}"><div class="nh"><span class="nbadge">${NEWS_KIND[k]}</span><span class="grow">${n.at ? fmtTime(n.at) : ''}</span>${del}</div><b>${esc(n.title || '')}</b>${n.text ? `<p>${fmtText(n.text)}</p>` : ''}</div>`;
+}
+function onNews(list){
+  F.news = list.filter(n => n && n.title).sort((a, b) => (b.at || 0) - (a.at || 0));
+  if (ADM.on) renderAdmList();
+  let seen = store.get(ak('newsSeen'), null);
+  if (seen == null){ seen = Date.now() - 3 * 86400000; store.set(ak('newsSeen'), seen); }   // はじめての人には、3日より前のものは出さない
+  const fresh = F.news.filter(n => (n.at || 0) > seen && n.by !== F.fuid && !F.newsShown.has(n.id));
+  if (!fresh.length) return;
+  for (const n of fresh) F.newsShown.add(n.id);
+  if (fresh.some(n => n.kind === 'update')) checkUpdate(true);
+  const items = NEWS.fresh && !$('#mNews').classList.contains('hide') ? [...fresh, ...NEWS.items].slice(0, 5) : fresh.slice(0, 5);
+  showNews(items, true);
+  playSound('msg');
+  showNote('📢 ' + fresh[0].title, fresh[0].text || '運営からのおしらせだよ', 'news', 'news');
+}
+function showNews(items, fresh){
+  NEWS.items = items; NEWS.fresh = fresh;
+  $('#newsTitle').textContent = fresh ? '運営からのおしらせ' : 'これまでのおしらせ';
+  $('#newsList').innerHTML = items.length ? items.map(n => newsHTML(n)).join('') : '<p class="hint">まだおしらせはないよ</p>';
+  if (fresh) store.set(ak('newsSeen'), Math.max(store.get(ak('newsSeen'), 0) || 0, ...items.map(n => n.at || 0)));
+  paintNewsUpd();
+  $('#mNews').classList.remove('hide');
+}
+function paintNewsUpd(){ $('#newsUpd').classList.toggle('hide', !(NEWS.items.some(n => n.kind === 'update') && UPD.info && UPD.state === 'ready')); }
+function closeNews(){ $('#mNews').classList.add('hide'); cancelNote('news'); }
+$('#newsOk').onclick = closeNews;
+$('#newsX').onclick = closeNews;
+$('#newsUpd').onclick = () => { closeNews(); startUpdate(); };
+$('#newsAll').onclick = () => { closeModals(); showNews(F.news.slice(0, 10), false); };
+
+/* ---------- 管理者パネル（パスワードを知っている人だけ） ---------- */
+// パスワードを暗号の形にする（パスワードそのものは、どこにも送らない・しまわない）
+async function adminKey(pw){
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('futari-voice-admin:' + pw));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+function openAdmin(){ openModal('mAdmin'); paintAdmin(); }
+function paintAdmin(){
+  $('#admLock').classList.toggle('hide', ADM.on);
+  $('#admMain').classList.toggle('hide', !ADM.on);
+  if (!ADM.on){ $('#admErr').textContent = ''; $('#admPass').value = ''; setTimeout(() => $('#admPass').focus(), 0); return; }
+  paintKinds(); renderAdmList(); loadStats();
+}
+async function unlockAdmin(e){
+  e.preventDefault();
+  const pw = $('#admPass').value;
+  if (!pw){ $('#admPass').focus(); return; }
+  if (Date.now() < ADM.wait){ $('#admErr').textContent = 'まちがいが多いよ。' + Math.ceil((ADM.wait - Date.now()) / 1000) + '秒まってね'; return; }
+  if (!DBX || !F.on){ $('#admErr').textContent = 'インターネットにつながっていないみたい'; return; }
+  $('#admGo').disabled = true; $('#admErr').textContent = '';
+  try {
+    await DBX.set('admins/' + F.fuid, {key:await adminKey(pw), at:NOW});
+    ADM.on = true; ADM.tries = 0; $('#admPass').value = '';
+    paintAdmin(); toast('管理者パネルを開いたよ');
+  } catch(err){
+    const code = String(err && (err.code || err.message) || '');
+    if (/permission/i.test(code)){ if (++ADM.tries >= 5){ ADM.tries = 0; ADM.wait = Date.now() + 30000; } $('#admErr').textContent = 'パスワードがちがうよ'; }
+    else $('#admErr').textContent = 'うまくいかなかった…（' + code + '）';
+    $('#admPass').select();
+  } finally { $('#admGo').disabled = false; }
+}
+async function loadStats(){
+  for (const id of ['#stUsers', '#stOnline', '#stVer']) $(id).textContent = '…';
+  fetch('../version.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).then(v => { $('#stVer').textContent = v && v.name ? v.name : '–'; }, () => { $('#stVer').textContent = '–'; });
+  if (!DBX || !DBX.count){ $('#stUsers').textContent = $('#stOnline').textContent = '–'; return; }
+  DBX.count('users', []).then(n => { $('#stUsers').textContent = n + '人'; }, () => { $('#stUsers').textContent = '–'; });
+  DBX.count('users', [['seen', '>', {__ms:serverNow() - 150000}]]).then(n => { $('#stOnline').textContent = n + '人'; }, () => { $('#stOnline').textContent = '–'; });
+}
+function paintKinds(){ for (const b of document.querySelectorAll('#admKinds .kchip')) b.classList.toggle('sel', b.dataset.k === ADM.kind); }
+function renderAdmList(){ $('#admList').innerHTML = F.news.length ? F.news.map(n => newsHTML(n, true)).join('') : '<p class="hint">まだ送ったおしらせはないよ</p>'; }
+function resetSend(){ ADM.sendArm = 0; $('#admSend').textContent = '全員に送る'; $('#admSend').classList.remove('arm'); }
+async function sendNews(){
+  const title = $('#admTitle').value.trim(), text = $('#admText').value.trim();
+  $('#admSendErr').textContent = '';
+  if (!title){ $('#admSendErr').textContent = 'タイトルを書いてね'; $('#admTitle').focus(); return; }
+  // まちがえて送らないように、2回おしてね
+  if (Date.now() > ADM.sendArm){
+    ADM.sendArm = Date.now() + 5000; $('#admSend').textContent = '本当に全員に送る？（もう一回おす）'; $('#admSend').classList.add('arm');
+    setTimeout(() => { if (ADM.sendArm && Date.now() >= ADM.sendArm) resetSend(); }, 5100);
+    return;
+  }
+  resetSend(); $('#admSend').disabled = true;
+  try {
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    await DBX.set('news/' + id, {title, text, kind:ADM.kind, by:F.fuid, at:NOW});
+    $('#admTitle').value = ''; $('#admText').value = '';
+    toast('全員におしらせを送ったよ！');
+  } catch(err){
+    const code = String(err && (err.code || err.message) || '');
+    $('#admSendErr').textContent = /permission/i.test(code) ? '送れなかった…。パスワードが変わったかも。「ロックする」をおして、もう一回開いてね' : '送れなかった…（' + code + '）';
+  } finally { $('#admSend').disabled = false; }
+}
+$('#admOpen').onclick = openAdmin;
+$('#admForm').onsubmit = unlockAdmin;
+$('#admKinds').onclick = e => { const b = e.target.closest('.kchip'); if (b){ ADM.kind = b.dataset.k; paintKinds(); } };
+$('#admSend').onclick = sendNews;
+$('#admLockBtn').onclick = () => { ADM.on = false; resetSend(); paintAdmin(); };
+$('#admTpl').onclick = async () => {
+  ADM.kind = 'update'; paintKinds();
+  let name = '';
+  try { const v = await fetch('../version.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.json()); name = (v && v.name) || ''; } catch(e){}
+  $('#admTitle').value = '新しいバージョン' + (name ? '（' + name + '）' : '') + 'が出たよ！';
+  if (!$('#admText').value.trim()) $('#admText').value = 'アプリの上に出る「アップデート」をおすと、新しくなるよ。\n\n新しくなったこと：\n・';
+  $('#admText').focus();
+};
+$('#admList').onclick = async e => {
+  const b = e.target.closest('[data-del]'); if (!b) return;
+  const id = b.dataset.del;
+  if (ADM.delArm !== id){
+    ADM.delArm = id; renderAdmList();
+    setTimeout(() => { if (ADM.delArm === id){ ADM.delArm = ''; renderAdmList(); } }, 4000);
+    return;
+  }
+  ADM.delArm = '';
+  try { await DBX.del('news/' + id); toast('おしらせを消したよ'); } catch(err){ toast('消せなかった…'); renderAdmList(); }
+};
+if (DEBUG) window.__fvADM = ADM;
+
 /* ---------- アップデート（アプリの中で、新しいバージョンに入れかえる） ---------- */
 const BUILD = +'@@BUILD@@' || 0;                  // このページを作ったときの番号（GitHubで組み立てたときだけ）
 const DESK = window.fvDesktop && window.fvDesktop.platform === 'windows' ? window.fvDesktop : null;
@@ -2851,6 +3073,7 @@ function renderUpd(){
   $('#updGo').textContent = btn || '';
   $('#updGo').classList.toggle('hide', !btn);
   $('#updX').classList.toggle('hide', ['progress', 'installing'].includes(UPD.state));
+  paintNewsUpd();
 }
 function startUpdate(){
   const I = UPD.info; if (!I) return;

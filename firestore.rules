@@ -7,6 +7,8 @@ rules_version = '2';
 //   dms/{a}_{b}            … 個人チャットの最後のメッセージ（フレンドどうしだけ）
 //   dms/{a}_{b}/msgs/{id}  … 個人チャットのメッセージ
 //   calls/{a}_{b}          … 個人通話の呼び出し（フレンドどうしだけ）
+//   admins/{uid}           … 管理者パネルのパスワードを知っている人（本人だけ見られる）
+//   news/{id}              … 運営から全員へのおしらせ（だれでも見られる。送る・消すのは管理者だけ）
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
@@ -19,6 +21,11 @@ service cloud.firestore {
     function friends(pid) { return exists(/databases/$(database)/documents/friendships/$(pid)); }
     function membersOk(pid, d) { return d.members is list && d.members.size() == 2 && d.members.hasAll(partsOf(pid)); }
     function str(v, n) { return v is string && v.size() <= n; }
+    // 管理者のパスワード：アプリでパスワードを暗号の形（key）にして、ここでもう一回暗号にして、くらべる。
+    // ↓ これは「テスト用のパスワード」の形。本番（Firebaseの画面で公開するルール）では、本物のパスワードの形に入れかえる。本物はどこにも公開しない
+    function adminHash() { return '5041115d321d95432dd5f9ea5b6fc96a350ed0b8f1759d2f2566331e1458ae73'; } // ADMIN_HASH
+    function keyOk(k) { return k is string && k.size() == 64 && hashing.sha256(k).toHexString().lower() == adminHash(); }
+    function isAdmin() { return signedIn() && keyOk(get(/databases/$(database)/documents/admins/$(me())).data.key); }
 
     match /users/{uid} {
       allow read: if signedIn();
@@ -87,6 +94,26 @@ service cloud.firestore {
           && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 2000
           && request.resource.data.ts == request.time;
       }
+    }
+
+    match /admins/{uid} {
+      allow read, delete: if signedIn() && me() == uid;
+      allow create, update: if signedIn() && me() == uid
+        && request.resource.data.keys().hasOnly(['key', 'at'])
+        && keyOk(request.resource.data.key)
+        && request.resource.data.at == request.time;
+    }
+
+    match /news/{id} {
+      allow read: if signedIn();
+      allow delete: if isAdmin();
+      allow create: if isAdmin() && id.size() <= 40
+        && request.resource.data.keys().hasOnly(['title', 'text', 'kind', 'by', 'at'])
+        && str(request.resource.data.title, 60) && request.resource.data.title.size() > 0
+        && str(request.resource.data.text, 1000)
+        && request.resource.data.kind in ['info', 'update', 'warn']
+        && request.resource.data.by == me()
+        && request.resource.data.at == request.time;
     }
 
     match /calls/{pid} {

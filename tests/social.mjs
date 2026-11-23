@@ -1,8 +1,8 @@
 // フレンド・個人チャット・個人通話・「ホームを見ても通話が切れない」をためす
 //   ふつう: にせデータベース（tests/fakedb.mjs）で画面の動きをためす
 //   FS_EMU=127.0.0.1:8085 のとき: 本物の Firestore エミュレーター（きまり firestore.rules も）でためす
-import { launch, page, register, waitShown, waitFor, ok, done, sleep, dcBytes, audioBytes } from './helpers.mjs';
-import { createFakeDB } from './fakedb.mjs';
+import { launch, page, register, waitShown, waitFor, ok, done, sleep, dcBytes, audioBytes, shown } from './helpers.mjs';
+import { createFakeDB, TEST_ADMIN_PASS } from './fakedb.mjs';
 const SITE = process.env.SITE || 'http://127.0.0.1:8080';
 const FS = process.env.FS_EMU || '';
 const URL = SITE + '/app/?server=' + (process.env.PEER || '127.0.0.1:9000') + '&emu=' + (process.env.EMU || '127.0.0.1:9099') + (FS ? '&fsemu=' + FS : '');
@@ -148,6 +148,55 @@ try {
   ok(true, '電話がきたときも、パソコンのおしらせが出る');
   await B.evaluate(() => { document.hasFocus = () => true; });
   await B.click('#ringNo'); await waitFor(A, () => !__fvDC.state, 15000, 'ことわる2');
+
+  // 管理者パネル：パスワードを入れると開いて、全員におしらせを送れる
+  await A.click('#btnSet'); await waitShown(A, 'mSet');
+  await A.click('#admOpen'); await waitShown(A, 'mAdmin');
+  ok(await shown(A, 'admLock') && !(await shown(A, 'admMain')), '設定の「管理者」から開くと、はじめはパスワードの画面');
+  await A.fill('#admPass', 'guess-0000'); await A.click('#admGo');
+  await waitFor(A, () => document.getElementById('admErr').textContent.includes('ちがう'), 15000, 'まちがったパスワード');
+  ok(!(await shown(A, 'admMain')), 'パスワードがちがうと開かない');
+  await A.fill('#admPass', TEST_ADMIN_PASS); await A.click('#admGo');
+  await waitShown(A, 'admMain', 15000);
+  ok(true, '正しいパスワードで管理者パネルが開く');
+  await waitFor(A, () => /\d+人/.test(document.getElementById('stUsers').textContent) && /\d+人/.test(document.getElementById('stOnline').textContent), 15000, '人数');
+  ok(true, '登録している人・オンラインの人数が見える（' + await A.textContent('#stUsers') + ' / ' + await A.textContent('#stOnline') + '）');
+  await B.evaluate(() => { document.hasFocus = () => false; });
+  await A.click('#admTpl');
+  await waitFor(A, () => document.getElementById('admTitle').value.includes('新しいバージョン'), 5000, 'ひな形');
+  ok(await A.evaluate(() => __fvADM.kind === 'update'), '「アップデートのおしらせを書く」で、ひな形が入る');
+  await A.fill('#admTitle', 'テストのおしらせ'); await A.fill('#admText', 'アップデートしてね\nよろしく');
+  await A.click('#admSend');
+  ok(await A.evaluate(() => document.getElementById('admSend').textContent.includes('本当に')), 'まちがえないように、送る前にもう一回たしかめる');
+  await A.click('#admSend');
+  await waitShown(B, 'mNews', 15000);
+  ok(await B.evaluate(() => { const t = document.getElementById('newsList').textContent; return t.includes('テストのおしらせ') && t.includes('よろしく') && t.includes('アップデート'); }), '全員の画面に、おしらせが出る');
+  await waitFor(B, () => __notes.some(n => n[2] === 'news' && String(n[0]).includes('テストのおしらせ')), 10000, 'おしらせの通知');
+  ok(true, 'ほかの窓を見ているときは、パソコンのおしらせもとどく');
+  await B.evaluate(() => { document.hasFocus = () => true; });
+  await sleep(300); await shot(B, 'news');
+  await B.click('#newsOk');
+  ok(!(await shown(B, 'mNews')), 'OKをおすと、とじる');
+  await waitFor(A, () => document.getElementById('admList').textContent.includes('テストのおしらせ'), 10000, '送ったおしらせ');
+  ok(!(await shown(A, 'mNews')), '送った人の画面には出ない（一覧に出る）');
+  await shot(A, 'admin');
+  await B.evaluate(() => document.getElementById('newsAll').click());
+  ok(await B.evaluate(() => !document.getElementById('mNews').classList.contains('hide') && document.getElementById('newsTitle').textContent.includes('これまで') && document.getElementById('newsList').textContent.includes('テストのおしらせ')), '設定から、これまでのおしらせを見られる');
+  await B.click('#newsOk');
+  // 管理者でない人は、送れない・パスワードなしでは入れない
+  const denied = await B.evaluate(async () => { try { await __fvDBX().set('news/hack1', {title:'x', text:'', kind:'info', by:__fvF.fuid, at:{__now:1}}); return false; } catch(e){ return true; } });
+  ok(denied, '管理者でない人は、おしらせを送れない（データベースがことわる）');
+  const denied2 = await B.evaluate(async () => { try { await __fvDBX().set('admins/' + __fvF.fuid, {key:'0'.repeat(64), at:{__now:1}}); return false; } catch(e){ return true; } });
+  ok(denied2, 'でたらめな暗号では、管理者になれない');
+  // 消す・ロック
+  await A.click('#admList [data-del]');
+  ok(await A.evaluate(() => document.getElementById('admList').textContent.includes('本当に消す')), '消す前にもう一回たしかめる');
+  await A.click('#admList [data-del]');
+  await waitFor(A, () => !document.getElementById('admList').textContent.includes('テストのおしらせ'), 10000, '消す');
+  ok(true, '送ったおしらせを消せる');
+  await A.click('#admLockBtn');
+  ok(await shown(A, 'admLock'), 'ロックすると、またパスワードの画面になる');
+  await A.keyboard.press('Escape');
 
   // フレンドをやめる
   await A.click('#homeBtn'); await A.click('[data-ftab="all"]'); await A.click('#fbody [data-unf]'); await A.click('#cfOk');
