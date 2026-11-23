@@ -101,7 +101,7 @@ try {
   await A.click('[data-ftab="all"]'); await A.click('#fbody [data-dmopen]');
   await A.fill('#dmIn', 'テストのメッセージ ' + R); await A.press('#dmIn', 'Enter');
   await waitFor(B, () => [...__fvF.dms.values()].some(d => d.last && d.last.text && d.last.text.startsWith('テストのメッセージ')), 20000, 'DM');
-  await B.click('#chList [data-dmopen]');
+  await B.click('#dmList [data-dmopen]');
   await waitFor(B, () => document.getElementById('dmMsgs').textContent.includes('テストのメッセージ'), 15000, 'DM本文');
   ok(true, '本物のデータベースで、個人チャットがとどく');
   await A.click('#btnCall');
