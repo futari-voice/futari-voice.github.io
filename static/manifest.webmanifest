@@ -1,12 +1,12 @@
 {
-  "name": "ふたりボイス",
-  "short_name": "ふたりボイス",
-  "description": "友だち4人までのサーバー（チャット・通話・画面共有）",
+  "name": "なかまボイス",
+  "short_name": "なかまボイス",
+  "description": "なかまと話せるボイスチャット。サーバーは何人でも（チャット・通話・画面共有）",
   "start_url": "app/",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#313338",
-  "theme_color": "#1e1f22",
+  "background_color": "#0b0c1b",
+  "theme_color": "#0b0c1b",
   "lang": "ja",
   "icons": [
     {

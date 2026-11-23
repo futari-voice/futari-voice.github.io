@@ -72,7 +72,7 @@ final class Notifs {
         if (nm == null) return;
         boolean call = "call".equals(tag);
         Notification.Builder b = builder(c, call ? CH_RING : CH_MSG)
-                .setContentTitle(title == null ? "ふたりボイス" : title)
+                .setContentTitle(title == null ? "なかまボイス" : title)
                 .setContentText(text == null ? "" : text)
                 .setAutoCancel(true)
                 .setPriority(Notification.PRIORITY_HIGH)

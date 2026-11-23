@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="ja"><head><meta charset="utf-8"><title>ふたりボイス</title>
-<style>body{margin:0;height:100vh;display:grid;place-items:center;background:#313338;color:#dbdee1;font:16px/1.6 "Segoe UI","Meiryo",sans-serif;text-align:center}
-h1{color:#f2f3f5;font-size:24px;margin:0 0 8px}button{margin-top:18px;height:44px;padding:0 24px;border:0;border-radius:4px;background:#5865f2;color:#fff;font:inherit;font-weight:700;cursor:pointer}</style></head>
+<html lang="ja"><head><meta charset="utf-8"><title>なかまボイス</title>
+<style>body{margin:0;height:100vh;display:grid;place-items:center;background:#0b0c1b;color:#e3e5ff;font:16px/1.6 "Segoe UI","Meiryo",sans-serif;text-align:center}
+h1{color:#fff;font-size:24px;margin:0 0 8px}button{margin-top:18px;height:44px;padding:0 24px;border:0;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#6366f1 48%,#22d3ee);color:#fff;font:inherit;font-weight:700;cursor:pointer}</style></head>
 <body><div><h1>インターネットにつながっていないよ</h1><p>Wi-Fi をたしかめてから、もう一度ためしてね。</p><button id="r">もう一度ためす</button></div>
 <script>const u = new URLSearchParams(location.search).get('u'); const go = () => { if (u && /^https:\/\//.test(u)) location.href = u; }; document.getElementById('r').onclick = go; setTimeout(go, 10000);</script></body></html>

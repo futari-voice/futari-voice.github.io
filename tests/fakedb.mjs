@@ -29,8 +29,16 @@ export function createFakeDB(){
   const docs = new Map();
   const watchers = new Map();
   let seq = 0;
-  const conv = v => v && typeof v === 'object' && v.__now ? Date.now() : Array.isArray(v) ? v.map(conv) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, conv(x)])) : v;
-  const put = (p, d, merge) => docs.set(p, merge && docs.has(p) ? Object.assign({}, docs.get(p), conv(d)) : conv(d));
+  const conv = v => v && typeof v === 'object' && v.__now ? Date.now() : v && v.__add ? [...v.__add] : v && v.__rem ? [] : Array.isArray(v) ? v.map(conv) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, conv(x)])) : v;
+  const isMap = v => v && typeof v === 'object' && !Array.isArray(v) && !v.__now && !v.__add && !v.__rem;
+  // 本物と同じ：merge のときは、中の地図（map）もまぜる。ADD/REM はリストに足す・消す
+  const apply = (cur, d) => { const out = Object.assign({}, cur); for (const [k, v] of Object.entries(d)){
+    if (v && v.__add) out[k] = [...new Set([...(Array.isArray(cur[k]) ? cur[k] : []), ...v.__add])];
+    else if (v && v.__rem) out[k] = (Array.isArray(cur[k]) ? cur[k] : []).filter(x => !v.__rem.includes(x));
+    else if (isMap(v) && isMap(cur[k])) out[k] = apply(cur[k], v);
+    else out[k] = conv(v);
+  } return out; };
+  const put = (p, d, merge) => docs.set(p, merge && docs.has(p) ? apply(docs.get(p), d) : conv(d));
   const parent = p => p.split('/').slice(0, -1).join('/');
   const idOf = p => p.split('/').pop();
   const match = (coll, wh, p) => {

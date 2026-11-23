@@ -19,7 +19,7 @@ export async function page(browser, url, name, errs, setup){
 }
 export const shown = (p, id) => p.evaluate(i => !document.getElementById(i).classList.contains('hide'), id);
 export async function waitShown(p, id, ms = 15000){ const t0 = Date.now(); while (Date.now() - t0 < ms){ if (await shown(p, id).catch(() => false)) return true; await sleep(150); } throw new Error(p._n + ': #' + id + ' が出なかった（' + (await p.textContent('#lErr').catch(() => '')) + '）'); }
-export async function waitFor(p, fn, ms, label){ const t0 = Date.now(); while (Date.now() - t0 < ms){ try { if (await p.evaluate(fn)) return Date.now() - t0; } catch(e){} await sleep(200); } throw new Error('時間切れ: ' + label + ' (' + p._n + ')'); }
+export async function waitFor(p, fn, ms, label, arg){ const t0 = Date.now(); while (Date.now() - t0 < ms){ try { if (await p.evaluate(fn, arg)) return Date.now() - t0; } catch(e){} await sleep(200); } throw new Error('時間切れ: ' + label + ' (' + p._n + ')'); }
 export async function register(p, user, pass, name){
   await waitShown(p, 'login');
   await p.click('#tabUp'); await p.fill('#lUser', user); await p.fill('#lPass', pass); await p.fill('#lPass2', pass); await p.click('#lGo');

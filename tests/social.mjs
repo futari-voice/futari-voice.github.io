@@ -46,14 +46,14 @@ try {
   await A.click('#fbody [data-dmopen]');
   await waitShown(A, 'vDm');
   await A.fill('#dmIn', 'やっほー！ゲームしよ'); await A.press('#dmIn', 'Enter');
-  await waitFor(B, () => !document.getElementById('homeBadge').classList.contains('hide') && document.getElementById('chList').textContent.includes('あおい'), 15000, 'DMのしるし');
-  ok(true, '個人チャットがとどくと、しるしが出る');
-  await B.click('#chList [data-dmopen]');
+  await waitFor(B, () => !!document.querySelector('#dmList .ch.unread .badge') && document.getElementById('dmList').textContent.includes('あおい'), 15000, 'DMのしるし');
+  ok(true, '個人チャットがとどくと、左のメニューにしるしが出る');
+  await B.click('#dmList [data-dmopen]');
   ok(await waitFor(B, () => document.getElementById('dmMsgs').textContent.includes('やっほー！ゲームしよ'), 10000, 'DM本文').then(() => true), '個人チャットのメッセージが相手に見える');
   await B.fill('#dmIn', 'いいよ〜'); await B.press('#dmIn', 'Enter');
   ok(await waitFor(A, () => document.getElementById('dmMsgs').textContent.includes('いいよ〜'), 10000, 'DM返事').then(() => true), '返事もとどく');
-  await waitFor(B, () => document.getElementById('homeBadge').classList.contains('hide'), 5000, '既読').catch(() => {});
-  ok(await B.evaluate(() => document.getElementById('homeBadge').classList.contains('hide')), '読んだら、しるしが消える');
+  await waitFor(B, () => !document.querySelector('#dmList .badge'), 5000, '既読').catch(() => {});
+  ok(await B.evaluate(() => !document.querySelector('#dmList .badge')), '読んだら、しるしが消える');
 
   // 個人通話
   await A.click('#btnCall');
@@ -115,13 +115,14 @@ try {
 
   // サーバーのボイス中にホームを見ても、ボイスは切れない
   await A.click('#addBtn'); await A.click('#goCreate'); await A.fill('#cName', 'ゲーム部'); await A.click('#cMake');
+  await waitShown(A, 'mInvite');
   const link = await A.inputValue('#invLink'); await A.keyboard.press('Escape');
   await B.click('#addBtn'); await B.fill('#addInv', link); await B.click('#addJoin button');
-  await waitFor(A, () => [...__fv.peers.values()].some(P => P.ok), 25000, 'サーバー');
-  await A.click('[data-vc="game"]'); await B.click('[data-vc="game"]');
+  await waitFor(B, () => !!__fv.sid, 25000, 'サーバー');
+  for (const p of [A, B]){ await p.click('[data-vc="game"]'); await p.click('#vjoin [data-act="joinvc"]'); }
   await waitFor(B, () => [...__fv.peers.values()].some(P => P.call && P.audio && P.audio.srcObject), 25000, 'ボイス');
   await A.click('#homeBtn'); await sleep(1500);
-  await A.click('#chList [data-dmopen]'); await sleep(1500);
+  await A.click('#dmList [data-dmopen]'); await sleep(1500);
   ok(await A.evaluate(() => __fv.voice === 'game' && !!__fv.sid && [...__fv.peers.values()].some(P => P.ok)), 'ボイス中にホームや個人チャットを見ても、ボイスは切れない');
   const x = await audioBytes(B);
   ok(x.length === 1 && x[0].b > 1000, 'そのあいだも声はとどいている');

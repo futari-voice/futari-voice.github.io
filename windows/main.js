@@ -1,4 +1,4 @@
-// ふたりボイス Windows版
+// なかまボイス Windows版
 // 中身は公開しているWebアプリ（いつも最新）。Windowsアプリとしての窓・マイク・画面共有・Googleログインのお手伝いをする。
 const { app, BrowserWindow, shell, ipcMain, session, desktopCapturer, dialog, Tray, Menu, Notification, net } = require('electron');
 const fs = require('fs');
@@ -79,9 +79,9 @@ ipcMain.handle('fv:update', async (e, url) => {
 function makeTray() {
   if (tray) return;
   tray = new Tray(path.join(__dirname, 'icon.ico'));
-  tray.setToolTip('ふたりボイス');
+  tray.setToolTip('なかまボイス');
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: 'ふたりボイスを開く', click: () => { if (win) focusWin(); else createWindow(); } },
+    { label: 'なかまボイスを開く', click: () => { if (win) focusWin(); else createWindow(); } },
     { type: 'separator' },
     { label: 'おわる', click: () => { quitting = true; app.quit(); } },
   ]));
@@ -110,7 +110,7 @@ function setupSession() {
     try {
       const sources = await desktopCapturer.getSources({ types: ['screen', 'window'], thumbnailSize: { width: 0, height: 0 } });
       const screens = sources.filter(s => s.id.startsWith('screen:'));
-      const wins = sources.filter(s => s.id.startsWith('window:') && s.name && !/ふたりボイス|FutariVoice/.test(s.name)).slice(0, 8);
+      const wins = sources.filter(s => s.id.startsWith('window:') && s.name && !/なかまボイス|ふたりボイス|FutariVoice/.test(s.name)).slice(0, 8);
       const list = [...screens.map((s, i) => ({ s, label: screens.length > 1 ? `画面全体 ${i + 1}` : '画面全体' })), ...wins.map(s => ({ s, label: s.name.length > 40 ? s.name.slice(0, 40) + '…' : s.name }))];
       if (!list.length) return cb({});
       const r = await dialog.showMessageBox(win, { type: 'question', title: '画面を共有', message: 'どれをみんなに見せる？', buttons: [...list.map(x => x.label), 'やめる'], cancelId: list.length, noLink: true });
@@ -124,7 +124,7 @@ function setupSession() {
 function createWindow() {
   win = new BrowserWindow({
     width: 1280, height: 800, minWidth: 420, minHeight: 520,
-    title: 'ふたりボイス', backgroundColor: '#313338', autoHideMenuBar: true,
+    title: 'なかまボイス', backgroundColor: '#0b0c1b', autoHideMenuBar: true,
     icon: path.join(__dirname, 'icon.ico'),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true, backgroundThrottling: false, spellcheck: false },
   });
@@ -140,7 +140,7 @@ function createWindow() {
     win.hide();
     if (!hintShown) {
       hintShown = true;
-      try { new Notification({ title: 'ふたりボイスは右下で待っているよ', body: 'メッセージや電話がきたら、おしらせするよ。おわるときは、右下のアイコンを右クリックして「おわる」をおしてね。', icon: path.join(__dirname, 'icon.ico') }).show(); } catch (err) { /* おしらせが出せなくても大丈夫 */ }
+      try { new Notification({ title: 'なかまボイスは右下で待っているよ', body: 'メッセージや電話がきたら、おしらせするよ。おわるときは、右下のアイコンを右クリックして「おわる」をおしてね。', icon: path.join(__dirname, 'icon.ico') }).show(); } catch (err) { /* おしらせが出せなくても大丈夫 */ }
     }
   });
   win.on('closed', () => { win = null; });

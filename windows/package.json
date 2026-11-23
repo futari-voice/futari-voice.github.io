@@ -2,7 +2,7 @@
   "name": "futari-voice-desktop",
   "productName": "FutariVoice",
   "version": "1.0.0",
-  "description": "ふたりボイス Windows版",
+  "description": "なかまボイス Windows版",
   "author": "FutariVoice",
   "main": "main.js",
   "scripts": {
@@ -20,8 +20,8 @@
       "oneClick": true,
       "perMachine": false,
       "artifactName": "FutariVoice-Setup.exe",
-      "shortcutName": "ふたりボイス",
-      "uninstallDisplayName": "ふたりボイス",
+      "shortcutName": "なかまボイス",
+      "uninstallDisplayName": "なかまボイス",
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true
     }

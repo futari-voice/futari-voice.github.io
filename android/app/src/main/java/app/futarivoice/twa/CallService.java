@@ -15,7 +15,7 @@ import android.os.PowerManager;
 import android.util.Log;
 
 /**
- * ふたりボイスを「うしろで動かしておく」ための、小さなおしらせ。
+ * なかまボイスを「うしろで動かしておく」ための、小さなおしらせ。
  *   通話中 … 「ボイスにつながっているよ」（通話が切れないように）
  *   待つ   … 「メッセージや電話を待っているよ」（アプリをとじても通知が届くように）
  */
@@ -108,13 +108,13 @@ public class CallService extends Service {
         Notification.Builder b;
         if (inCall) {
             b = Notifs.builder(this, Notifs.CH_CALL)
-                    .setContentTitle(callTitle.isEmpty() ? "ふたりボイス" : callTitle)
+                    .setContentTitle(callTitle.isEmpty() ? "なかまボイス" : callTitle)
                     .setContentText(callText)
                     .addAction(new Notification.Action.Builder(Icon.createWithResource(this, R.drawable.ic_stat), "切る",
                             Notifs.service(this, ACTION_HANGUP, 4)).build());
         } else {
             b = Notifs.builder(this, Notifs.CH_WAIT)
-                    .setContentTitle("ふたりボイス")
+                    .setContentTitle("なかまボイス")
                     .setContentText("メッセージや電話を待っているよ");
         }
         Notification n = b.setOngoing(true).setShowWhen(false).setContentIntent(Notifs.open(this, null, null, 3)).build();

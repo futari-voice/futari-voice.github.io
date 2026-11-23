@@ -8,7 +8,7 @@ import {
 import {
   initializeFirestore, connectFirestoreEmulator, doc, collection, getDoc, setDoc, deleteDoc,
   onSnapshot, query, where, orderBy, limitToLast, documentId, serverTimestamp, runTransaction, writeBatch,
-  getCountFromServer, Timestamp,
+  getCountFromServer, Timestamp, arrayUnion, arrayRemove,
 } from 'firebase/firestore';
 window.FB = {
   initializeApp, getAuth, connectAuthEmulator, onAuthStateChanged, GoogleAuthProvider,
@@ -16,5 +16,5 @@ window.FB = {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, deleteUser,
   initializeFirestore, connectFirestoreEmulator, doc, collection, getDoc, setDoc, deleteDoc,
   onSnapshot, query, where, orderBy, limitToLast, documentId, serverTimestamp, runTransaction, writeBatch,
-  getCountFromServer, Timestamp,
+  getCountFromServer, Timestamp, arrayUnion, arrayRemove,
 };

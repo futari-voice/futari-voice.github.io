@@ -15,7 +15,7 @@ public class InstallReceiver extends BroadcastReceiver {
         String action = i.getAction();
         if (Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)) {
             Notifs.channels(c);
-            Notifs.show(c, "アップデートできたよ！", "タップして、ふたりボイスを開いてね", "updated", null);
+            Notifs.show(c, "アップデートできたよ！", "タップして、なかまボイスを開いてね", "updated", null);
             return;
         }
         int st = i.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE);

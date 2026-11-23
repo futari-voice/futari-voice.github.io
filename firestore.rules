@@ -1,5 +1,5 @@
 rules_version = '2';
-// ふたりボイス：フレンド・個人チャット・個人通話のためのデータベースのきまり
+// なかまボイス：フレンド・個人チャット・個人通話・サーバーのためのデータベースのきまり
 //   users/{uid}            … プロフィール（ログインしている人ならだれでも見られる。書けるのは本人だけ）
 //   unames/{id}            … ユーザーID → uid（同じIDを2人が使えないようにする）
 //   requests/{to}_{from}   … フレンド申請（送った人と受けた人だけ見られる）
@@ -9,6 +9,10 @@ rules_version = '2';
 //   calls/{a}_{b}          … 個人通話の呼び出し（フレンドどうしだけ）
 //   admins/{uid}           … 管理者パネルのパスワードを知っている人（本人だけ見られる）
 //   news/{id}              … 運営から全員へのおしらせ（だれでも見られる。送る・消すのは管理者だけ）
+//   servers/{sid}          … サーバー（名前・チャンネル・メンバーのリスト・招待コード。メンバーだけ見られる）
+//   servers/{sid}/ch/{cid}/msgs/{id} … サーバーのチャット（メンバーだけ）
+//   servers/{sid}/voice/{uid} … いまボイスにいる人（メンバーだけ）
+//   joins/{uid}_{sid}      … 招待コードで入った記録（コードが合っているときだけ作れる）
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
@@ -25,6 +29,14 @@ service cloud.firestore {
     // ↓ これは「テスト用のパスワード」の形。本番（Firebaseの画面で公開するルール）では、本物のパスワードの形に入れかえる。本物はどこにも公開しない
     function adminHash() { return '5041115d321d95432dd5f9ea5b6fc96a350ed0b8f1759d2f2566331e1458ae73'; } // ADMIN_HASH
     function keyOk(k) { return k is string && k.size() == 64 && hashing.sha256(k).toHexString().lower() == adminHash(); }
+    function srvDoc(sid) { return get(/databases/$(database)/documents/servers/$(sid)).data; }
+    function srvAfter(sid) { return getAfter(/databases/$(database)/documents/servers/$(sid)).data; }
+    function member(sid) { return signedIn() && me() in srvDoc(sid).members; }
+    function srvOk(d) {
+      return str(d.name, 30) && d.name.size() > 0 && str(d.icon, 60000)
+        && d.members is list && d.channels is list && d.channels.size() >= 1 && d.channels.size() <= 20
+        && str(d.invite, 24) && d.invite.size() >= 8;
+    }
     function isAdmin() { return signedIn() && keyOk(get(/databases/$(database)/documents/admins/$(me())).data.key); }
 
     match /users/{uid} {
@@ -113,6 +125,67 @@ service cloud.firestore {
         && str(request.resource.data.text, 1000)
         && request.resource.data.kind in ['info', 'update', 'warn']
         && request.resource.data.by == me()
+        && request.resource.data.at == request.time;
+    }
+
+    match /servers/{sid} {
+      allow read: if signedIn() && me() in resource.data.members;
+      allow delete: if signedIn() && resource.data.owner == me();
+      allow create: if signedIn() && sid.matches('^[a-z0-9]{10,24}$')
+        && request.resource.data.keys().hasOnly(['name', 'icon', 'owner', 'members', 'invite', 'channels', 'created'])
+        && request.resource.data.owner == me() && request.resource.data.members == [me()]
+        && srvOk(request.resource.data) && request.resource.data.created == request.time;
+      allow update: if signedIn() && request.resource.data.owner == resource.data.owner
+        && request.resource.data.created == resource.data.created && srvOk(request.resource.data) && (
+          // 作った人：名前・アイコン・チャンネル・招待コード・メンバー（外す）を変えられる
+          (resource.data.owner == me() && me() in request.resource.data.members
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'icon', 'channels', 'invite', 'members', 'last', 'lastMsg']))
+          // メンバー：メッセージを送ったときに「最後のメッセージ」を書く
+          || (me() in resource.data.members
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['last', 'lastMsg'])
+            && request.resource.data.lastMsg.keys().hasOnly(['ch', 'from', 'text', 'ts'])
+            && request.resource.data.lastMsg.from == me() && request.resource.data.lastMsg.ts == request.time
+            && str(request.resource.data.lastMsg.text, 120) && str(request.resource.data.lastMsg.ch, 24)
+            && request.resource.data.last.size() <= 40)
+          // 招待コードで入る：自分をメンバーに足すだけ（joins に正しいコードがあるとき）
+          || (!(me() in resource.data.members)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+            && request.resource.data.members.toSet() == resource.data.members.toSet().union([me()].toSet())
+            && getAfter(/databases/$(database)/documents/joins/$(me() + '_' + sid)).data.code == resource.data.invite)
+          // 自分からぬける（作った人はぬけられない。消す）
+          || (me() in resource.data.members && resource.data.owner != me()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+            && request.resource.data.members.toSet() == resource.data.members.toSet().difference([me()].toSet()))
+        );
+
+      match /ch/{cid}/msgs/{mid} {
+        allow read: if member(sid);
+        allow delete: if signedIn() && (resource.data.from == me() || srvDoc(sid).owner == me());
+        allow create: if signedIn() && me() in srvAfter(sid).members
+          && mid.size() <= 40 && cid.size() <= 24
+          && request.resource.data.keys().hasOnly(['from', 'text', 'ts', 'sys'])
+          && request.resource.data.from == me() && request.resource.data.ts == request.time
+          && request.resource.data.text is string && request.resource.data.text.size() <= 2000
+          && request.resource.data.get('sys', '') in ['', 'join', 'create']
+          && (request.resource.data.text.size() > 0 || request.resource.data.get('sys', '') != '');
+      }
+
+      match /voice/{uid} {
+        allow read: if member(sid);
+        allow delete: if signedIn() && (me() == uid || srvDoc(sid).owner == me());
+        allow create, update: if member(sid) && me() == uid
+          && request.resource.data.keys().hasOnly(['ch', 'at', 'mute', 'deaf', 'scr'])
+          && str(request.resource.data.ch, 24) && request.resource.data.at == request.time
+          && request.resource.data.mute is bool && request.resource.data.deaf is bool && request.resource.data.scr is bool;
+      }
+    }
+
+    match /joins/{jid} {
+      allow read, delete: if signedIn() && resource.data.uid == me();
+      allow create, update: if signedIn() && jid == me() + '_' + request.resource.data.sid
+        && request.resource.data.keys().hasOnly(['uid', 'sid', 'code', 'at'])
+        && request.resource.data.uid == me() && str(request.resource.data.sid, 24) && str(request.resource.data.code, 24)
+        && request.resource.data.code == srvDoc(request.resource.data.sid).invite
         && request.resource.data.at == request.time;
     }
 

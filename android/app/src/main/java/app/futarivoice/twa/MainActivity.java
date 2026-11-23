@@ -35,7 +35,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 /**
- * ふたりボイス Android版。
+ * なかまボイス Android版。
  * アプリの中に Web の画面（公開しているサイトの /app/）を出す。
  * 画面（WebView）はアプリ全体で1つだけ持っていて、アプリの窓をとじても（スワイプで消しても）、
  * CallService が動いているあいだは画面の中身が動きつづける。だから通話が切れず、通知も届く。
@@ -81,7 +81,7 @@ public class MainActivity extends Activity {
     }
 
     private static void setupWeb(WebView w) {
-        w.setBackgroundColor(0xFF313338);
+        w.setBackgroundColor(0xFF0B0C1B);
         WebSettings s = w.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);

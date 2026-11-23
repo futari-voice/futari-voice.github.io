@@ -14,6 +14,15 @@ async function cleanup(){
     const F = window.__fvF, D = window.__fvDBX && window.__fvDBX();
     if (D && F && F.fuid){
       for (const m of F.dmMsgs || []) if (m.from === F.fuid && F.dm){ const pid = F.fuid < F.dm ? F.fuid + '_' + F.dm : F.dm + '_' + F.fuid; await D.del('dms/' + pid + '/msgs/' + m.id).catch(() => {}); }
+      // サーバー：自分のメッセージ・ボイスのしるし・招待の記録を消して、作ったサーバーは消す、入ったサーバーはぬける
+      const S = window.__fv, SV = window.__fvSV;
+      if (S && S.sid) for (const m of S.msgs || []) if (m.uid === F.fuid) await D.del('servers/' + S.sid + '/ch/' + S.textCh + '/msgs/' + m.id).catch(() => {});
+      for (const sv of (SV ? [...SV.values()] : [])){
+        await D.del('servers/' + sv.id + '/voice/' + F.fuid).catch(() => {});
+        await D.del('joins/' + F.fuid + '_' + sv.id).catch(() => {});
+        if (sv.owner === F.fuid) await D.del('servers/' + sv.id).catch(() => {});
+        else await D.set('servers/' + sv.id, {members:{__rem:[F.fuid]}}, true).catch(() => {});
+      }
     }
   }); } catch(e){}
   for (const p of users) try { await p.evaluate(async () => {
@@ -52,13 +61,18 @@ try {
       const A = await page(b, url, 'A', errs); users.push(A);
       await register(A, 'ci_a_' + R + (relay ? 'r' : ''), 'ci-pass-' + R, 'テストA');
       await A.click('#homeCreate'); await A.click('#cMake');
+      await waitShown(A, 'mInvite');
       const link = await A.inputValue('#invLink'); await A.keyboard.press('Escape');
       const B = await page(b, url, 'B', errs); users.push(B);
       await register(B, 'ci_b_' + R + (relay ? 'r' : ''), 'ci-pass-' + R, 'テストB');
       await B.fill('#homeInv', link); await B.click('#homeJoin button');
-      await waitFor(B, () => [...__fv.peers.values()].some(P => P.ok && P.conn && P.conn.open), 40000, 'つながる' + tag);
-      ok(true, '本物のネットで、招待リンクから入ってつながる' + tag);
-      await A.click('[data-vc="game"]'); await B.click('[data-vc="game"]');
+      await waitFor(B, () => !!__fv.sid, 30000, '入る' + tag);
+      ok(true, '本物のデータベースで、招待リンクからサーバーに入れる' + tag);
+      if (!relay){
+        await B.fill('#ci', 'こんにちは' + R); await B.press('#ci', 'Enter');
+        ok(await waitFor(A, r => document.getElementById('msgs').textContent.includes('こんにちは' + r), 20000, 'サーバーのチャット', R).then(() => true), '本物のデータベースで、サーバーのチャットがとどく');
+      }
+      for (const p of [A, B]){ await p.click('[data-vc="game"]'); await p.click('#vjoin [data-act="joinvc"]'); }
       await waitFor(B, () => [...__fv.peers.values()].some(P => P.call && P.audio && P.audio.srcObject), 40000, '通話' + tag);
       await sleep(3000);
       const x = await audioBytes(B);
