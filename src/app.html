@@ -929,6 +929,9 @@ kbd{background:var(--rail);border:1px solid var(--line);border-radius:6px;paddin
       <label class="sw"><span>まわりの音をへらす（ノイズ抑制）</span><input type="checkbox" class="tg" id="sNoise"></label>
       <label class="sw"><span>声がはね返るのをふせぐ（エコー除去）</span><input type="checkbox" class="tg" id="sEcho"></label>
       <label class="sw"><span>声の大きさを自動でそろえる</span><input type="checkbox" class="tg" id="sAgc"></label>
+      <h3>高音質モード</h3>
+      <label class="sw"><span>高音質で通話する（音楽・ゲーム音もクリアに）</span><input type="checkbox" class="tg" id="sHifi"></label>
+      <p class="hint">オンにすると、声がもっとクリアになるよ。ノイズ低減と自動音量はオフになって、データを少し多く使うよ。</p>
       <h3>おしらせ（通知）</h3>
       <label class="sw"><span>メッセージ・フレンド申請・電話がきたら、おしらせを出す</span><input type="checkbox" class="tg" id="sNote"></label>
       <button class="btn2 hide" id="noteAllow" style="justify-self:start">このパソコン（ブラウザ）で、おしらせを許可する</button>
@@ -1051,7 +1054,7 @@ let acct = '';
 const ak = k => 'a.' + acct + '.' + k;
 const me = {uid:'', name:'', color:COLORS[0], avatar:'', ver:0};
 const saveMe = () => store.set(ak('me'), me);
-const cfg = Object.assign({inputId:'',outputId:'',auto:true,th:-50,echo:true,noise:true,agc:true,vol:{},scrVol:80,sounds:true,msgSound:true,members:true,last:'',note:true,bg:true}, store.get('cfg2', {}));
+const cfg = Object.assign({inputId:'',outputId:'',auto:true,th:-50,echo:true,noise:true,agc:true,vol:{},scrVol:80,sounds:true,msgSound:true,members:true,last:'',note:true,bg:true,hifi:false}, store.get('cfg2', {}));
 const saveCfg = () => store.set('cfg2', cfg);
 
 const S = {sid:'', vsid:'', meta:null, msgs:[], msgsReady:false,
@@ -1165,7 +1168,7 @@ async function setupAudio(){
   if (!S.rawStream) await openMic();
 }
 async function openMic(){
-  const c = {audio:{echoCancellation:cfg.echo, noiseSuppression:cfg.noise, autoGainControl:cfg.agc, channelCount:1}};
+  const c = {audio:{echoCancellation:cfg.echo, noiseSuppression:cfg.hifi ? false : cfg.noise, autoGainControl:cfg.hifi ? false : cfg.agc, channelCount:1, sampleRate:{ideal:48000}}};
   if (cfg.inputId) c.audio.deviceId = {exact:cfg.inputId};
   let st;
   try { st = await navigator.mediaDevices.getUserMedia(c); }
@@ -1749,10 +1752,27 @@ function startTicker(){
 }
 
 /* ---------- 声と画面 ---------- */
-function opusTune(sdp){
+// 送る声の「よさ」(ビット数)。多いほどきれい。高音質モードはもっと多い
+const audioBps = () => cfg.hifi ? 256000 : 128000;
+// Opus(声の圧縮)の設定を書きかえて、音をよくする
+function tuneOpus(sdp, bps, stereo){
   const m = sdp.match(/a=rtpmap:(\d+) opus\/48000/i); if (!m) return sdp;
-  const re = new RegExp('a=fmtp:' + m[1] + ' ([^\\r\\n]*)');
-  return sdp.replace(re, (all, p) => 'a=fmtp:' + m[1] + ' ' + p.split(';').filter(x => x && !/^(maxaveragebitrate|useinbandfec)=/.test(x)).concat(['maxaveragebitrate=64000','useinbandfec=1']).join(';'));
+  const id = m[1];
+  const extra = ['maxaveragebitrate=' + bps, 'maxplaybackrate=48000', 'useinbandfec=1'];
+  if (stereo) extra.push('stereo=1', 'sprop-stereo=1');
+  const clean = p => p.split(';').filter(x => x && !/^(maxaveragebitrate|useinbandfec|maxplaybackrate|stereo|sprop-stereo|cbr)=/.test(x)).concat(extra).join(';');
+  const re = new RegExp('a=fmtp:' + id + ' ([^\\r\\n]*)');
+  if (re.test(sdp)) return sdp.replace(re, (all, p) => 'a=fmtp:' + id + ' ' + clean(p));
+  return sdp.replace(new RegExp('(a=rtpmap:' + id + ' opus/48000(?:/2)?\\r?\\n)'), '$1a=fmtp:' + id + ' ' + extra.join(';') + '\r\n');
+}
+function opusTune(sdp){ return tuneOpus(sdp, audioBps(), false); }      // 声（マイク）
+function opusScreen(sdp){ return tuneOpus(sdp, 256000, true); }         // 画面共有の音（音楽・ゲーム音、ステレオ）
+// いま通話中なら、音質の変更をすぐ反映する
+async function applyAudioQuality(){
+  const bps = audioBps();
+  for (const P of S.peers.values()){ const pc = P.call && P.call.peerConnection; if (pc){ const a = pc.getSenders().find(x => x.track && x.track.kind === 'audio'); if (a) setBitrate(a, bps); } }
+  if (DC.sender) setBitrate(DC.sender, bps);
+  if ((S.voice || DC.state) && !S.noMic && !S.micTest){ try { await openMic(); } catch(e){} }
 }
 function resetMedia(P){
   if (P.call){ const c = P.call; P.call = null; safeClose(c); }
@@ -1779,6 +1799,7 @@ function wireCall(P, call){
   call.on('close', () => { if (P.call === call) P.call = null; });
   call.on('error', e => console.warn('call', e));
   const pc = call.peerConnection;
+  if (pc){ const a = pc.getSenders().find(x => x.track && x.track.kind === 'audio'); if (a) setBitrate(a, audioBps()); }
   if (pc) pc.addEventListener('iceconnectionstatechange', () => {
     if (P.call !== call) return;
     P.ice = pc.iceConnectionState; renderUser();
@@ -1875,7 +1896,7 @@ async function toggleScreen(){
 function shareTo(P){
   if (!S.scrStream || !S.peer) return;
   if (P.scrOut) safeClose(P.scrOut);
-  P.scrOut = S.peer.call(P.id, S.scrStream, {metadata:{kind:'screen'}});
+  P.scrOut = S.peer.call(P.id, S.scrStream, {metadata:{kind:'screen'}, sdpTransform:opusScreen});
 }
 function stopScreen(quiet){
   if (!S.scrStream) return;
@@ -2188,7 +2209,7 @@ function openSettings(){
   $('#pName').value = me.name;
   buildColors($('#pColors'), me.color, c => { me.color = c; profileChanged(); });
   $('#sAuto').checked = cfg.auto; $('#sTh').value = cfg.th; $('#sTh').classList.toggle('hide', cfg.auto);
-  $('#sNoise').checked = cfg.noise; $('#sEcho').checked = cfg.echo; $('#sAgc').checked = cfg.agc; $('#sSnd').checked = cfg.sounds; $('#sMsg').checked = cfg.msgSound;
+  $('#sNoise').checked = cfg.noise; $('#sEcho').checked = cfg.echo; $('#sAgc').checked = cfg.agc; $('#sSnd').checked = cfg.sounds; $('#sMsg').checked = cfg.msgSound; $('#sHifi').checked = cfg.hifi;
   $('#micTest').classList.toggle('hide', !!S.rawStream);
   paintNoteSettings(); paintVersion();
   fillDevices(); renderMeter(); openModal('mSet');
@@ -2655,6 +2676,7 @@ function dcNewPC(){
 function dcAddTrack(pc){
   const tr = S.sendTrack;
   DC.sender = pc.addTrack(tr, new MediaStream([tr]));
+  setBitrate(DC.sender, audioBps());
 }
 function dcPlay(st){
   if (!DC.audio){ DC.audio = document.createElement('audio'); DC.audio.autoplay = true; DC.audio.setAttribute('playsinline', ''); DC.audio.className = 'hide'; document.body.appendChild(DC.audio); }
@@ -3495,6 +3517,7 @@ $('#sNote').onchange = e => { cfg.note = e.target.checked; saveCfg(); syncBg(); 
 $('#sBg').onchange = e => { cfg.bg = e.target.checked; saveCfg(); syncBg(); };
 $('#noteAllow').onclick = askNote;
 for (const [id, k] of [['#sNoise','noise'], ['#sEcho','echo'], ['#sAgc','agc']]) $(id).onchange = e => { cfg[k] = e.target.checked; micChanged(); };
+$('#sHifi').onchange = e => { cfg.hifi = e.target.checked; saveCfg(); applyAudioQuality(); toast(cfg.hifi ? '高音質モードにしたよ' : 'ふつうの音質にもどしたよ'); };
 $('#sIn').onchange = e => { cfg.inputId = e.target.value; micChanged(); };
 $('#sOut').onchange = e => {
   cfg.outputId = e.target.value; saveCfg();
