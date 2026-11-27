@@ -1,7 +1,7 @@
 {
   "ok": true,
-  "time": "2026-11-27T10:43:27.197Z",
-  "version": "1.0.15",
+  "time": "2026-11-27T11:43:06.218Z",
+  "version": "1.0.16",
   "checks": {
     "site": true,
     "version": true,
